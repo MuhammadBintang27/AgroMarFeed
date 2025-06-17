@@ -26,7 +26,7 @@ const BestSeller = () => {
             {"\n"}hingga 30%! Beli pakan, bantu bumi.
           </p>
           <div>
-            <Button href="/catalog" size="md" className="bg-1 text-white mb-6">
+            <Button href="/katalog" size="md" className="bg-1 text-white mb-6">
               Lihat Produk
               <ArrowRight className="ml-2" />
             </Button>
