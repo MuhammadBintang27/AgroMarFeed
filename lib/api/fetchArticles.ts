@@ -18,9 +18,11 @@ export interface Article {
   updatedAt: string;
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+
 export async function fetchArticles(): Promise<Article[]> {
   try {
-    const response = await fetch("http://localhost:4000/api/artikels", {
+    const response = await fetch(`${API_BASE}/api/artikels`, {
       cache: "no-store",
     });
     if (!response.ok) {
@@ -36,7 +38,7 @@ export async function fetchArticles(): Promise<Article[]> {
 
 export async function fetchArticleById(id: string): Promise<Article | null> {
   try {
-    const response = await fetch(`http://localhost:4000/api/artikels/${id}`, {
+    const response = await fetch(`${API_BASE}/api/artikels/${id}`, {
       cache: "no-store",
     });
     if (!response.ok) {

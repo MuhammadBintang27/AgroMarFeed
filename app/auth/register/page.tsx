@@ -15,15 +15,19 @@ export default function RegisterPage() {
   const [error, setError] = useState<string>('');
   const router = useRouter();
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    try {
-      await signup(credentials);
-      router.push('/auth/login');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed');
-    }
-  };
+const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  try {
+    console.log("Submitting signup credentials:", credentials); // Log credentials
+    const result = await signup(credentials);
+    console.log("Signup success response:", result);
+    router.push('/auth/login');
+  } catch (err: any) {
+    console.error("Signup error:", err); // Log seluruh error
+    setError(err.response?.data?.message || err.message || 'Registration failed');
+  }
+};
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCredentials((prev) => ({ ...prev, [e.target.name]: e.target.value }));

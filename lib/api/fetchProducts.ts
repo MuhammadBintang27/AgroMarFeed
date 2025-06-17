@@ -4,8 +4,10 @@ export interface Weight {
   price: number;
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+
 export interface Product {
-  _id: string; // Changed from id to _id to match API
+  _id: string;
   name: string;
   description: string;
   categoryOptions: string;
@@ -22,7 +24,8 @@ export interface Product {
 
 export const fetchProducts = async (): Promise<Product[]> => {
   try {
-    const response = await fetch("http://localhost:4000/api/products", {
+    console.log("Fetching from:", `${API_BASE}/api/products`);;
+    const response = await fetch(`${API_BASE}/api/products`, {
       cache: "no-store",
     });
     if (!response.ok) {
@@ -57,7 +60,7 @@ export const fetchProducts = async (): Promise<Product[]> => {
 export const fetchProductById = async (id: string): Promise<Product> => {
   try {
     console.log("Fetching product with ID:", id);
-    const response = await fetch(`http://localhost:4000/api/products/${id}`, {
+    const response = await fetch(`${API_BASE}/api/products/${id}`, {
       cache: "no-store",
     });
     if (!response.ok) {
