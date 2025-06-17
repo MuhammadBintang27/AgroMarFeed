@@ -27,7 +27,7 @@ const SpecialOffer = () => {
         </motion.h2>
 
         <motion.a
-          href="/catalog"
+          href="/katalog"
           className="inline-flex items-center gap-2 text-[rgba(0,0,0,0.4)] text-lg mb-8 px-4 py-2 bg-transparent hover:underline pt-12"
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -60,7 +60,7 @@ const SpecialOffer = () => {
               <p className="text-black text-sm mb-8">
                 limbah agro-maritim, Hemat hingga 30%! Beli pakan, bantu bumi.
               </p>
-              <Button href="/catalog" size="md" className="bg-1 text-white mb-6">
+              <Button href="/katalog" size="md" className="bg-1 text-white mb-6">
                 Beli Sekarang
                 <ArrowRight className="ml-2" />
               </Button>
@@ -111,7 +111,7 @@ const SpecialOffer = () => {
             <p className="text-white text-sm mb-8">
               limbah agro-maritim, Hemat hingga 30%! Beli pakan, bantu bumi.
             </p>
-            <Button href="/catalog" size="md" className="bg-3 text-black mb-6">
+            <Button href="/katalog" size="md" className="bg-3 text-black mb-6">
               Beli Sekarang
               <ArrowRight className="ml-2" />
             </Button>

@@ -23,7 +23,7 @@ const LatestBlog = () => {
           Latest Blog
         </h2>
         <a
-          href="/catalog"
+          href="/artikel"
           className="inline-flex items-center gap-2 text-[rgba(0,0,0,0.4)] text-lg mb-8 px-4 py-2 bg-transparent hover:underline pt-12"
         >
           Lihat semua
