@@ -1,4 +1,3 @@
-// app/dashboard/page.tsx
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -17,7 +16,7 @@ export default function DashboardPage() {
         setUser(response.user ?? null); // Convert undefined to null
       } catch (err: any) {
         setError('Not authenticated');
-        router.push('/login');
+        router.push('/auth/login');
       }
     };
     fetchUser();

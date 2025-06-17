@@ -1,5 +1,4 @@
 // app/page.tsx
-
 import Hero from "@/components/pages/home/Hero";
 import BestSeller from "@/components/pages/home/BestSeller";
 import SpecialOffer from "@/components/pages/home/SpecialOffer";
