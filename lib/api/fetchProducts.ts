@@ -24,7 +24,6 @@ export interface Product {
 
 export const fetchProducts = async (): Promise<Product[]> => {
   try {
-    console.log("Fetching from:", `${API_BASE}/api/products`);;
     const response = await fetch(`${API_BASE}/api/products`, {
       cache: "no-store",
     });
