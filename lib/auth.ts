@@ -1,4 +1,3 @@
-// lib/api.ts
 import axios, { AxiosInstance } from 'axios';
 import { User, ApiResponse, AuthCredentials, SignupCredentials } from '@/types';
 
