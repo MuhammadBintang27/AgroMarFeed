@@ -36,7 +36,7 @@ export default function ConsultationPage() {
   ];
 
   return (
-    <div className="min-h-screen pt-32 pb-16 bg-7">
+    <div className="min-h-screen pt-32 pb-16 bg-white">
       <ChatbotWidget />
       <div className="container mx-auto px-4">
         {/* Header Section */}

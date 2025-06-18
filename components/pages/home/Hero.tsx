@@ -7,7 +7,7 @@ import Button from "../../ui/Button";
 
 const Hero = () => {
   return (
-<section className="relative w-full min-h-[100vh] flex flex-col justify-start">
+<section className="relative w-full min-h-screen flex flex-col justify-start pb-10">
   {/* Gambar background */}
   <Image
     src="/images/home/bg_homepage.png"
@@ -48,15 +48,14 @@ const Hero = () => {
       whileInView={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.8, delay: 0.3 }}
     >
-<Button
-  href="/katalog"
-  size="md"
-  className="mb-6 text-sm px-4 py-2 md:text-base md:px-6 md:py-3"
->
-  Lihat Produk
-  <ArrowRight className="ml-2 w-4 h-4 md:w-5 md:h-5" />
-</Button>
-
+      <Button
+        href="/katalog"
+        size="md"
+        className="mb-6 text-sm px-4 py-2 md:text-base md:px-6 md:py-3"
+      >
+        Lihat Produk
+        <ArrowRight className="ml-2 w-4 h-4 md:w-5 md:h-5" />
+      </Button>
     </motion.div>
   </div>
 
@@ -65,7 +64,7 @@ const Hero = () => {
     initial={{ y: 100, opacity: 0 }}
     whileInView={{ y: 0, opacity: 1 }}
     transition={{ duration: 1 }}
-    className="relative z-20 mt-auto mb-8 md:mb-16 mx-auto bg-black/20 backdrop-blur-l py-6 px-4 md:py-10 md:px-12 rounded-xl max-w-[95%] md:max-w-[1150px]"
+    className="relative z-20 mt-10 md:mt-20 mx-auto bg-black/20 py-6 px-4 md:py-10 md:px-12 rounded-xl max-w-[95%] md:max-w-[1150px]"
   >
     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-center">
       {[...Array(4)].map((_, i) => (
@@ -81,6 +80,7 @@ const Hero = () => {
     </div>
   </motion.div>
 </section>
+
 
   );
 };
