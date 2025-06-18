@@ -27,8 +27,11 @@ export default function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between 
-        bg-white lg:bg-transparent transition">
+      <div
+        className={`max-w-7xl mx-auto px-6 py-4 flex items-center justify-between 
+    transition ${menuOpen ? 'bg-white shadow-md' : 'bg-transparent lg:bg-transparent'}`}
+      >
+
 
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">

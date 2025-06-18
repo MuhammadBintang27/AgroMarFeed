@@ -37,7 +37,7 @@ export default function ProfilePage() {
   if (!user) return <div>Loading...</div>;
 
   return (
-    <section className="bg-white w-full text-black py-20 px-4 sm:px-6 lg:px-8">
+    <section className="bg-white w-full text-black py-20 px-4 sm:px-6 lg:px-8 lg:py-40 md:py-30">
       <div className="w-full max-w-5xl mx-auto flex flex-col lg:flex-row gap-10">
         {/* Sidebar kiri */}
         <div className="w-full lg:w-[30%]">
@@ -77,7 +77,49 @@ export default function ProfilePage() {
 
         {/* Konten kanan */}
         <div className="w-full lg:w-[70%]">
-          {/* Kosong dulu */}
+          <h2 className="text-xl font-semibold mb-1">Profil Saya</h2>
+          <p className="text-sm text-gray-600 mb-6">
+            Kelola informasi profil Anda untuk mengontrol, melindungi, dan mengamankan akun
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+            <div className="font-medium">Nama Pengguna</div>
+            <div>{user.name}</div>
+
+            <div className="font-medium">Email</div>
+            <div>{user.email}</div>
+
+            <div className="font-medium">Nomor Telepon</div>
+            <div>{user.detail?.[0]?.no_telpon || '-'}</div>
+
+            <div className="font-medium">Tanggal Lahir</div>
+            <div>{user.detail?.[0]?.tanggal_lahir ? new Date(user.detail[0].tanggal_lahir).toLocaleDateString() : '-'}</div>
+
+            <div className="font-medium">Jenis Kelamin</div>
+            <div>{user.detail?.[0]?.jenis_kelamin || '-'}</div>
+          </div>
+
+          <div className="mt-10">
+            <h3 className="text-lg font-semibold mb-2">Alamat</h3>
+            {user.alamat && user.alamat.length > 0 ? (
+              <div className="flex flex-col gap-4">
+                {user.alamat.map((alamat, idx) => (
+                  <div
+                    key={idx}
+                    className={`border p-4 rounded-md ${alamat.is_active ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}
+                  >
+                    <p className="font-medium">{alamat.label_alamat || 'Alamat Tanpa Label'}</p>
+                    <p>{alamat.nama} - {alamat.nomor_hp}</p>
+                    <p>{alamat.alamat_lengkap}</p>
+                    <p>{alamat.desa}, {alamat.kecamatan}, {alamat.kabupaten}, {alamat.provinsi} {alamat.kode_pos}</p>
+                    <p className="text-sm text-gray-500">Catatan: {alamat.catatan_kurir || '-'}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">Belum ada alamat tersimpan.</p>
+            )}
+          </div>
         </div>
       </div>
     </section>
