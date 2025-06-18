@@ -15,10 +15,11 @@ const SpecialOffer = () => {
   if (!isMounted) return null;
 
   return (
-    <section className="bg-white w-full px-48">
-      <div className="flex justify-between items-center">
+    <section className="bg-white w-full px-6 md:px-16 lg:px-48 py-12">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <motion.h2
-          className="text-3xl md:text-4xl font-normal text-black"
+          className="text-2xl md:text-4xl font-normal text-black"
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.1 }}
@@ -28,7 +29,7 @@ const SpecialOffer = () => {
 
         <motion.a
           href="/katalog"
-          className="inline-flex items-center gap-2 text-[rgba(0,0,0,0.4)] text-lg mb-8 px-4 py-2 bg-transparent hover:underline pt-12"
+          className="inline-flex items-center gap-2 text-[rgba(0,0,0,0.4)] text-base md:text-lg mt-4 md:mt-0"
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.1 }}
@@ -36,112 +37,98 @@ const SpecialOffer = () => {
           Lihat semua
           <ArrowRight className="ml-0" />
         </motion.a>
-
       </div>
 
-      <div className="flex justify-center gap-8 py-6 px-6 pb-50">
+      {/* Cards Container */}
+      <div className="w-full max-w-[1100px] mx-auto flex flex-col lg:flex-row justify-center items-center gap-8">
+
+        {/* Kartu 1 */}
         <motion.div
-          style={{ width: 500, height: 360 }}
-          className="bg-3 flex-shrink-0 rounded-2xl flex flex-col justify-between relative"
+          className="flex-shrink-0 basis-[90%] sm:basis-[420px] md:basis-[480px] max-w-[480px] w-full h-auto bg-3 rounded-2xl flex flex-col justify-between relative p-4 md:p-6"
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.3 }}
         >
-          <div className="absolute top-6 left-6 bg-4 text-black text-xs px-3 py-1 rounded-[20]">
+          <div className="absolute top-6 left-6 bg-4 text-black text-xs px-3 py-1 rounded-[20px]">
             Flat 25% Diskon
           </div>
 
-          <div className="flex h-full pt-14">
-            {/* Kiri: Teks */}
-            <div className="flex flex-col justify-start w-1/2 pr-4 pl-7 pt-4">
-              <h3 className="text-black text-3xl font-normal leading-snug mb-4">
+          <div className="flex flex-col md:flex-row h-full pt-10 md:pt-14">
+            {/* Teks */}
+            <div className="flex flex-col justify-start w-full md:w-1/2 pr-2 md:pr-4 pl-1 md:pl-2 pt-2 md:pt-4">
+              <h3 className="text-black text-xl md:text-3xl font-normal leading-snug mb-3 md:mb-4">
                 SCRATCH & PECK FEEDS
               </h3>
-              <p className="text-black text-sm mb-8">
+              <p className="text-black text-xs md:text-sm mb-6 md:mb-8">
                 limbah agro-maritim, Hemat hingga 30%! Beli pakan, bantu bumi.
               </p>
-              <Button href="/katalog" size="md" className="bg-1 text-white mb-6">
+              <Button
+                href="/katalog"
+                size="md"
+                className="bg-1 text-white mb-4 md:mb-6 text-sm md:text-base"
+              >
                 Beli Sekarang
                 <ArrowRight className="ml-2" />
               </Button>
             </div>
 
-            {/* Kanan: Gambar */}
-            <div className="w-1/2 relative overflow-hidden flex items-center justify-center">
-              <motion.div
-                className="absolute bottom-[-60px] right-[-40px]" // geser ke pojok kanan bawah dan agak keluar
-                whileHover={{
-                  scale: 0.75,
-                  x: -30,
-                  y: -30,
-                  transition: { duration: 0.3 },
-                }}
-              >
-                <Image
-                  src="/images/home/specialOffer1.png"
-                  alt="Special Offer Image"
-                  width={420}
-                  height={420}
-                  className="object-contain"
-                />
-              </motion.div>
+            {/* Gambar */}
+            <div className="w-full md:w-1/2 flex items-center justify-center p-2 md:p-4">
+              <Image
+                src="/images/home/specialOffer1.png"
+                alt="Special Offer Image"
+                width={400}
+                height={400}
+                className="object-contain h-auto w-full"
+              />
             </div>
-
           </div>
         </motion.div>
 
-        {/* Kotak 2*/}
+        {/* Kartu 2 */}
         <motion.div
-          style={{ width: 500, height: 360 }}
-          className="bg-2 flex-shrink-0 rounded-2xl flex flex-col justify-between relative"
+          className="flex-shrink-0 basis-[90%] sm:basis-[420px] md:basis-[480px] max-w-[480px] w-full h-auto bg-2 rounded-2xl flex flex-col justify-between relative p-4 md:p-6"
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
         >
-        <div className="absolute top-6 left-6 bg-3 text-black text-xs px-3 py-1 rounded-[20]">
-          Flat 25% Diskon
-        </div>
-
-        <div className="flex h-full pt-14">
-          {/* Kiri: Teks */}
-          <div className="flex flex-col justify-start w-1/2 pr-4 pl-7 pt-4">
-            <h3 className="text-white text-3xl font-normal leading-snug mb-4">
-              GIMME ORGANIC
-            </h3>
-            <p className="text-white text-sm mb-8">
-              limbah agro-maritim, Hemat hingga 30%! Beli pakan, bantu bumi.
-            </p>
-            <Button href="/katalog" size="md" className="bg-3 text-black mb-6">
-              Beli Sekarang
-              <ArrowRight className="ml-2" />
-            </Button>
+          <div className="absolute top-6 left-6 bg-3 text-black text-xs px-3 py-1 rounded-[20px]">
+            Flat 25% Diskon
           </div>
 
-          {/* Kanan: Gambar */}
-          <div className="w-1/2 relative overflow-hidden flex items-center justify-center">
-            <motion.div
-              className="absolute bottom-[-100px] right-[0px]" // geser ke pojok kanan bawah dan agak keluar
-              whileHover={{
-                scale: 0.75,
-                x: -25,
-                y: -45,
-                transition: { duration: 0.3 },
-              }}
-            >
+          <div className="flex flex-col md:flex-row h-full pt-10 md:pt-14">
+            {/* Teks */}
+            <div className="flex flex-col justify-start w-full md:w-1/2 pr-2 md:pr-4 pl-1 md:pl-2 pt-2 md:pt-4">
+              <h3 className="text-white text-xl md:text-3xl font-normal leading-snug mb-3 md:mb-4">
+                SCRATCH & PECK FEEDS
+              </h3>
+              <p className="text-white text-xs md:text-sm mb-6 md:mb-8">
+                limbah agro-maritim, Hemat hingga 30%! Beli pakan, bantu bumi.
+              </p>
+              <Button
+                href="/katalog"
+                size="md"
+                className="bg-3 text-black mb-4 md:mb-6 text-sm md:text-base"
+              >
+                Beli Sekarang
+                <ArrowRight className="ml-2" />
+              </Button>
+            </div>
+
+            {/* Gambar */}
+            <div className="w-full md:w-1/2 flex items-center justify-center p-2 md:p-4">
               <Image
-                src="/images/home/specialOffer2.png"
+                src="/images/home/specialOffer1.png"
                 alt="Special Offer Image"
-                width={210}
-                height={250}
-                className="object-contain"
+                width={400}
+                height={400}
+                className="object-contain h-auto w-full"
               />
-            </motion.div>
+            </div>
           </div>
-        </div>
-      </motion.div>
-    </div>
-
-    </section >
+        </motion.div>
+      </div>
+    </section>
   );
 };
 
