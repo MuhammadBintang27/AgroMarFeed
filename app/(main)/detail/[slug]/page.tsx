@@ -7,6 +7,8 @@ import { Heart, Minus, Plus, Star } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { fetchProductById, fetchProducts, Product } from "@/lib/api/fetchProducts";
+import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const Detail = () => {
   const [quantity, setQuantity] = useState(0);
@@ -90,24 +92,40 @@ const Detail = () => {
     return <div className="text-center py-40 text-red-500">Error: {error || "Product not found"}</div>;
   }
 
+  const router = useRouter();
+
   return (
-    <section className="bg-white py-40 w-full">
-      <div className="w-full max-w-5xl mx-auto flex flex-col item-left text-left mb-12">
-        <h2 className="text-left text-2xl font-normal text-black mb-16">Detail Produk</h2>
-        <div className="flex flex-col md:flex-row gap-10 mb-50">
+    <section className="bg-white pt-22 sm:pt-24 md:pt-28 pb-10 w-full">
+      <div className="w-full max-w-5xl mx-auto flex flex-col px-4">
+        {/* Tombol Back */}
+        <button
+          onClick={() => router.back()}
+          className="flex items-center text-black text-sm mb-4 hover:underline w-fit"
+        >
+          <ArrowLeft className="w-6 h-6 mr-1" />
+        </button>
+
+        <h2 className="text-left text-2xl font-semibold text-black mb-8">Detail Produk</h2>
+
+        {/* Detail Produk */}
+        <div className="flex flex-col md:flex-row gap-8 mb-12">
+          {/* Gambar Produk */}
           <div className="w-full md:w-2/5 flex justify-center items-start">
             <Image
               src={product.imageUrl}
               alt={product.name}
               width={300}
               height={300}
-              className="object-contain"
+              className="object-contain w-full max-w-xs md:max-w-sm"
             />
           </div>
+
+          {/* Info Produk */}
           <div className="w-full md:w-3/5 flex flex-col gap-4">
-            <h3 className="text-3xl font-normal text-black">{product.name}</h3>
-            <div className="flex items-center gap-2 text-yellow-500">
-              <span className="text-black ml-2">{product.rating}</span>
+            <h3 className="text-2xl md:text-3xl font-semibold text-black">{product.name}</h3>
+
+            <div className="flex items-center gap-2 text-yellow-500 text-sm md:text-base">
+              <span className="text-black">{product.rating}</span>
               {[...Array(Math.floor(product.rating))].map((_, i) => (
                 <Star key={i} fill="currentColor" stroke="currentColor" className="w-5 h-5" />
               ))}
@@ -118,58 +136,105 @@ const Detail = () => {
                 <Star key={i} fill="none" stroke="currentColor" className="w-5 h-5" />
               ))}
             </div>
-            <div className="text-4xl font-normal text-black">
+
+            <div className="text-2xl md:text-4xl font-semibold text-black">
               Rp{product.price.toLocaleString()}
             </div>
-            <p className="text-black/50 text-sm mb-4">{product.description}</p>
-            <p className="text-black text-xl">Tersedia Dalam :</p>
-            <div className="flex gap-3">
+
+            <p className="text-black/60 text-sm">{product.description}</p>
+
+            <p className="text-black text-base md:text-lg font-medium mt-4">Tersedia Dalam:</p>
+            <div className="flex flex-wrap gap-2">
               {product.weights.map((weight) => (
                 <div
                   key={weight.id}
-                  className="bg-2 px-2 py-2 rounded-[20px] text-sm text-white cursor-pointer hover:bg-2/80 transition"
+                  className="bg-2 px-3 py-1.5 rounded-full text-sm text-white cursor-pointer hover:bg-2/80 transition"
                 >
                   {weight.value}
                 </div>
               ))}
             </div>
-            <div className="flex flex-col md:flex-row items-center gap-4 mt-4">
-              <div className="flex items-center gap-2 bg-[#6D8044]/14 px-4 py-2 rounded-[20px]">
-                <button onClick={decrement} className="text-black text-xl">
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mt-6">
+              {/* Counter */}
+              <div className="flex items-center gap-3 bg-[#6D8044]/14 px-4 py-2 rounded-full">
+                <button onClick={decrement} className="text-black text-lg">
                   <Minus />
                 </button>
-                <span className="text-lg text-black">{quantity}</span>
+                <span className="text-lg font-medium text-black">{quantity}</span>
                 <button onClick={increment} className="text-black text-lg">
                   <Plus />
                 </button>
               </div>
+
+              {/* Tombol Aksi */}
               <div className="flex flex-wrap gap-2">
-                <button className="bg-2 px-5 py-2 rounded-[20px] text-white font-medium hover:bg-2/80 transition">
+                <button className="bg-2 px-5 py-2 rounded-full text-white font-medium hover:bg-2/80 transition">
                   Tambah ke Keranjang
                 </button>
-                <button className="bg-3 px-5 py-2 rounded-[20px] text-black font-medium hover:bg-3/90 transition">
+                <button className="bg-3 px-5 py-2 rounded-full text-black font-medium hover:bg-3/90 transition">
                   Beli Sekarang
                 </button>
-                <button className="w-7 text-black hover:text-red-500 transition flex items-center justify-center">
-                  <Heart className="w-8 h-8" />
+                <button className="w-8 h-8 text-black hover:text-red-500 transition flex items-center justify-center">
+                  <Heart className="w-6 h-6" />
                 </button>
               </div>
             </div>
           </div>
         </div>
-        <section className="w-full py-10">
-          <h2 className="text-left text-2xl font-normal text-black mb-4">Best Seller</h2>
-          <div className="flex overflow-x-auto gap-6 pb-4 hide-scrollbar">
+
+        {/* Produk Lain */}
+        <section className="w-full pt-4">
+          <h2 className="text-left text-xl md:text-2xl font-semibold text-black mb-4">Produk Lain</h2>
+          <div className="flex overflow-x-auto gap-4 pb-2 hide-scrollbar">
             {bestSellers.length > 0 ? (
-              bestSellers.map((product) => renderProductCard(product))
+              bestSellers.map((product) => (
+                <Link href={`/detail/${product._id}`} className="flex-shrink-0 w-60 md:w-72">
+                  <div className="bg-7 rounded-2xl p-4 flex flex-col hover:shadow-lg transition cursor-pointer h-full">
+                    <div className="w-full h-48 md:h-60 flex justify-center items-center mb-4">
+                      <Image
+                        src={product.imageUrl || "/images/placeholder.png"}
+                        alt={product.name}
+                        width={200}
+                        height={200}
+                        className="object-contain w-full h-full"
+                      />
+                    </div>
+                    <h3 className="text-sm md:text-base font-semibold text-left text-black leading-tight mb-1">
+                      {product.name}
+                    </h3>
+                    <div className="flex justify-between text-xs md:text-sm text-black/40 mb-1 px-1">
+                      <span>{product.categoryOptions}</span>
+                      <span className="flex items-center gap-1 text-yellow-500 text-[12px] md:text-[14px]">
+                        ★ <span className="text-black/60">({product.rating ?? "0.0"})</span>
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center px-1 mt-auto">
+                      <span className="text-sm md:text-base font-semibold text-black">
+                        Rp{product.price.toLocaleString()}
+                      </span>
+                      <div className="flex gap-2">
+                        <button className="w-6 h-6 rounded-full bg-black text-white border border-black/10 flex items-center justify-center text-sm">
+                          +
+                        </button>
+                        <button className="w-6 h-6 text-[#C7C7CC] hover:text-red-500 transition flex items-center justify-center">
+                          <Heart className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))
             ) : (
-              <p className="text-black/50">No best sellers available.</p>
+              <p className="text-black/50">Tidak ada produk tersedia.</p>
             )}
           </div>
         </section>
+
       </div>
     </section>
   );
+
 };
 
 export default Detail;

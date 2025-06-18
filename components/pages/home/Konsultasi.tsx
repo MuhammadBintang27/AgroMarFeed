@@ -5,40 +5,42 @@ import React from "react";
 
 const Konsultasi = () => {
   return (
-    <section className="bg-white py-20 w-full">
+    <section className="bg-white py-16 px-4 w-full">
       <motion.div
         initial={{ opacity: 0, x: -50 }}
         whileInView={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8, delay: 0.2 }}
-        className="w-full max-w-5xl mx-auto flex flex-col md:flex-row items-center mb-24"
+        className="w-full max-w-5xl mx-auto flex flex-col md:flex-row items-start md:items-center gap-10"
       >
         {/* Kiri */}
-        <div className="md:w-1/2 text-start md:pr-8 mb-8 md:mb-0">
-          <h2 className="text-3xl md:text-5xl font-normal text-black mb-4">
+        <div className="w-full md:w-1/2 text-center md:text-start">
+          <h2 className="text-2xl md:text-5xl font-semibold text-black mb-4 leading-snug">
             Butuh Panduan Langsung dari Pakarnya?
           </h2>
           <p className="text-black text-base md:text-lg mb-6">
             Kami hadirkan konsultasi pribadi tanpa harus ke lapangan. Efisien, terpercaya, dan siap membantu Anda 24/7.
           </p>
-          <button className="bg-yellow-400 text-black font-semibold px-6 py-3 rounded-full hover:bg-yellow-500 transition duration-300">
-            Mulai Konsultasi
-          </button>
+          <div className="flex justify-center md:justify-start">
+            <button className="bg-yellow-400 text-black font-semibold px-6 py-3 rounded-full hover:bg-yellow-500 transition duration-300">
+              Mulai Konsultasi
+            </button>
+          </div>
         </div>
 
         {/* Kanan */}
-        <div className="md:w-1/2 flex flex-col gap-4">
+        <div className="w-full md:w-1/2 flex flex-col gap-4">
           {[1, 2, 3].map((_, index) => (
             <div
               key={index}
               className="bg-7 rounded-xl p-4 shadow-md flex flex-col gap-2"
             >
               {/* Baris 1: Nama Konselor */}
-              <div className="text-lg font-normal text-black">
+              <div className="text-lg font-semibold text-black text-center md:text-start">
                 Nama Konselor
               </div>
 
               {/* Baris 2: Durasi & Harga */}
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap justify-center md:justify-start gap-2">
                 <span className="bg-2 text-white px-3 py-1 rounded-full text-sm">
                   Durasi: 30 menit
                 </span>
@@ -48,7 +50,7 @@ const Konsultasi = () => {
               </div>
 
               {/* Baris 3: Rating dan Jumlah Konsultasi */}
-              <div className="flex items-center gap-3 text-black text-sm">
+              <div className="flex justify-center md:justify-start items-center gap-3 text-black text-sm">
                 <span className="flex items-center gap-1">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
