@@ -8,6 +8,7 @@ type ButtonProps = {
   onClick?: (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => void;
   className?: string;
   size?: "sm" | "md" | "lg";
+  disabled?: boolean;
 };
 
 const Button: React.FC<ButtonProps> = ({
@@ -16,6 +17,7 @@ const Button: React.FC<ButtonProps> = ({
   onClick,
   className = "",
   size = "md",
+  disabled = false,
 }) => {
   const baseStyle =
     "inline-flex items-center justify-center font-normal rounded-full transition-all";
@@ -24,13 +26,15 @@ const Button: React.FC<ButtonProps> = ({
     md: "px-6 py-3 text-base",
     lg: "px-8 py-4 text-lg",
   };
-  const colorStyles = "bg-yellow-500 text-black hover:bg-yellow-400";
+  const colorStyles = disabled
+    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+    : "bg-yellow-500 text-black hover:bg-yellow-400";
   const combinedClassName = `${baseStyle} ${sizeStyles[size]} ${colorStyles} ${className}`;
 
   if (href) {
     return (
       <Link href={href} legacyBehavior>
-        <a className={combinedClassName} onClick={onClick}>
+        <a className={combinedClassName} onClick={onClick} aria-disabled={disabled} tabIndex={disabled ? -1 : 0}>
           {children}
         </a>
       </Link>
@@ -38,7 +42,7 @@ const Button: React.FC<ButtonProps> = ({
   }
 
   return (
-    <button type="button" onClick={onClick} className={combinedClassName}>
+    <button type="button" onClick={onClick} className={combinedClassName} disabled={disabled}>
       {children}
     </button>
   );

@@ -1,448 +1,277 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation"; // Add this import
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useUser } from "@/contexts/UserContext";
 import { motion } from "framer-motion";
 import { Calendar, Clock, MapPin, User, Mail, Phone } from "lucide-react";
+import CityAutocomplete from '@/components/ui/CityAutocomplete';
+import CourierAutocomplete from '@/components/ui/CourierAutocomplete';
+import ServiceAutocomplete from '@/components/ui/ServiceAutocomplete';
 
-export default function BookingPage() {
-  const router = useRouter(); // Add router instance
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-
-  // Add form state
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
+export default function CheckoutPage() {
+  const router = useRouter();
+  const { user } = useUser();
+  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedOrigin, setSelectedOrigin] = useState<any>(null);
+  const [selectedDestination, setSelectedDestination] = useState<any>(null);
+  const [selectedCourier, setSelectedCourier] = useState<any>(null);
+  const [shippingOptions, setShippingOptions] = useState<any[]>([]);
+  const [selectedService, setSelectedService] = useState<any>(null);
+  const [form, setForm] = useState({
+    nama: "",
+    telepon: "",
+    alamat: "",
+    kode_pos: "",
   });
-
-  // Add loading state
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Add form handler
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  // Ambil data keranjang
+  useEffect(() => {
+    const fetchCart = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/cart/user/${user._id}`);
+        const data = await res.json();
+        setCartItems(data.cart_item || []);
+      } catch {
+        setError("Gagal mengambil keranjang");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCart();
+  }, [user]);
+
+  // Hitung ongkir jika origin, destination, dan kurir dipilih
+  useEffect(() => {
+    if (selectedOrigin && selectedDestination && selectedCourier && user) {
+      calculateShippingWithOriginDestCourier(
+        String(selectedOrigin.id),
+        String(selectedDestination.id),
+        selectedCourier.code,
+        user._id
+      );
+    }
+  }, [selectedOrigin, selectedDestination, selectedCourier, user]);
+
+  const calculateShippingWithOriginDestCourier = async (
+    originId: string,
+    destinationId: string,
+    courier: string,
+    userId: string
+  ) => {
+    if (!originId || !destinationId || !courier || !userId) return;
+    try {
+      // Hitung total berat keranjang (default 1000g jika tidak ada)
+      const totalWeight = cartItems.reduce((sum, item) => sum + (item.product_id?.berat || 1000) * (item.jumlah || 1), 0) || 1000;
+      const res = await fetch(`/api/shipping/calculate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          origin: originId,
+          destination: destinationId,
+          weight: totalWeight,
+          courier: courier,
+          price: 'lowest',
+        }),
+      });
+      const data = await res.json();
+      setShippingOptions(data.shipping_options || []);
+    } catch (e) {
+      setShippingOptions([]);
+    }
   };
 
-  // Add validation check
-  const isFormValid = () => {
-    return (
-      formData.firstName &&
-      formData.lastName &&
-      formData.email &&
-      formData.phone &&
-      selectedDate &&
-      selectedTime
-    );
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.subtotal || 0), 0);
+  const total = subtotal + (selectedService?.cost[0]?.value || 0);
+
+  const handleChange = (e: any) => {
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   };
 
-  // Update the confirmation handler to include booking details
-  const handleConfirmBooking = async () => {
-    if (!isFormValid() || isSubmitting) return;
-
+  const handleOrder = async () => {
+    if (!user || !form.nama || !form.telepon || !form.alamat || !form.kode_pos || !selectedOrigin || !selectedDestination || !selectedCourier || !selectedService) return;
     setIsSubmitting(true);
     try {
-      const bookingDetails = {
-        date: selectedDate?.toISOString(),
-        time: selectedTime,
-        ...formData,
-      };
-
-      // Navigate to payment with booking details
-      router.push(
-        `/pembayaran?booking=${encodeURIComponent(
-          JSON.stringify(bookingDetails)
-        )}`
-      );
-    } catch (error) {
-      console.error("Error submitting booking:", error);
-      alert("There was an error processing your booking. Please try again.");
+      const res = await fetch("/api/orders/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user._id,
+          shipping_address: {
+            nama: form.nama,
+            telepon: form.telepon,
+            alamat: form.alamat,
+            kode_pos: form.kode_pos,
+            origin: selectedOrigin.label,
+            destination: selectedDestination.label,
+          },
+          courier: selectedCourier.code,
+          service: selectedService.service,
+          ongkir: selectedService.cost[0].value,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.order) {
+        // Initiate payment
+        const payRes = await fetch(`/api/orders/${data.order._id}/payment`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ payment_type: selectedCourier.code }),
+        });
+        const payData = await payRes.json();
+        if (payRes.ok && payData.payment_url) {
+          window.location.href = payData.payment_url;
+        } else {
+          alert("Gagal inisiasi pembayaran");
+        }
+      } else {
+        alert(data.message || "Gagal membuat order");
+      }
+    } catch {
+      alert("Terjadi kesalahan server");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const timeSlots = [
-    "08:00 - 09:00",
-    "09:00 - 10:00",
-    "10:00 - 11:00",
-    "11:00 - 12:00",
-    "13:00 - 14:00",
-    "14:00 - 15:00",
-  ];
-
-  // Function to get month name
-  const getMonthName = (date: Date) => {
-    return date.toLocaleString("id-ID", { month: "long", year: "numeric" });
-  };
-
-  // Function to get days in month including empty spaces for correct day alignment
-  const getDaysInMonth = () => {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const firstDay = new Date(year, month, 1).getDay(); // 0 = Sunday
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    // Adjust first day to start from Monday (1) instead of Sunday (0)
-    const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1;
-
-    // Create array for empty spaces
-    const days = Array(adjustedFirstDay).fill(null);
-
-    // Add actual dates
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(new Date(year, month, i));
-    }
-
-    return days;
-  };
-
-  // Function to check if date is in the past
-  const isPastDate = (date: Date) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return date < today;
-  };
-
-  // Functions to change month
-  const prevMonth = () => {
-    setCurrentMonth(
-      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1)
+  if (!user) {
+    return (
+      <div className="min-h-screen pt-32 pb-16 bg-7">
+        <div className="container mx-auto px-4 max-w-4xl text-center">
+          <h1 className="text-3xl font-bold mb-4 text-black">Checkout</h1>
+          <p className="text-gray-600 mb-8">Silakan login terlebih dahulu untuk melanjutkan checkout.</p>
+          <button 
+            onClick={() => router.push('/auth/login')}
+            className="bg-2 text-white px-6 py-3 rounded-lg hover:bg-2/80 transition"
+          >
+            Login
+          </button>
+        </div>
+      </div>
     );
-  };
-
-  const nextMonth = () => {
-    setCurrentMonth(
-      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1)
-    );
-  };
-
-  const handleNextStep = () => {
-    if (selectedDate && selectedTime) {
-      setCurrentStep(2);
-      // Scroll to detail section smoothly
-      document
-        .getElementById("detail-section")
-        ?.scrollIntoView({ behavior: "smooth" });
-    }
-  };
+  }
 
   return (
     <div className="min-h-screen pt-32 pb-16 bg-7">
       <div className="container mx-auto px-4 max-w-4xl">
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          {/* Header with Icon */}
-          <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold mb-3 text-black">
-              Konsultasi Ahli Pakan & Dokter Hewan Langsung
-            </h1>
-            <p className="text-black text-sm max-w-2xl mx-auto">
-              Paket ikan, pakan ayam, dan ternak dari limbah agro-maritim. Hemat
-              hingga 30%! Beli pakan, bantu bumi.
-            </p>
-          </div>
-
-          {/* Booking Form Card */}
-          <div className="bg-white rounded-2xl p-8 shadow-lg">
-            {/* Progress Steps */}
-            <div className="flex items-center justify-center mb-8">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center">
-                  <span
-                    className={`w-8 h-8 rounded-full ${
-                      currentStep === 1 ? "bg-2 text-white" : "bg-2 text-white"
-                    } flex items-center justify-center text-sm`}
-                  >
-                    1
-                  </span>
-                  <span className="ml-2 text-sm font-medium text-black">
-                    Pilih Jadwal
-                  </span>
-                </div>
-                <div
-                  className={`w-16 h-[2px] ${
-                    currentStep === 2 ? "bg-2" : "bg-gray-200"
-                  } transition-colors duration-300`}
-                ></div>
-                <div className="flex items-center">
-                  <span
-                    className={`w-8 h-8 rounded-full ${
-                      currentStep === 2
-                        ? "bg-2 text-white"
-                        : "bg-gray-200 text-gray-600"
-                    } transition-colors duration-300 flex items-center justify-center text-sm`}
-                  >
-                    2
-                  </span>
-                  <span
-                    className={`ml-2 text-sm font-medium ${
-                      currentStep === 2 ? "text-black" : "text-gray-500"
-                    }`}
-                  >
-                    Detail Pribadi
-                  </span>
-                </div>
+        <h1 className="text-3xl font-bold mb-6 text-black text-center">Checkout</h1>
+        {loading ? (
+          <div className="text-center py-10">Loading...</div>
+        ) : cartItems.length === 0 ? (
+          <div className="text-center py-10 text-gray-500">Keranjang kosong</div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Form Alamat Pengiriman */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg">
+              <h2 className="text-xl font-bold mb-4">Alamat Pengiriman</h2>
+              <input 
+                className="w-full border rounded p-2 mb-2" 
+                name="nama" 
+                placeholder="Nama Penerima" 
+                value={form.nama} 
+                onChange={handleChange} 
+              />
+              <input 
+                className="w-full border rounded p-2 mb-2" 
+                name="telepon" 
+                placeholder="No. Telepon" 
+                value={form.telepon} 
+                onChange={handleChange} 
+              />
+              <input 
+                className="w-full border rounded p-2 mb-2" 
+                name="alamat" 
+                placeholder="Alamat Lengkap" 
+                value={form.alamat} 
+                onChange={handleChange} 
+              />
+              <input 
+                className="w-full border rounded p-2 mb-2" 
+                name="kode_pos" 
+                placeholder="Kode Pos" 
+                value={form.kode_pos} 
+                onChange={handleChange} 
+              />
+              <div className="mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Lokasi Pengirim (Origin)</label>
+                <CityAutocomplete
+                  value={selectedOrigin}
+                  onChange={setSelectedOrigin}
+                  placeholder="Cari lokasi pengirim..."
+                />
               </div>
-            </div>
-
-            {/* Calendar and Time Selection */}
-            <div className="grid md:grid-cols-2 gap-8 mb-8">
-              {/* Calendar Section */}
-              <div className="border rounded-xl p-6 bg-gray-50">
-                <h3 className="text-lg font-semibold mb-4 flex items-center justify-between text-black">
-                  <span className="flex items-center">
-                    <Calendar className="w-5 h-5 mr-2 text-2 text-black" />
-                    Pilih Tanggal
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={prevMonth}
-                      className="p-1 hover:bg-gray-200 rounded-full transition-all"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 19l-7-7 7-7"
-                        />
-                      </svg>
-                    </button>
-                    <span className="text-sm font-medium min-w-[140px] text-center">
-                      {getMonthName(currentMonth)}
-                    </span>
-                    <button
-                      onClick={nextMonth}
-                      className="p-1 hover:bg-gray-200 rounded-full transition-all"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </h3>
-                <div className="bg-white rounded-lg p-4">
-                  <div className="grid grid-cols-7 gap-1 mb-2">
-                    {["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"].map(
-                      (day) => (
-                        <div
-                          key={day}
-                          className="text-center text-sm font-medium text-gray-500"
-                        >
-                          {day}
-                        </div>
-                      )
-                    )}
-                    {getDaysInMonth().map((date, i) => (
-                      <button
-                        key={i}
-                        disabled={date === null || (date && isPastDate(date))}
-                        className={`text-center p-2 text-sm rounded-lg transition-all
-                          ${date === null ? "invisible" : ""}
-                          ${
-                            date && isPastDate(date)
-                              ? "text-gray-300 cursor-not-allowed"
-                              : ""
-                          }
-                          ${
-                            date &&
-                            selectedDate?.getDate() === date.getDate() &&
-                            selectedDate?.getMonth() === date.getMonth()
-                              ? "bg-2 text-white"
-                              : date && !isPastDate(date)
-                              ? "hover:bg-2/10"
-                              : ""
-                          }
-                        `}
-                        onClick={() =>
-                          date && !isPastDate(date) && setSelectedDate(date)
-                        }
-                      >
-                        {date ? date.getDate() : ""}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              <div className="mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Lokasi Penerima (Destination)</label>
+                <CityAutocomplete
+                  value={selectedDestination}
+                  onChange={setSelectedDestination}
+                  placeholder="Cari lokasi penerima..."
+                />
               </div>
-
-              {/* Time Slots Section */}
-              <div className="border rounded-xl p-6 bg-gray-50">
-                <h3 className="text-lg font-semibold mb-4 flex items-center text-black">
-                  <Clock className="w-5 h-5 mr-2 text-2" />
-                  Pilih Waktu
-                </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {timeSlots.map((time) => (
-                    <button
-                      key={time}
-                      className={`p-3 rounded-lg text-sm transition-all
-                        ${
-                          selectedTime === time
-                            ? "bg-2 text-white"
-                            : "bg-white hover:bg-2/10"
-                        }`}
-                      onClick={() => setSelectedTime(time)}
-                    >
-                      {time}
-                    </button>
-                  ))}
-                </div>
+              <div className="mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Kurir</label>
+                <CourierAutocomplete
+                  value={selectedCourier}
+                  onChange={setSelectedCourier}
+                  placeholder="Cari kurir..."
+                />
               </div>
-            </div>
-
-            {/* Next Step Button */}
-            <div className="mt-8 flex justify-end mb-10">
+              {shippingOptions.length > 0 && (
+                <div className="mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Layanan Pengiriman</label>
+                  <ServiceAutocomplete
+                    options={shippingOptions}
+                    value={selectedService}
+                    onChange={setSelectedService}
+                    placeholder="Cari layanan pengiriman..."
+                  />
+                </div>
+              )}
               <button
-                className={`bg-2 text-white px-8 py-3 rounded-lg transition-all flex items-center
-                  ${
-                    !selectedDate || !selectedTime
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:opacity-90"
+                className={`w-full font-medium py-3 rounded-xl mt-4 transition-all flex items-center justify-center gap-2
+                  ${form.nama && form.telepon && form.alamat && form.kode_pos && selectedOrigin && selectedDestination && selectedCourier && selectedService && !isSubmitting
+                    ? "bg-2 text-white hover:bg-2/90"
+                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
                   }`}
-                onClick={handleNextStep}
-                disabled={!selectedDate || !selectedTime}
+                disabled={!form.nama || !form.telepon || !form.alamat || !form.kode_pos || !selectedOrigin || !selectedDestination || !selectedCourier || !selectedService || isSubmitting}
+                onClick={handleOrder}
               >
-                <span>Lanjutkan</span>
+                {isSubmitting ? "Memproses..." : "Bayar Sekarang"}
               </button>
             </div>
-
-            {/* Personal Details Form */}
-            <div
-              id="detail-section"
-              className={`border-t pt-8 transition-opacity duration-300 ${
-                currentStep === 2
-                  ? "opacity-100"
-                  : "opacity-50 pointer-events-none"
-              }`}
-            >
-              <h3 className="text-lg font-semibold mb-6 text-black">
-                Detail Pribadi
-              </h3>
-              <div className="grid md:grid-cols-2 gap-6 text-black">
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700">
-                    Nama Depan<span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <div className="relative">
-                    <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-2/20 focus:border-2 transition-all"
-                      placeholder="Masukkan nama depan"
-                      required
-                    />
-                  </div>
+            {/* Ringkasan Pesanan */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg">
+              <h2 className="text-xl font-bold mb-4">Ringkasan Pesanan</h2>
+              {cartItems.map((item) => (
+                <div key={item.product_id?._id || item.product_id} className="flex justify-between mb-2">
+                  <span>{item.product_id?.nama || "Produk"} x {item.jumlah}</span>
+                  <span>Rp{(item.subtotal || 0).toLocaleString()}</span>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700">
-                    Nama Belakang<span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <div className="relative">
-                    <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-2/20 focus:border-2 transition-all"
-                      placeholder="Masukkan nama belakang"
-                      required
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700">
-                    Email<span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-2/20 focus:border-2 transition-all"
-                      placeholder="Masukkan email"
-                      required
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700">
-                    No. Telepon<span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-2/20 focus:border-2 transition-all"
-                      placeholder="Masukkan no. telepon"
-                      required
-                    />
-                  </div>
-                </div>
+              ))}
+              <hr className="my-4" />
+              <div className="flex justify-between mb-2">
+                <span className="font-medium">Subtotal</span>
+                <span>Rp{subtotal.toLocaleString()}</span>
               </div>
-
-              {/* Submit Button */}
-              <div className="mt-8 flex justify-end">
-                <button
-                  className={`bg-2 text-white px-8 py-3 rounded-lg transition-all flex items-center gap-2
-                    ${
-                      !isFormValid() || isSubmitting
-                        ? "opacity-50 cursor-not-allowed"
-                        : "hover:opacity-90"
-                    }`}
-                  onClick={handleConfirmBooking}
-                  disabled={!isFormValid() || isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <span>Processing...</span>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin ml-2"></div>
-                    </>
-                  ) : (
-                    <>
-                      <span>Konfirmasi Booking</span>
-                      <span>→</span>
-                    </>
-                  )}
-                </button>
+              <div className="flex justify-between mb-2">
+                <span className="font-medium">Ongkir</span>
+                <span>{selectedService ? `Rp${selectedService.cost[0].value.toLocaleString()}` : '-'}</span>
+              </div>
+              <hr className="my-4" />
+              <div className="flex justify-between text-lg font-bold">
+                <span>Total</span>
+                <span>Rp{total.toLocaleString()}</span>
               </div>
             </div>
           </div>
-        </motion.div>
+        )}
       </div>
     </div>
   );
