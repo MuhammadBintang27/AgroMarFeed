@@ -1,5 +1,6 @@
 "use client";
 import Button from "@/components/ui/Button";
+import AddToCartButton from "@/components/ui/AddToCartButton";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
@@ -9,6 +10,7 @@ import { useParams } from "next/navigation";
 import { fetchProductById, fetchProducts, Product } from "@/lib/api/fetchProducts";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/contexts/UserContext";
 
 const Detail = () => {
   const [quantity, setQuantity] = useState(0);
@@ -18,6 +20,7 @@ const Detail = () => {
   const [error, setError] = useState<string | null>(null);
   const params = useParams();
   const slug = params.slug as string;
+  const { user } = useUser();
 
   const increment = () => setQuantity((q) => q + 1);
   const decrement = () => setQuantity((q) => (q > 0 ? q - 1 : 0));
@@ -169,10 +172,45 @@ const Detail = () => {
 
               {/* Tombol Aksi */}
               <div className="flex flex-wrap gap-2">
-                <button className="bg-2 px-5 py-2 rounded-full text-white font-medium hover:bg-2/80 transition">
-                  Tambah ke Keranjang
-                </button>
-                <button className="bg-3 px-5 py-2 rounded-full text-black font-medium hover:bg-3/90 transition">
+                <AddToCartButton
+                  productId={product._id}
+                  quantity={quantity}
+                  onSuccess={() => {
+                    alert('Produk berhasil ditambahkan ke keranjang!');
+                    setQuantity(0);
+                  }}
+                  onError={(message) => alert(message)}
+                />
+                <button
+                  className="bg-3 px-5 py-2 rounded-full text-black font-medium hover:bg-3/90 transition"
+                  onClick={async () => {
+                    if (!user) {
+                      alert('Silakan login terlebih dahulu');
+                      router.push('/auth/login');
+                      return;
+                    }
+                    if (quantity < 1) {
+                      alert('Jumlah produk harus minimal 1');
+                      return;
+                    }
+                    // Tambahkan ke keranjang dengan jumlah yang dipilih
+                    const response = await fetch('/api/cart/add', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        user_id: user._id,
+                        product_id: product._id,
+                        jumlah: quantity,
+                      }),
+                    });
+                    if (response.ok) {
+                      router.push('/pembayaran');
+                    } else {
+                      const data = await response.json();
+                      alert(data.message || 'Gagal menambahkan ke keranjang');
+                    }
+                  }}
+                >
                   Beli Sekarang
                 </button>
                 <button className="w-8 h-8 text-black hover:text-red-500 transition flex items-center justify-center">
@@ -200,25 +238,23 @@ const Detail = () => {
                         className="object-contain w-full h-full"
                       />
                     </div>
-                    <h3 className="text-sm md:text-base font-semibold text-left text-black leading-tight mb-1">
-                      {product.name}
-                    </h3>
-                    <div className="flex justify-between text-xs md:text-sm text-black/40 mb-1 px-1">
+                    <h3 className="text-lg font-semibold text-left mb-2 text-black">{product.name}</h3>
+                    <div className="flex justify-between text-sm text-black/30 mb-2 px-1">
                       <span>{product.categoryOptions}</span>
-                      <span className="flex items-center gap-1 text-yellow-500 text-[12px] md:text-[14px]">
-                        ★ <span className="text-black/60">({product.rating ?? "0.0"})</span>
+                      <span className="flex items-center gap-1 text-yellow-500 text-[16px]">
+                        ★ <span className="text-black/60">({product.rating})</span>
                       </span>
                     </div>
-                    <div className="flex justify-between items-center px-1 mt-auto">
-                      <span className="text-sm md:text-base font-semibold text-black">
+                    <div className="flex justify-between items-center px-1">
+                      <span className="text-base font-semibold text-black">
                         Rp{product.price.toLocaleString()}
                       </span>
                       <div className="flex gap-2">
-                        <button className="w-6 h-6 rounded-full bg-black text-white border border-black/10 flex items-center justify-center text-sm">
+                        <button className="w-6 h-6 rounded-full bg-black text-xl text-white border border-black/10 flex items-center justify-center">
                           +
                         </button>
                         <button className="w-6 h-6 text-[#C7C7CC] hover:text-red-500 transition flex items-center justify-center">
-                          <Heart className="w-5 h-5" />
+                          <Heart className="w-6 h-6" />
                         </button>
                       </div>
                     </div>
@@ -226,15 +262,13 @@ const Detail = () => {
                 </Link>
               ))
             ) : (
-              <p className="text-black/50">Tidak ada produk tersedia.</p>
+              <div className="text-center text-gray-500">Tidak ada produk lain</div>
             )}
           </div>
         </section>
-
       </div>
     </section>
   );
-
 };
 
 export default Detail;
