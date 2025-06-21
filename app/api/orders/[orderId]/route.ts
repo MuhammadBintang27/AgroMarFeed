@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function DELETE(
+export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ user_id: string }> }
+  { params }: { params: Promise<{ orderId: string }> }
 ) {
   try {
-    const { user_id } = await params;
+    const { orderId } = await params;
 
-    if (!user_id) {
+    if (!orderId) {
       return NextResponse.json(
-        { message: 'User ID is required' },
+        { message: 'Order ID is required' },
         { status: 400 }
       );
     }
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/cart/clear/${user_id}`, {
-      method: 'DELETE',
+    const response = await fetch(`${process.env.BACKEND_URL}/api/orders/${orderId}`, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -29,7 +29,7 @@ export async function DELETE(
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error clearing cart:', error);
+    console.error('Error fetching order:', error);
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

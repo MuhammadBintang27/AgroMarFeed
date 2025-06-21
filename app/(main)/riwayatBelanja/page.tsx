@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import InformativeFooter from "@/components/footer/detilInformasi";
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/contexts/UserContext';
 
 interface Product {
   name: string;
@@ -19,219 +21,266 @@ interface HistoryItem {
   shippingAddress: string;
 }
 
-export default function HistoryPage() {
-  const [isMounted, setIsMounted] = useState(false);
-  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([
-    {
-      id: "ORD001",
-      date: "15 Mei 2025",
-      products: [
-        { name: "GimMe Organic", besaran: "5 kg", quantity: 2 },
-        { name: "GimMe Organic", besaran: "10 kg", quantity: 1 },
-      ],
-      total: 60000,
-      status: "Selesai",
-      paymentMethod: "Transfer Bank",
-      shippingAddress: "Jl. Ternak Sejahtera No. 12, Sleman, Yogyakarta",
-    },
-    {
-      id: "ORD002",
-      date: "14 Mei 2025",
-      products: [{ name: "GimMe Organic", besaran: "15 kg", quantity: 3 }],
-      total: 132000,
-      status: "Dikirim",
-      paymentMethod: "COD",
-      shippingAddress: "Jl. Budidaya No. 5, Bandung",
-    },
-    {
-      id: "ORD003",
-      date: "13 Mei 2025",
-      products: [
-        { name: "GimMe Organic", besaran: "20 kg", quantity: 1 },
-        { name: "GimMe Organic", besaran: "5 kg", quantity: 4 },
-      ],
-      total: 115000,
-      status: "Diproses",
-      paymentMethod: "E-Wallet",
-      shippingAddress: "Jl. Peternakan No. 10, Surabaya",
-    },
-  ]);
+interface Order {
+  _id: string;
+  orderId: string;
+  total_bayar: number;
+  status: string;
+  payment_status: string;
+  shipping_address: {
+    nama: string;
+    alamat: string;
+    kota: string;
+  };
+  order_item: Array<{
+    product_id: {
+      name: string;
+      price: number;
+      image?: string;
+    };
+    jumlah: number;
+    subtotal: number;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+}
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
+export default function OrderHistoryPage() {
+  const router = useRouter();
+  const { user } = useUser();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    if (user) {
+      fetchOrders();
+    }
+  }, [user]);
 
-  if (!isMounted) return null;
-
-  const formatRupiahSingkat = (value: number) => {
-    if (value >= 100000) return `Rp${Math.round(value / 1000)}RB`;
-    return `Rp${value.toLocaleString()}`;
+  const fetchOrders = async () => {
+    try {
+      const response = await fetch(`/api/orders/user/${user?._id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setOrders(data);
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleOpenModal = (item: HistoryItem) => {
-    setSelectedItem(item);
-    setIsModalOpen(true);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'paid':
+      case 'processing':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled':
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedItem(null);
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'paid':
+        return 'Dibayar';
+      case 'processing':
+        return 'Diproses';
+      case 'pending':
+        return 'Menunggu Pembayaran';
+      case 'cancelled':
+        return 'Dibatalkan';
+      case 'failed':
+        return 'Gagal';
+      default:
+        return status;
+    }
   };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const handleOrderClick = (order: Order) => {
+    setSelectedOrder(selectedOrder?._id === order._id ? null : order);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat riwayat pesanan...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen pt-32 pb-16 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-8 px-[30%]">
-          <h1 className="text-3xl font-bold mb-2 text-black">Riwayat Belanja</h1>
-          <p className="text-gray-600">
-            Pelet ikan, pakan ayam, dan ternak dari limbah agro-maritim. Hemat hingga 30%! Beli pakan, bantu bumi.
-          </p>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Riwayat Pesanan</h1>
+          <p className="text-gray-600">Lihat semua pesanan Anda</p>
         </div>
 
-        <div className="flex-1">
-          <div className="px-20 py-4">
-            {historyItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20">
-                <Image
-                  src="/images/cart/keranjangKosong.png"
-                  alt="Belum ada riwayat"
-                  width={120}
-                  height={120}
-                />
-                <p className="text-gray-600 mt-4">Belum ada riwayat belanja</p>
-              </div>
-            ) : (
-              historyItems.map((item: HistoryItem) => (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-[25px] p-6 mb-4 shadow-md"
-                >
-                  <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-4">
+        {orders.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Belum ada pesanan</h3>
+            <p className="text-gray-600 mb-6">Mulai berbelanja untuk melihat riwayat pesanan Anda</p>
+            <button
+              onClick={() => router.push('/katalog')}
+              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition duration-200"
+            >
+              Mulai Belanja
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {orders.map((order) => (
+              <div key={order._id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                {/* Order Header */}
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex justify-between items-start">
                     <div>
-                      <span className="font-bold text-black">{item.id}</span>
-                      <span className="text-gray-500 text-sm ml-2">{item.date}</span>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Order #{order.orderId}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {formatDate(order.createdAt)}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {order.shipping_address.nama} - {order.shipping_address.alamat}, {order.shipping_address.kota}
+                      </p>
                     </div>
-                    <span
-                      className={`text-sm px-3 py-1 rounded-full ${
-                        item.status === "Selesai"
-                          ? "bg-green-100 text-green-700"
-                          : item.status === "Dikirim"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {item.status}
-                    </span>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-gray-900">
+                        Rp {order.total_bayar.toLocaleString()}
+                      </p>
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium mt-2 ${getStatusColor(order.payment_status)}`}>
+                        {getStatusText(order.payment_status)}
+                      </span>
+                    </div>
                   </div>
+                </div>
 
-                  <div className="space-y-2">
-                    {item.products.map((product: Product, index: number) => (
-                      <div key={index} className="flex items-center gap-4">
-                        <Image
-                          src="/images/cart/gimmeOrganic.png"
-                          alt={product.name}
-                          width={40}
-                          height={40}
-                          className="rounded"
-                        />
+                {/* Order Items */}
+                <div className="p-6">
+                  <div className="space-y-4">
+                    {order.order_item.map((item, index) => (
+                      <div key={index} className="flex items-center space-x-4">
+                        <div className="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                          {item.product_id.image ? (
+                            <img
+                              src={item.product_id.image}
+                              alt={item.product_id.name}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                          ) : (
+                            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                            </svg>
+                          )}
+                        </div>
                         <div className="flex-1">
-                          <span className="text-black">{product.name}</span>
-                          <span className="text-gray-500 text-sm ml-2">
-                            {product.besaran} x {product.quantity}
-                          </span>
+                          <h4 className="text-sm font-medium text-gray-900">
+                            {item.product_id.name}
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {item.jumlah} x Rp {item.product_id.price.toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-gray-900">
+                            Rp {item.subtotal.toLocaleString()}
+                          </p>
                         </div>
                       </div>
                     ))}
                   </div>
 
-                  <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-                    <div>
-                      <span className="text-gray-600">Total Belanja:</span>
-                      <span className="font-bold text-black ml-2">
-                        {formatRupiahSingkat(item.total)}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => handleOpenModal(item)}
-                      className="px-4 py-2 bg-3 text-white rounded-lg hover:bg-yellow-500"
-                    >
-                      Detail
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* MODAL */}
-        {isModalOpen && selectedItem && (
-          <div
-            className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50"
-            onClick={handleCloseModal}
-          >
-            <div
-              className="bg-white rounded-[25px] p-6 w-full max-w-md mx-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h2 className="text-2xl font-bold text-black mb-4">
-                Detail Pesanan #{selectedItem.id}
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-gray-600">Tanggal: {selectedItem.date}</p>
-                  <p className="text-gray-600">Status: {selectedItem.status}</p>
-                  <p className="text-gray-600">
-                    Metode Pembayaran: {selectedItem.paymentMethod}
-                  </p>
-                  <p className="text-gray-600">
-                    Alamat Pengiriman: {selectedItem.shippingAddress}
-                  </p>
-                </div>
-                <div className="border-t pt-4">
-                  <h3 className="font-bold text-black">Daftar Produk:</h3>
-                  {selectedItem.products.map((product: Product, index: number) => (
-                    <div key={index} className="flex items-center gap-4 mt-2">
-                      <Image
-                        src="/images/cart/gimmeOrganic.png"
-                        alt={product.name}
-                        width={40}
-                        height={40}
-                        className="rounded"
-                      />
-                      <div>
-                        <span className="text-black">{product.name}</span>
-                        <span className="text-gray-500 text-sm ml-2">
-                          {product.besaran} x {product.quantity}
-                        </span>
+                  {/* Order Actions */}
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm text-gray-600">
+                        <p>Status: <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${getStatusColor(order.status)}`}>
+                          {getStatusText(order.status)}
+                        </span></p>
+                      </div>
+                      <div className="space-x-3">
+                        <button
+                          onClick={() => handleOrderClick(order)}
+                          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          {selectedOrder?._id === order._id ? 'Sembunyikan Detail' : 'Lihat Detail'}
+                        </button>
+                        {order.payment_status === 'pending' && (
+                          <button
+                            onClick={() => router.push(`/pembayaran?order_id=${order.orderId}`)}
+                            className="text-sm bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-200"
+                          >
+                            Bayar Sekarang
+                          </button>
+                        )}
                       </div>
                     </div>
-                  ))}
-                </div>
-                <div className="border-t pt-4">
-                  <p className="text-gray-600">Total Belanja:</p>
-                  <p className="font-bold text-black">
-                    {formatRupiahSingkat(selectedItem.total)}
-                  </p>
+                  </div>
+
+                  {/* Expanded Details */}
+                  {selectedOrder?._id === order._id && (
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                      <h4 className="font-medium text-gray-900 mb-4">Detail Pesanan</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-600">Order ID:</p>
+                          <p className="font-medium">{order.orderId}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Tanggal Pesanan:</p>
+                          <p className="font-medium">{formatDate(order.createdAt)}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Status Pembayaran:</p>
+                          <p className="font-medium">{getStatusText(order.payment_status)}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Status Pesanan:</p>
+                          <p className="font-medium">{getStatusText(order.status)}</p>
+                        </div>
+                        <div className="md:col-span-2">
+                          <p className="text-gray-600">Alamat Pengiriman:</p>
+                          <p className="font-medium">
+                            {order.shipping_address.nama}<br />
+                            {order.shipping_address.alamat}<br />
+                            {order.shipping_address.kota}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-              <button
-                onClick={handleCloseModal}
-                className="mt-6 w-full px-4 py-2 bg-3 text-white rounded-lg hover:bg-yellow-500"
-              >
-                Tutup
-              </button>
-            </div>
+            ))}
           </div>
         )}
-
-        {/* Detil Informasi */}
-        <div className="mt-20">
-          <InformativeFooter />
-        </div>
       </div>
     </div>
   );

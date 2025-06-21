@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log('📨 Frontend received payment notification:', body);
 
     // Forward the notification to backend
     const response = await fetch(`${process.env.BACKEND_URL}/api/payment/notification`, {
@@ -14,23 +15,22 @@ export async function POST(request: NextRequest) {
     });
 
     const data = await response.json();
+    console.log('📋 Backend response:', data);
 
     if (!response.ok) {
+      console.error('❌ Backend notification processing failed:', data);
       return NextResponse.json(data, { status: response.status });
     }
 
-    // If payment is successful, remove items from cart
-    if (data.transaction_status === 'settlement' || data.transaction_status === 'capture') {
-      const orderId = data.order_id;
-      
-      // Get pending order info from database or localStorage equivalent
-      // For now, we'll handle cart removal in the backend
-      console.log(`Payment successful for order: ${orderId}`);
-    }
-
-    return NextResponse.json({ message: 'Notification processed successfully' });
+    console.log('✅ Payment notification processed successfully');
+    return NextResponse.json({ 
+      message: 'Notification processed successfully',
+      orderStatus: data.orderStatus,
+      paymentStatus: data.paymentStatus,
+      cartCleared: data.cartCleared
+    });
   } catch (error) {
-    console.error('Error processing payment notification:', error);
+    console.error('❌ Error processing payment notification:', error);
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

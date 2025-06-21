@@ -52,6 +52,7 @@ const PaymentPage = () => {
   const [recipientName, setRecipientName] = useState('');
   const [postalCode, setPostalCode] = useState('');
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
+  const [notes, setNotes] = useState('');
 
   // Get selected items from URL params
   useEffect(() => {
@@ -156,40 +157,83 @@ const PaymentPage = () => {
   };
 
   const handleCheckout = async () => {
-    if (!selectedShipping || !address || !phone || !recipientName) {
-      alert('Mohon lengkapi semua data dan pilih layanan pengiriman');
+    if (!user) {
+      alert('Silakan login terlebih dahulu');
+      return;
+    }
+
+    if (!recipientName || !phone || !address || !postalCode || !selectedOrigin || !selectedDestination) {
+      alert('Lengkapi semua data pengiriman');
+      return;
+    }
+
+    if (!selectedShipping) {
+      alert('Pilih layanan pengiriman');
       return;
     }
 
     setIsLoading(true);
+
     try {
-      // Prepare order data for Midtrans
-      const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
+      // Step 1: Create order first
+      const orderData = {
+        user_id: user._id,
+        shipping_address: {
+          nama: recipientName,
+          telepon: phone,
+          alamat: address,
+          kota: selectedDestination?.city_name || '',
+          kode_pos: postalCode,
+          provinsi: selectedDestination?.province || '',
+        },
+        ongkir: selectedShipping.shipping_cost,
+        catatan: notes,
+      };
+
+      console.log('Creating order with data:', orderData);
+
+      const orderResponse = await fetch('/api/orders/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      const orderResult = await orderResponse.json();
+
+      if (!orderResponse.ok) {
+        throw new Error(orderResult.message || 'Gagal membuat order');
+      }
+
+      console.log('Order created:', orderResult);
+
+      // Step 2: Create payment with order data
       const paymentData = {
-        orderId,
+        orderId: orderResult.order.orderId,
         items: cartItems.map(item => ({
           productId: item.product_id._id,
-          name: item.product_id.nama || item.product_id.name || 'Product',
+          name: item.product_id.nama || item.product_id.name,
           price: item.product_id.price,
-          quantity: item.jumlah,
+          quantity: item.jumlah
         })),
         customerDetails: {
           name: recipientName,
-          email: user?.email || 'customer@example.com',
+          email: user.email,
           phone: phone,
           address: address,
           city: selectedDestination?.city_name || '',
           postalCode: postalCode,
-          userId: user?._id,
+          userId: user._id,
         },
         shippingDetails: {
           address: address,
           city: selectedDestination?.city_name || '',
           postalCode: postalCode,
         },
-        selectedItemIds: selectedItemIds, // Send selected item IDs to backend
       };
+
+      console.log('Creating payment with data:', paymentData);
 
       // Create payment token
       const paymentResponse = await fetch('/api/payment/create', {
@@ -210,7 +254,8 @@ const PaymentPage = () => {
       }
     } catch (error) {
       console.error('Error creating payment:', error);
-      alert('Terjadi kesalahan saat membuat pembayaran');
+      const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan saat membuat pembayaran';
+      alert(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -295,6 +340,16 @@ const PaymentPage = () => {
                       onChange={e => setPostalCode(e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Kode Pos"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Catatan (Opsional)</label>
+                    <textarea
+                      value={notes}
+                      onChange={e => setNotes(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows={2}
+                      placeholder="Catatan tambahan untuk kurir atau pesanan"
                     />
                   </div>
                   <div className="mb-4">
