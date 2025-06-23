@@ -14,10 +14,11 @@ export async function GET(
       );
     }
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/orders/${orderId}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/orders/${orderId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        "ngrok-skip-browser-warning": "true"
       },
     });
 

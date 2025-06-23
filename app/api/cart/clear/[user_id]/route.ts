@@ -14,10 +14,11 @@ export async function DELETE(
       );
     }
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/cart/clear/${user_id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/cart/clear/${user_id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
+        "ngrok-skip-browser-warning": "true"
       },
     });
 

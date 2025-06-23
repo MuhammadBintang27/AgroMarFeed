@@ -54,6 +54,26 @@ const PaymentPage = () => {
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
 
+  // Tambahan untuk order detail jika ada order_id
+  const [orderDetails, setOrderDetails] = useState<any>(null);
+  const [orderLoading, setOrderLoading] = useState(false);
+  const orderId = searchParams.get('order_id');
+
+  // Jika ada order_id, fetch detail order
+  useEffect(() => {
+    if (orderId) {
+      setOrderLoading(true);
+      fetch(`/api/orders/${orderId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.order) setOrderDetails(data.order);
+          else if (data.success && data.data) setOrderDetails(data.data);
+        })
+        .catch(() => setOrderDetails(null))
+        .finally(() => setOrderLoading(false));
+    }
+  }, [orderId]);
+
   // Get selected items from URL params
   useEffect(() => {
     const selectedItemsParam = searchParams.get('selectedItems');
@@ -267,6 +287,77 @@ const PaymentPage = () => {
       calculateShipping();
     }
   }, [selectedOrigin, selectedDestination, cartItems]);
+
+  // Render jika ada order_id (mode instruksi pembayaran)
+  if (orderId) {
+    if (orderLoading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Memuat detail pesanan...</p>
+          </div>
+        </div>
+      );
+    }
+    if (!orderDetails) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-500">Pesanan tidak ditemukan.</p>
+            <button onClick={() => router.push('/riwayatBelanja')} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded">Kembali ke Riwayat</button>
+          </div>
+        </div>
+      );
+    }
+    // Jika sudah dibayar
+    if (orderDetails.payment_status === 'paid') {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+              <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Pembayaran Sudah Diterima</h1>
+            <p className="text-gray-600 mb-6">Terima kasih, pesanan Anda sudah dibayar dan sedang diproses.</p>
+            <button onClick={() => router.push('/riwayatBelanja')} className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200">Lihat Riwayat Pesanan</button>
+          </div>
+        </div>
+      );
+    }
+    // Jika masih pending
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 mb-6">
+            <svg className="h-8 w-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Menunggu Pembayaran</h1>
+          <p className="text-gray-600 mb-6">Silakan selesaikan pembayaran Anda sesuai instruksi berikut:</p>
+          <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            <p className="text-sm text-gray-600">Order ID: {orderDetails.orderId}</p>
+            <p className="text-sm text-gray-600">Total: Rp {orderDetails.total_bayar?.toLocaleString()}</p>
+            {/* Tambahkan instruksi pembayaran/kode pembayaran di sini jika ada */}
+            <p className="text-sm text-blue-700 mt-2">Silakan cek email Anda atau klik tombol di bawah untuk melihat instruksi pembayaran di Midtrans.</p>
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 mb-2"
+          >
+            Refresh Status Pembayaran
+          </button>
+          {orderDetails.payment_url && (
+            <a href={orderDetails.payment_url} target="_blank" rel="noopener noreferrer" className="w-full block bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200 mb-2">Lihat Instruksi Pembayaran</a>
+          )}
+          <button onClick={() => router.push('/riwayatBelanja')} className="w-full bg-gray-200 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-300 transition duration-200">Kembali ke Riwayat Pesanan</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-32 pb-16 bg-white">

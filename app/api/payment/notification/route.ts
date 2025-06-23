@@ -6,10 +6,11 @@ export async function POST(request: NextRequest) {
     console.log('📨 Frontend received payment notification:', body);
 
     // Forward the notification to backend
-    const response = await fetch(`${process.env.BACKEND_URL}/api/payment/notification`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/payment/notification`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        "ngrok-skip-browser-warning": "true"
       },
       body: JSON.stringify(body),
     });

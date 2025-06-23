@@ -12,10 +12,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/shipping/search-destination?keyword=${encodeURIComponent(keyword)}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/shipping/search-destination?keyword=${encodeURIComponent(keyword)}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        "ngrok-skip-browser-warning": "true"
       },
     });
 

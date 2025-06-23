@@ -4,7 +4,7 @@ export interface Weight {
   price: number;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export interface Product {
   _id: string;
@@ -26,6 +26,9 @@ export const fetchProducts = async (): Promise<Product[]> => {
   try {
     const response = await fetch(`${API_BASE}/api/products`, {
       cache: "no-store",
+      headers: {
+        "ngrok-skip-browser-warning": "true"
+      }
     });
     if (!response.ok) {
       throw new Error(`Failed to fetch products: ${response.status}`);
@@ -61,6 +64,9 @@ export const fetchProductById = async (id: string): Promise<Product> => {
     console.log("Fetching product with ID:", id);
     const response = await fetch(`${API_BASE}/api/products/${id}`, {
       cache: "no-store",
+      headers: {
+        "ngrok-skip-browser-warning": "true"
+      }
     });
     if (!response.ok) {
       throw new Error(`Failed to fetch product: ${response.status}`);

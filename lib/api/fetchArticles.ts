@@ -18,12 +18,15 @@ export interface Article {
   updatedAt: string;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export async function fetchArticles(): Promise<Article[]> {
   try {
-    const response = await fetch(`${API_BASE}/api/artikels`, {
+    const response = await fetch(`${API_BASE}/api/articles`, {
       cache: "no-store",
+      headers: {
+        "ngrok-skip-browser-warning": "true"
+      }
     });
     if (!response.ok) {
       throw new Error("Failed to fetch articles");

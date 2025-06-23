@@ -29,10 +29,11 @@ export async function GET(request: NextRequest) {
     if (origin_pin_point) params.append('origin_pin_point', origin_pin_point);
     if (destination_pin_point) params.append('destination_pin_point', destination_pin_point);
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/shipping/calculate?${params.toString()}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/shipping/calculate?${params.toString()}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        "ngrok-skip-browser-warning": "true"
       },
     });
 

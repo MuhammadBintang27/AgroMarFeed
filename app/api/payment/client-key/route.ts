@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const response = await fetch(`${process.env.BACKEND_URL}/api/payment/client-key`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/payment/client-key`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        "ngrok-skip-browser-warning": "true"
       },
     });
 

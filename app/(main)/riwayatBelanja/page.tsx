@@ -60,7 +60,11 @@ export default function OrderHistoryPage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch(`/api/orders/user/${user?._id}`);
+      const response = await fetch(`/api/orders/user/${user?._id}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true"
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setOrders(data);
@@ -70,6 +74,11 @@ export default function OrderHistoryPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRefreshOrders = async () => {
+    setLoading(true);
+    await fetchOrders();
   };
 
   const getStatusColor = (status: string) => {
@@ -133,8 +142,22 @@ export default function OrderHistoryPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Riwayat Pesanan</h1>
-          <p className="text-gray-600">Lihat semua pesanan Anda</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Riwayat Pesanan</h1>
+              <p className="text-gray-600">Lihat semua pesanan Anda</p>
+            </div>
+            <button
+              onClick={handleRefreshOrders}
+              disabled={loading}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 disabled:bg-gray-400 flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              {loading ? 'Memuat...' : 'Refresh'}
+            </button>
+          </div>
         </div>
 
         {orders.length === 0 ? (
@@ -233,12 +256,15 @@ export default function OrderHistoryPage() {
                           {selectedOrder?._id === order._id ? 'Sembunyikan Detail' : 'Lihat Detail'}
                         </button>
                         {order.payment_status === 'pending' && (
-                          <button
-                            onClick={() => router.push(`/pembayaran?order_id=${order.orderId}`)}
-                            className="text-sm bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-200"
-                          >
-                            Bayar Sekarang
-                          </button>
+                          <>
+                            <button
+                              onClick={() => router.push(`/pembayaran?order_id=${order.orderId}`)}
+                              className="text-sm bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-200"
+                            >
+                              Bayar Sekarang
+                            </button>
+                            <p className="text-xs text-gray-500 mt-1">Klik untuk melihat instruksi pembayaran tanpa input ulang.</p>
+                          </>
                         )}
                       </div>
                     </div>

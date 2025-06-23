@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000';
 
 export async function DELETE(
   request: NextRequest,
@@ -10,6 +10,10 @@ export async function DELETE(
     const { product_id } = await params;
     const response = await fetch(`${BACKEND_URL}/api/cart/remove/${product_id}`, {
       method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        "ngrok-skip-browser-warning": "true"
+      },
     });
     
     const data = await response.json();

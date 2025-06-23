@@ -33,36 +33,33 @@ export default function PaymentSuccessPage() {
   const { user } = useUser();
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const orderId = searchParams.get('order_id');
 
   useEffect(() => {
     if (orderId) {
-      // Fetch order details
       fetchOrderDetails();
     }
   }, [orderId]);
 
   const fetchOrderDetails = async () => {
     try {
-      const response = await fetch(`/api/orders/${orderId}`);
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`/api/orders/${orderId}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true"
+        }
+      });
       if (response.ok) {
         const data = await response.json();
-        console.log('Order details response:', data);
-        
-        // Handle both response formats
-        if (data.success && data.order) {
-          setOrderDetails(data.order);
-        } else if (data.order) {
-          setOrderDetails(data.order);
-        } else {
-          console.error('Unexpected response format:', data);
-        }
+        setOrderDetails(data);
       } else {
-        console.error('Failed to fetch order details:', response.status, response.statusText);
+        setError('Pesanan tidak ditemukan.');
       }
     } catch (error) {
-      console.error('Error fetching order details:', error);
+      setError('Gagal mengambil data pesanan.');
     } finally {
       setLoading(false);
     }
@@ -87,24 +84,64 @@ export default function PaymentSuccessPage() {
     );
   }
 
+  let statusTitle = '';
+  let statusDesc = '';
+  let statusIcon = null;
+  let statusColor = '';
+
+  if (error) {
+    statusTitle = 'Pesanan Tidak Ditemukan';
+    statusDesc = error;
+    statusIcon = (
+      <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
+        <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </div>
+    );
+    statusColor = 'text-red-600';
+  } else if (orderDetails?.payment_status === 'paid' || orderDetails?.status === 'processing') {
+    statusTitle = 'Pembayaran Berhasil!';
+    statusDesc = 'Terima kasih telah berbelanja di AgroMarFeed. Pesanan Anda telah berhasil diproses.';
+    statusIcon = (
+      <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+        <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+    );
+    statusColor = 'text-green-600';
+  } else if (orderDetails?.payment_status === 'pending') {
+    statusTitle = 'Menunggu Pembayaran';
+    statusDesc = 'Pesanan Anda masih menunggu pembayaran. Silakan selesaikan pembayaran sesuai instruksi.';
+    statusIcon = (
+      <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 mb-6">
+        <svg className="h-8 w-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
+    );
+    statusColor = 'text-yellow-600';
+  } else if (orderDetails?.payment_status === 'failed' || orderDetails?.status === 'cancelled') {
+    statusTitle = 'Pembayaran Gagal / Dibatalkan';
+    statusDesc = 'Pembayaran Anda gagal atau dibatalkan. Silakan lakukan pemesanan ulang.';
+    statusIcon = (
+      <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
+        <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </div>
+    );
+    statusColor = 'text-red-600';
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
         <div className="text-center">
-          {/* Success Icon */}
-          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
-            <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-          </div>
-
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Pembayaran Berhasil!
-          </h1>
-
-          <p className="text-gray-600 mb-6">
-            Terima kasih telah berbelanja di AgroMarFeed. Pesanan Anda telah berhasil diproses.
-          </p>
+          {statusIcon}
+          <h1 className={`text-2xl font-bold mb-4 ${statusColor}`}>{statusTitle}</h1>
+          <p className="text-gray-600 mb-6">{statusDesc}</p>
 
           {orderDetails && (
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
@@ -112,6 +149,7 @@ export default function PaymentSuccessPage() {
               <p className="text-sm text-gray-600">Order ID: {orderDetails.orderId}</p>
               <p className="text-sm text-gray-600">Total: Rp {orderDetails.total_bayar?.toLocaleString()}</p>
               <p className="text-sm text-gray-600">Status: {orderDetails.status}</p>
+              <p className="text-sm text-gray-600">Pembayaran: {orderDetails.payment_status}</p>
             </div>
           )}
 

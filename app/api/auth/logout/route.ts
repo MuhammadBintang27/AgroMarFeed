@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000';
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,6 +9,8 @@ export async function GET(request: NextRequest) {
       credentials: 'include',
       headers: {
         'Cookie': request.headers.get('cookie') || '',
+        'Content-Type': 'application/json',
+        "ngrok-skip-browser-warning": "true"
       },
     });
 
