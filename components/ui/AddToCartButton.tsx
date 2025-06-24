@@ -64,23 +64,6 @@ export default function AddToCartButton({
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex items-center border rounded-lg">
-        <button
-          onClick={() => setQuantity(Math.max(1, quantity - 1))}
-          className="px-3 py-2 text-gray-600 hover:bg-gray-100"
-          disabled={quantity <= 1 || typeof propQuantity === 'number'}
-        >
-          -
-        </button>
-        <span className="px-3 py-2 border-x">{quantity}</span>
-        <button
-          onClick={() => setQuantity(quantity + 1)}
-          className="px-3 py-2 text-gray-600 hover:bg-gray-100"
-          disabled={typeof propQuantity === 'number'}
-        >
-          +
-        </button>
-      </div>
       <Button
         onClick={handleAddToCart}
         disabled={isLoading}
