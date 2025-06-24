@@ -1,22 +1,26 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation"; // Add this import
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Calendar, Clock, MapPin, User, Mail, Phone } from "lucide-react";
+import { useUser } from '@/contexts/UserContext';
 
 export default function BookingPage() {
-  const router = useRouter(); // Add router instance
+  const router = useRouter();
+  const { slug } = useParams();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [konsultan, setKonsultan] = useState<any>(null);
+  const [loadingKonsultan, setLoadingKonsultan] = useState(true);
+  const { user } = useUser();
 
   // Add form state
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    nama_lengkap: "",
     email: "",
-    phone: "",
+    no_hp: "",
   });
 
   // Add loading state
@@ -34,10 +38,9 @@ export default function BookingPage() {
   // Add validation check
   const isFormValid = () => {
     return (
-      formData.firstName &&
-      formData.lastName &&
+      formData.nama_lengkap &&
       formData.email &&
-      formData.phone &&
+      formData.no_hp &&
       selectedDate &&
       selectedTime
     );
@@ -46,37 +49,152 @@ export default function BookingPage() {
   // Update the confirmation handler to include booking details
   const handleConfirmBooking = async () => {
     if (!isFormValid() || isSubmitting) return;
-
+    if (!user || !user._id) {
+      alert('Silakan login terlebih dahulu');
+      return;
+    }
     setIsSubmitting(true);
     try {
-      const bookingDetails = {
-        date: selectedDate?.toISOString(),
-        time: selectedTime,
-        ...formData,
+      // Find selected slot's jam_mulai & jam_berakhir
+      let jam_mulai = null, jam_berakhir = null;
+      if (selectedTime) {
+        const [mulai, akhir] = selectedTime.split(" - ");
+        jam_mulai = mulai;
+        jam_berakhir = akhir;
+      }
+      const appointmentPayload = {
+        user_id: user._id,
+        nama_lengkap: formData.nama_lengkap,
+        email: formData.email,
+        no_hp: formData.no_hp,
+        konsultan_id: konsultan?._id,
+        tanggal_konsultasi: selectedDate?.toISOString(),
+        jadwal: { jam_mulai, jam_berakhir },
+        total_harga: konsultan?.price || 0,
+        metode_pembayaran: 'midtrans',
       };
+      console.log('Appointment payload:', appointmentPayload);
 
-      // Navigate to payment with booking details
-      router.push(
-        `/pembayaran?booking=${encodeURIComponent(
-          JSON.stringify(bookingDetails)
-        )}`
-      );
+      // Step 1: Create appointment
+      const res = await fetch('/api/appointment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(appointmentPayload),
+      });
+
+
+      const data = await res.json();
+
+      console.log('Appointment response:', data);
+
+      if (res.ok && data._id) {
+        // Step 2: Create payment for konsultasi
+        const appointmentId = data._id;
+        const productId = konsultan?._id || '';
+        const name = konsultan?.nama ? `Konsultasi: ${konsultan.nama}` : 'Konsultasi';
+        const price = typeof konsultan?.price === 'number' ? konsultan.price : 0;
+        const quantity = 1;
+        const description = konsultan?.nama && selectedDate && jam_mulai && jam_berakhir
+          ? `Konsultasi dengan ${konsultan.nama} pada ${selectedDate.toLocaleDateString('id-ID')} jam ${jam_mulai}-${jam_berakhir}`
+          : 'Konsultasi';
+        const customerName = formData.nama_lengkap || 'User';
+        const customerEmail = formData.email || 'user@email.com';
+        const customerPhone = formData.no_hp || '0000000000';
+        const userId = user._id || '';
+
+        const paymentData = {
+          appointmentId,
+          items: [
+            {
+              productId,
+              name,
+              price,
+              quantity,
+              description,
+            },
+          ],
+          customerDetails: {
+            name: customerName,
+            email: customerEmail,
+            phone: customerPhone,
+            userId,
+          },
+        };
+        // Validasi payload payment
+        if (!paymentData.appointmentId) {
+          alert('Gagal membuat appointmentId untuk pembayaran.');
+          return;
+        }
+        if (!paymentData.items || !Array.isArray(paymentData.items) || paymentData.items.length === 0) {
+          alert('Data item pembayaran konsultasi kosong.');
+          return;
+        }
+        if (!paymentData.customerDetails || !paymentData.customerDetails.name || !paymentData.customerDetails.email || !paymentData.customerDetails.phone) {
+          alert('Data customer pembayaran konsultasi tidak lengkap.');
+          return;
+        }
+        console.log('Payment payload:', paymentData);
+        const paymentRes = await fetch('/api/payment/consultation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(paymentData),
+        });
+        const paymentResult = await paymentRes.json();
+        console.log('Payment response:', paymentResult);
+        if (paymentRes.ok && paymentResult.redirect_url) {
+          window.location.href = paymentResult.redirect_url;
+        } else {
+          alert(paymentResult.message || JSON.stringify(paymentResult) || 'Gagal membuat pembayaran konsultasi');
+        }
+      } else {
+        alert(data.message || JSON.stringify(data) || 'Gagal membuat appointment');
+      }
     } catch (error) {
-      console.error("Error submitting booking:", error);
-      alert("There was an error processing your booking. Please try again.");
+      console.error('Error submitting appointment:', error);
+      alert('There was an error processing your booking. Please try again.\n' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const timeSlots = [
-    "08:00 - 09:00",
-    "09:00 - 10:00",
-    "10:00 - 11:00",
-    "11:00 - 12:00",
-    "13:00 - 14:00",
-    "14:00 - 15:00",
-  ];
+  // Fetch konsultan by id (slug)
+  useEffect(() => {
+    if (!slug) return;
+    const fetchKonsultan = async () => {
+      setLoadingKonsultan(true);
+      try {
+        const res = await fetch(`/api/konsultan?id=${slug}`);
+        const data = await res.json();
+        setKonsultan(data);
+      } catch (err) {
+        setKonsultan(null);
+      } finally {
+        setLoadingKonsultan(false);
+      }
+    };
+    fetchKonsultan();
+  }, [slug]);
+
+  // Generate time slots from konsultan.jadwal
+  function generateTimeSlots(jadwal: { jam_mulai: string; jam_berakhir: string }[] = []) {
+    const slots: string[] = [];
+    for (const j of jadwal) {
+      let [startHour, startMin] = j.jam_mulai.split(":").map(Number);
+      let [endHour, endMin] = j.jam_berakhir.split(":").map(Number);
+      let current = new Date(0, 0, 0, startHour, startMin);
+      const end = new Date(0, 0, 0, endHour, endMin);
+      while (current < end) {
+        const next = new Date(current.getTime() + 60 * 60 * 1000); // +1 hour
+        if (next > end) break;
+        const pad = (n: number) => n.toString().padStart(2, "0");
+        slots.push(`${pad(current.getHours())}:${pad(current.getMinutes())} - ${pad(next.getHours())}:${pad(next.getMinutes())}`);
+        current = next;
+      }
+    }
+    return slots;
+  }
+
+  const timeSlots = konsultan ? generateTimeSlots(konsultan.jadwal) : [];
 
   // Function to get month name
   const getMonthName = (date: Date) => {
@@ -142,6 +260,24 @@ export default function BookingPage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
+          {/* Konsultan Info */}
+          {loadingKonsultan ? (
+            <div className="text-center mb-8">Loading konsultan...</div>
+          ) : konsultan ? (
+            <div className="flex items-center gap-4 mb-8 bg-white p-4 rounded-xl shadow">
+              {konsultan.image_url && (
+                <img src={konsultan.image_url} alt={konsultan.nama} className="w-20 h-20 rounded-full object-cover border" />
+              )}
+              <div>
+                <div className="font-bold text-lg text-black">{konsultan.nama}</div>
+                <div className="text-black/60 mb-1">{konsultan.profesi}</div>
+                <div className="text-black/60 text-sm">{konsultan.description}</div>
+                <div className="text-black/80 mt-1 font-semibold">Rp {konsultan.price?.toLocaleString("id-ID")}</div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center mb-8 text-red-500">Konsultan tidak ditemukan</div>
+          )}
           {/* Header with Icon */}
           <div className="text-center mb-12">
             <h1 className="text-3xl font-bold mb-3 text-black">
@@ -298,6 +434,7 @@ export default function BookingPage() {
                   Pilih Waktu
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
+                  {timeSlots.length === 0 && <div className="col-span-2 text-gray-400">Tidak ada jadwal tersedia</div>}
                   {timeSlots.map((time) => (
                     <button
                       key={time}
@@ -347,34 +484,17 @@ export default function BookingPage() {
               <div className="grid md:grid-cols-2 gap-6 text-black">
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-700">
-                    Nama Depan<span className="text-red-500 ml-1">*</span>
+                    Nama Lengkap<span className="text-red-500 ml-1">*</span>
                   </label>
                   <div className="relative">
                     <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
-                      name="firstName"
-                      value={formData.firstName}
+                      name="nama_lengkap"
+                      value={formData.nama_lengkap}
                       onChange={handleInputChange}
                       className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-2/20 focus:border-2 transition-all"
-                      placeholder="Masukkan nama depan"
-                      required
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700">
-                    Nama Belakang<span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <div className="relative">
-                    <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-2/20 focus:border-2 transition-all"
-                      placeholder="Masukkan nama belakang"
+                      placeholder="Masukkan nama lengkap"
                       required
                     />
                   </div>
@@ -404,8 +524,8 @@ export default function BookingPage() {
                     <Phone className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="tel"
-                      name="phone"
-                      value={formData.phone}
+                      name="no_hp"
+                      value={formData.no_hp}
                       onChange={handleInputChange}
                       className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-2/20 focus:border-2 transition-all"
                       placeholder="Masukkan no. telepon"

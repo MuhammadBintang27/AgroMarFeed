@@ -150,10 +150,10 @@ const handleBooking = (slug: string) => {
 
                     <div className="flex items-center mb-2">
                       <span className="text-yellow-400">★</span>
-                      <span className="ml-1">
+                      <span className="ml-1 text-black">
                         {konsultan.rating?.toFixed(1) || "0.0"}
                       </span>
-                      <span className="ml-2 text-gray-500 text-sm">
+                      <span className="ml-3 text-gray-500 text-sm">
                         {konsultan.jumlah_penanganan || 0} Penanganan
                       </span>
                     </div>
