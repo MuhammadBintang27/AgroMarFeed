@@ -3,19 +3,22 @@
 import { useState, useEffect } from 'react';
 import Button from './Button';
 import { useUser } from '@/contexts/UserContext';
+import { Weight } from '@/lib/api/fetchProducts';
 
 interface AddToCartButtonProps {
   productId: string;
   onSuccess?: () => void;
   onError?: (message: string) => void;
   quantity?: number;
+  weight?: Weight | null;
 }
 
 export default function AddToCartButton({ 
   productId, 
   onSuccess, 
   onError, 
-  quantity: propQuantity
+  quantity: propQuantity,
+  weight
 }: AddToCartButtonProps) {
   const { user } = useUser();
   const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +35,10 @@ export default function AddToCartButton({
       onError?.('Silakan login terlebih dahulu');
       return;
     }
-
+    if (!weight) {
+      onError?.('Pilih berat produk terlebih dahulu');
+      return;
+    }
     setIsLoading(true);
     try {
       const response = await fetch('/api/cart/add', {
@@ -44,6 +50,9 @@ export default function AddToCartButton({
           user_id: user._id,
           product_id: productId,
           jumlah: quantity,
+          weight_id: weight.id,
+          weight_value: weight.value,
+          harga_satuan: weight.price,
         }),
       });
 

@@ -21,6 +21,8 @@ interface CartItem {
     berat?: number;
   };
   jumlah: number;
+  weight_value?: string;
+  harga_satuan?: number;
 }
 
 interface ShippingOption {
@@ -83,7 +85,7 @@ const PaymentPage = () => {
   }, [searchParams]);
 
   // Calculate totals
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.product_id.price * item.jumlah), 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + ((item.harga_satuan || item.product_id.price) * item.jumlah), 0);
   const shippingCost = selectedShipping?.shipping_cost || 0;
   const tax = subtotal * 0.1; // 10% tax
   const discount = subtotal * 0.05; // 5% discount
@@ -208,6 +210,7 @@ const PaymentPage = () => {
         },
         ongkir: selectedShipping.shipping_cost,
         catatan: notes,
+        total_bayar: total,
       };
 
       console.log('Creating order with data:', orderData);
@@ -229,14 +232,41 @@ const PaymentPage = () => {
       console.log('Order created:', orderResult);
 
       // Step 2: Create payment with order data
-      const paymentData = {
-        orderId: orderResult.order.orderId,
-        items: cartItems.map(item => ({
+      const paymentItems = [
+        ...cartItems.map(item => ({
           productId: item.product_id._id,
           name: item.product_id.nama || item.product_id.name,
-          price: item.product_id.price,
+          price: item.harga_satuan || item.product_id.price,
           quantity: item.jumlah
         })),
+      ];
+      if (selectedShipping && selectedShipping.shipping_cost > 0) {
+        paymentItems.push({
+          productId: 'ONGKIR',
+          name: 'Ongkos Kirim',
+          price: selectedShipping.shipping_cost,
+          quantity: 1
+        });
+      }
+      if (tax > 0) {
+        paymentItems.push({
+          productId: 'PAJAK',
+          name: 'Pajak (10%)',
+          price: tax,
+          quantity: 1
+        });
+      }
+      if (discount > 0) {
+        paymentItems.push({
+          productId: 'DISKON',
+          name: 'Diskon (5%)',
+          price: -discount,
+          quantity: 1
+        });
+      }
+      const paymentData = {
+        orderId: orderResult.order.orderId,
+        items: paymentItems,
         customerDetails: {
           name: recipientName,
           email: user.email,
@@ -350,6 +380,17 @@ const PaymentPage = () => {
           >
             Refresh Status Pembayaran
           </button>
+          {/* Tombol Bayar Sekarang di Midtrans */}
+          {orderDetails.status === 'pending' && orderDetails.snap_redirect_url && (
+            <div className="mb-2">
+              <button
+                onClick={() => window.location.href = orderDetails.snap_redirect_url ?? ''}
+                className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200"
+              >
+                Dapatkan Kode Pembayaran Kembali
+              </button>
+            </div>
+          )}
           {orderDetails.payment_url && (
             <a href={orderDetails.payment_url} target="_blank" rel="noopener noreferrer" className="w-full block bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200 mb-2">Lihat Instruksi Pembayaran</a>
           )}
@@ -534,7 +575,7 @@ const PaymentPage = () => {
                         </p>
                       </div>
                       <p className="text-sm font-medium text-black">
-                        Rp{(item.product_id.price * item.jumlah).toLocaleString()}
+                        Rp{(item.harga_satuan || item.product_id.price * item.jumlah).toLocaleString()}
                       </p>
                     </div>
                   ))}
