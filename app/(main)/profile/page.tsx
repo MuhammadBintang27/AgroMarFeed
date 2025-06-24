@@ -65,7 +65,12 @@ export default function ProfilePage() {
             </div>
 
             <button className="mt-4 font-semibold text-left text-black hover:underline">Pesanan Saya</button>
-            <button className="font-semibold text-left text-black hover:underline">Riwayat Pemesanan</button>
+            <button
+              className="font-semibold text-left text-black hover:underline"
+              onClick={() => router.push('/riwayatBelanja')}
+            >
+              Riwayat Pemesanan
+            </button>
             <button
               onClick={handleLogout}
               className="font-semibold text-left text-black hover:underline"
