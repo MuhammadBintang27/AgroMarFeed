@@ -260,7 +260,7 @@ export default function CartPage() {
                                                 />
                                                 <div className="flex flex-col">
                                                     <span className="text-black">{item.product_id?.name || "Produk"}</span>
-                                                    <span className="text-gray-500 text-sm">{item.product_id?.besaran || "-"}</span>
+                                                    <span className="text-gray-500 text-sm">{item.weight_value || item.product_id?.besaran || "-"}</span>
                                                 </div>
                                             </div>
                                             {/* Kolom Harga */}

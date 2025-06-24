@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 import { Heart, Minus, Plus, Star } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { fetchProductById, fetchProducts, Product } from "@/lib/api/fetchProducts";
+import { fetchProductById, fetchProducts, Product, Weight } from "@/lib/api/fetchProducts";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
@@ -21,6 +21,7 @@ const Detail = () => {
   const params = useParams();
   const slug = params.slug as string;
   const { user } = useUser();
+  const [selectedWeight, setSelectedWeight] = useState<Weight | null>(null);
 
   const increment = () => setQuantity((q) => q + 1);
   const decrement = () => setQuantity((q) => (q > 0 ? q - 1 : 0));
@@ -141,7 +142,7 @@ const Detail = () => {
             </div>
 
             <div className="text-2xl md:text-4xl font-semibold text-black">
-              Rp{product.price.toLocaleString()}
+              {selectedWeight ? `Rp${selectedWeight.price.toLocaleString()}` : `Rp${product.price.toLocaleString()}`}
             </div>
 
             <p className="text-black/60 text-sm">{product.description}</p>
@@ -149,12 +150,17 @@ const Detail = () => {
             <p className="text-black text-base md:text-lg font-medium mt-4">Tersedia Dalam:</p>
             <div className="flex flex-wrap gap-2">
               {product.weights.map((weight) => (
-                <div
-                  key={weight.id}
-                  className="bg-2 px-3 py-1.5 rounded-full text-sm text-white cursor-pointer hover:bg-2/80 transition"
-                >
+                <label key={weight.id} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm cursor-pointer border transition ${selectedWeight?.id === weight.id ? 'bg-2 text-white border-2 border-2' : 'bg-white text-black border-gray-300'}`}>
+                  <input
+                    type="radio"
+                    name="weight"
+                    value={weight.id}
+                    checked={selectedWeight?.id === weight.id}
+                    onChange={() => setSelectedWeight(weight)}
+                    className="form-radio accent-2"
+                  />
                   {weight.value}
-                </div>
+                </label>
               ))}
             </div>
 
@@ -175,6 +181,7 @@ const Detail = () => {
                 <AddToCartButton
                   productId={product._id}
                   quantity={quantity}
+                  weight={selectedWeight}
                   onSuccess={() => {
                     alert('Produk berhasil ditambahkan ke keranjang!');
                     setQuantity(0);
@@ -193,7 +200,11 @@ const Detail = () => {
                       alert('Jumlah produk harus minimal 1');
                       return;
                     }
-                    // Tambahkan ke keranjang dengan jumlah yang dipilih
+                    if (!selectedWeight) {
+                      alert('Pilih berat produk terlebih dahulu');
+                      return;
+                    }
+                    // Tambahkan ke keranjang dengan jumlah dan berat yang dipilih
                     const response = await fetch('/api/cart/add', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
@@ -201,6 +212,9 @@ const Detail = () => {
                         user_id: user._id,
                         product_id: product._id,
                         jumlah: quantity,
+                        weight_id: selectedWeight.id,
+                        weight_value: selectedWeight.value,
+                        harga_satuan: selectedWeight.price,
                       }),
                     });
                     if (response.ok) {

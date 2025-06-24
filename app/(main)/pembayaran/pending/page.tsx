@@ -11,6 +11,8 @@ interface Order {
   items: any[];
   customerDetails: any;
   shippingDetails: any;
+  snap_redirect_url?: string;
+  redirect_url?: string;
 }
 
 export default function PaymentPendingPage() {
@@ -178,6 +180,19 @@ export default function PaymentPendingPage() {
               Kembali ke Beranda
             </button>
           </div>
+
+          {/* Tombol Bayar Sekarang di bawah tombol lain */}
+          {order && order.status === 'pending' && order.snap_redirect_url && (
+            <div className="mt-6">
+              <button
+                onClick={() => window.location.href = order.snap_redirect_url ?? ''}
+                className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200"
+              >
+                Bayar Sekarang di Midtrans
+              </button>
+              <p className="text-xs text-gray-500 mt-2">Klik tombol ini untuk kembali ke halaman pembayaran Midtrans jika Anda belum menyelesaikan pembayaran.</p>
+            </div>
+          )}
 
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
             <h3 className="font-semibold text-blue-900 mb-2">Informasi Penting:</h3>
