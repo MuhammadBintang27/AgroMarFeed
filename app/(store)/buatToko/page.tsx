@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import CityAutocomplete from "@/components/ui/CityAutocomplete";
 import { useUser } from "@/contexts/UserContext";
+import imageCompression from "browser-image-compression";
 
 interface CityOption {
   id: number;
@@ -40,9 +41,25 @@ export default function BuatTokoPage() {
   const { user } = useUser();
   const userId = user?._id || null;
 
-  const handleFotoKtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFotoKtpChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFotoKtp(e.target.files[0]);
+      let file = e.target.files[0];
+      if (file.size > 300 * 1024) {
+        // Kompres gambar jika > 300KB
+        try {
+          const compressedFile = await imageCompression(file, {
+            maxSizeMB: 0.2, // 200KB
+            maxWidthOrHeight: 800,
+            useWebWorker: true,
+          });
+          setFotoKtp(compressedFile);
+        } catch (err) {
+          alert('Gagal kompres gambar, gunakan file asli.');
+          setFotoKtp(file);
+        }
+      } else {
+        setFotoKtp(file);
+      }
     }
   };
 
@@ -64,6 +81,10 @@ export default function BuatTokoPage() {
     }
     if (!setuju) {
       setError("Anda harus menyetujui syarat & ketentuan");
+      return;
+    }
+    if (!nama || !nik || !fotoKtp || !namaToko || !email || !nomorHp || !deskripsi) {
+      setError("Semua field wajib diisi, termasuk upload foto KTP.");
       return;
     }
     setLoading(true);
@@ -105,7 +126,7 @@ export default function BuatTokoPage() {
           kabupaten: alamat.lokasi?.city_name,
           kecamatan: alamat.lokasi?.district_name,
           desa: alamat.lokasi?.subdistrict_name,
-          kode_pos: alamat.lokasi?.zip_code,
+          kode_pos: alamat.lokasi?.zip_code ? Number(alamat.lokasi.zip_code) : undefined,
           alamat_lengkap: alamat.alamat_lengkap,
         },
       };

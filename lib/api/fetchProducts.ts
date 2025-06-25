@@ -22,9 +22,13 @@ export interface Product {
   weights: Weight[];
 }
 
-export const fetchProducts = async (): Promise<Product[]> => {
+export const fetchProducts = async (storeId?: string): Promise<Product[]> => {
   try {
-    const response = await fetch(`${API_BASE}/api/products`, {
+    let url = "/api/products";
+    if (storeId) {
+      url += `?store_id=${storeId}`;
+    }
+    const response = await fetch(url, {
       cache: "no-store",
       headers: {
         "ngrok-skip-browser-warning": "true"
@@ -34,9 +38,9 @@ export const fetchProducts = async (): Promise<Product[]> => {
       throw new Error(`Failed to fetch products: ${response.status}`);
     }
     const data = await response.json();
-    console.log("Raw API response:", data); // Debug raw data
-    // Ensure data matches Product interface
-    const products: Product[] = data.map((item: any) => ({
+    // Pastikan data array
+    const arr = Array.isArray(data) ? data : [];
+    const products: Product[] = arr.map((item: any) => ({
       _id: item._id,
       name: item.name,
       description: item.description,
@@ -51,7 +55,6 @@ export const fetchProducts = async (): Promise<Product[]> => {
       stock: item.stock,
       weights: item.weights,
     }));
-    console.log("Parsed products:", products);
     return products;
   } catch (error: any) {
     console.error("Fetch products error:", error);
@@ -61,8 +64,7 @@ export const fetchProducts = async (): Promise<Product[]> => {
 
 export const fetchProductById = async (id: string): Promise<Product> => {
   try {
-    console.log("Fetching product with ID:", id);
-    const response = await fetch(`${API_BASE}/api/products/${id}`, {
+    const response = await fetch(`/api/products/${id}`, {
       cache: "no-store",
       headers: {
         "ngrok-skip-browser-warning": "true"
@@ -72,7 +74,6 @@ export const fetchProductById = async (id: string): Promise<Product> => {
       throw new Error(`Failed to fetch product: ${response.status}`);
     }
     const data = await response.json();
-    console.log("Raw product response:", data);
     const product: Product = {
       _id: data._id,
       name: data.name,
@@ -88,7 +89,6 @@ export const fetchProductById = async (id: string): Promise<Product> => {
       stock: data.stock,
       weights: data.weights,
     };
-    console.log("Parsed product:", product);
     return product;
   } catch (error: any) {
     console.error("Fetch product error:", error);

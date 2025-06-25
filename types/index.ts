@@ -30,6 +30,8 @@ export interface User {
     catatan_kurir?: string;
     is_active?: boolean;
   }>;
+
+  role?: string;
 }
 
 

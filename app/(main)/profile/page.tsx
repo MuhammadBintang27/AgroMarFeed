@@ -14,6 +14,7 @@ interface Store {
   nomor_hp: string;
   deskripsi: string;
   aktif: boolean;
+  rating?: number;
 }
 
 export default function ProfilePage() {
@@ -40,7 +41,11 @@ export default function ProfilePage() {
     if (user?._id) {
       setLoadingStore(true);
       fetch(`/api/stores/user/${user._id}`)
-        .then((res) => (res.ok ? res.json() : null))
+        .then(async (res) => {
+          if (res.status === 404) return null;
+          if (!res.ok) return null;
+          return await res.json();
+        })
         .then((data) => setStore(data))
         .catch(() => setStore(null))
         .finally(() => setLoadingStore(false));
@@ -83,9 +88,7 @@ export default function ProfilePage() {
 
           {/* Tombol Buka/Lihat Toko */}
           <div className="mb-6">
-            {loadingStore ? (
-              <div className="text-gray-400 text-sm">Cek status toko...</div>
-            ) : store && store._id ? (
+            {user.role === 'penjual' ? (
               <button
                 className="w-full bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition mb-2"
                 onClick={() => router.push(`/tokoSaya`)}
