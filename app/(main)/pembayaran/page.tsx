@@ -8,11 +8,13 @@ import CityAutocomplete from '@/components/ui/CityAutocomplete';
 import CourierAutocomplete from '@/components/ui/CourierAutocomplete';
 import ServiceAutocomplete from '@/components/ui/ServiceAutocomplete';
 import { useUser } from '@/contexts/UserContext';
+import { fetchStoreById } from '@/lib/api/fetchProducts';
 
 interface CartItem {
   _id: string;
   product_id: {
     _id: string;
+    store_id: string;
     nama?: string;
     name?: string;
     price: number;
@@ -55,6 +57,7 @@ const PaymentPage = () => {
   const [postalCode, setPostalCode] = useState('');
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
+  const [store, setStore] = useState<any>(null);
 
   // Tambahan untuk order detail jika ada order_id
   const [orderDetails, setOrderDetails] = useState<any>(null);
@@ -115,6 +118,37 @@ const PaymentPage = () => {
           // If no selected items, show all items (fallback)
           setCartItems(allCartItems);
         }
+
+        // Fetch store data from first product in cart
+        if (allCartItems.length > 0 && allCartItems[0].product_id.store_id) {
+          try {
+            const storeData = await fetchStoreById(allCartItems[0].product_id.store_id);
+            setStore(storeData);
+            
+            // Search for store location in RajaOngkir API
+            if (storeData.alamat?.kabupaten) {
+              try {
+                const searchResponse = await fetch(`/api/shipping/search-destination?keyword=${encodeURIComponent(storeData.alamat.kabupaten)}`);
+                if (searchResponse.ok) {
+                  const searchData = await searchResponse.json();
+                  if (searchData.data && searchData.data.length > 0) {
+                    // Use the first matching destination
+                    const storeDestination = searchData.data[0];
+                    setSelectedOrigin({
+                      id: storeDestination.id,
+                      city_name: storeDestination.city_name,
+                      province: storeDestination.province
+                    });
+                  }
+                }
+              } catch (searchError) {
+                console.error('Error searching store location:', searchError);
+              }
+            }
+          } catch (storeError) {
+            console.error('Error fetching store:', storeError);
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching cart:', error);
@@ -128,8 +162,13 @@ const PaymentPage = () => {
   };
 
   const calculateShipping = async () => {
-    if (!selectedOrigin?.id || !selectedDestination?.id) {
-      alert('Pilih lokasi pengirim dan penerima terlebih dahulu');
+    if (!selectedDestination?.id) {
+      alert('Pilih lokasi penerima terlebih dahulu');
+      return;
+    }
+
+    if (!selectedOrigin?.id) {
+      alert('Lokasi pengirim belum tersedia');
       return;
     }
 
@@ -434,6 +473,26 @@ const PaymentPage = () => {
                     Alamat Pengiriman
                   </h2>
                   
+                  {/* Info Toko Pengirim */}
+                  {store && (
+                    <div className="bg-blue-50 rounded-xl p-4 mb-6">
+                      <h4 className="text-sm font-medium text-black mb-2">Dikirim dari:</h4>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-2 flex items-center justify-center">
+                          <span className="text-white font-semibold text-sm">
+                            {store.nama_toko?.charAt(0)?.toUpperCase() || 'T'}
+                          </span>
+                        </div>
+                        <div>
+                          <h5 className="font-semibold text-black text-sm">{store.nama_toko}</h5>
+                          <p className="text-xs text-gray-600">
+                            {store.alamat?.alamat_lengkap || `${store.alamat?.kabupaten}, ${store.alamat?.provinsi}`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Nama Penerima</label>
                     <input
@@ -482,14 +541,6 @@ const PaymentPage = () => {
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       rows={2}
                       placeholder="Catatan tambahan untuk kurir atau pesanan"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Lokasi Pengirim (Origin)</label>
-                    <CityAutocomplete
-                      value={selectedOrigin}
-                      onChange={handleOriginChange}
-                      placeholder="Cari lokasi pengirim..."
                     />
                   </div>
                   <div className="mb-4">

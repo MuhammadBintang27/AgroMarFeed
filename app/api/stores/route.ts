@@ -16,8 +16,11 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const userId = searchParams.get('user_id');
+  const id = searchParams.get('id');
   let url = `${API_BASE}/api/stores`;
-  if (userId) {
+  if (id) {
+    url += `/${id}`;
+  } else if (userId) {
     url += `/user/${userId}`;
   }
   const res = await fetch(url);

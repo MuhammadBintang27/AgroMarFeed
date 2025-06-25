@@ -8,6 +8,7 @@ const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export interface Product {
   _id: string;
+  store_id: string;
   name: string;
   description: string;
   categoryOptions: string;
@@ -42,6 +43,7 @@ export const fetchProducts = async (storeId?: string): Promise<Product[]> => {
     const arr = Array.isArray(data) ? data : [];
     const products: Product[] = arr.map((item: any) => ({
       _id: item._id,
+      store_id: item.store_id,
       name: item.name,
       description: item.description,
       categoryOptions: item.categoryOptions,
@@ -76,6 +78,7 @@ export const fetchProductById = async (id: string): Promise<Product> => {
     const data = await response.json();
     const product: Product = {
       _id: data._id,
+      store_id: data.store_id,
       name: data.name,
       description: data.description,
       categoryOptions: data.categoryOptions,
@@ -105,6 +108,19 @@ export const createProduct = async (product: Omit<Product, "_id" | "rating"> & {
   if (!response.ok) {
     const data = await response.json();
     throw new Error(data.message || "Gagal menambah produk");
+  }
+  return await response.json();
+};
+
+export const fetchStoreById = async (id: string) => {
+  const response = await fetch(`/api/stores?id=${id}`, {
+    cache: "no-store",
+    headers: {
+      "ngrok-skip-browser-warning": "true"
+    }
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch store: ${response.status}`);
   }
   return await response.json();
 };

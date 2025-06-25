@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 import { Heart, Minus, Plus, Star } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { fetchProductById, fetchProducts, Product, Weight } from "@/lib/api/fetchProducts";
+import { fetchProductById, fetchProducts, Product, Weight, fetchStoreById } from "@/lib/api/fetchProducts";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
@@ -15,6 +15,7 @@ import { useUser } from "@/contexts/UserContext";
 const Detail = () => {
   const [quantity, setQuantity] = useState(0);
   const [product, setProduct] = useState<Product | null>(null);
+  const [store, setStore] = useState<any>(null);
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +38,16 @@ const Detail = () => {
       try {
         const productData = await fetchProductById(slug);
         setProduct(productData);
+
+        // Fetch store data
+        if (productData.store_id) {
+          try {
+            const storeData = await fetchStoreById(productData.store_id);
+            setStore(storeData);
+          } catch (storeError) {
+            console.error("Error fetching store:", storeError);
+          }
+        }
 
         const productsData = await fetchProducts();
         const bestSellersData = productsData.filter((p) => p.isBestSeller && p._id !== slug);
@@ -146,6 +157,24 @@ const Detail = () => {
             </div>
 
             <p className="text-black/60 text-sm">{product.description}</p>
+
+            {/* Info Toko */}
+            {store && (
+              <div className="bg-gray-50 rounded-xl p-4 mt-4">
+                <h4 className="text-sm font-medium text-black mb-3">Dijual oleh:</h4>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-2 flex items-center justify-center">
+                    <span className="text-white font-semibold text-lg">
+                      {store.nama_toko?.charAt(0)?.toUpperCase() || 'T'}
+                    </span>
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-black">{store.nama_toko}</h5>
+                    <p className="text-sm text-gray-600">{store.alamat?.kabupaten || 'Lokasi tidak tersedia'}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <p className="text-black text-base md:text-lg font-medium mt-4">Tersedia Dalam:</p>
             <div className="flex flex-wrap gap-2">
