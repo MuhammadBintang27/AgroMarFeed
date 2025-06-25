@@ -110,7 +110,7 @@ const ProdukPakan = () => {
             key={category}
             href=""
             size="sm"
-            className={`whitespace-nowrap text-xs md:text-sm px-4 py-2 ${activeCategory === category ? "bg-1 text-white" : "bg-2 text-white"
+            className={`hover:brightness-110 whitespace-nowrap text-xs md:text-sm px-4 py-2 ${activeCategory === category ? "bg-1 text-white" : "bg-2 text-white"
               }`}
             onClick={(e) => {
               e.preventDefault();

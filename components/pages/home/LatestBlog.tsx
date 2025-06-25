@@ -89,13 +89,6 @@ const LatestBlog = () => {
             {/* Author & Send icon */}
             <div className="flex items-center justify-between mt-auto">
               <div className="flex items-center">
-                <Image
-                  src={article.penulis[0]?.avatar || "/images/home/avatar.png"}
-                  alt={article.penulis[0]?.nama || "Author"}
-                  width={30}
-                  height={30}
-                  className="rounded-full mr-2"
-                />
                 <span className="text-sm text-black">
                   {article.penulis[0]?.nama || "Unknown"}
                 </span>

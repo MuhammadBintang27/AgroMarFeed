@@ -65,7 +65,7 @@ const SpecialOffer = () => {
               <Button
                 href="/katalog"
                 size="md"
-                className="bg-1 text-white mb-4 md:mb-6 text-sm md:text-base"
+                className="hover:scale-105 hover:brightness-110 duration-300 bg-1 text-white mb-4 md:mb-6 text-sm md:text-base"
               >
                 Beli Sekarang
                 <ArrowRight className="ml-2" />
@@ -73,7 +73,7 @@ const SpecialOffer = () => {
             </div>
 
             {/* Gambar */}
-            <div className="w-full md:w-1/2 flex items-center justify-center p-2 md:p-4">
+            <div className="hover:scale-105 duration-300 w-full md:w-1/2 flex items-center justify-center p-2 md:p-4">
               <Image
                 src="/images/home/specialOffer1.png"
                 alt="Special Offer Image"
@@ -108,7 +108,7 @@ const SpecialOffer = () => {
               <Button
                 href="/katalog"
                 size="md"
-                className="bg-3 text-black mb-4 md:mb-6 text-sm md:text-base"
+                className="hover:scale-105 hover:brightness-110 duration-300 bg-3 text-black mb-4 md:mb-6 text-sm md:text-base"
               >
                 Beli Sekarang
                 <ArrowRight className="ml-2" />
@@ -116,7 +116,7 @@ const SpecialOffer = () => {
             </div>
 
             {/* Gambar */}
-            <div className="w-full md:w-1/2 flex items-center justify-center p-2 md:p-4">
+            <div className="hover:scale-105 duration-300 w-full md:w-1/2 flex items-center justify-center p-2 md:p-4">
               <Image
                 src="/images/home/specialOffer1.png"
                 alt="Special Offer Image"

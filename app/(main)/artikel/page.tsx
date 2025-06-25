@@ -81,76 +81,24 @@ export default function ArticlePage() {
                     : article.kategori.toLowerCase() === "tips"
                 )
                 .map((article) => (
-                  <motion.div
-                    key={article._id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-7 rounded-2xl p-4 flex flex-col group cursor-pointer hover:shadow-lg transition-all duration-300"
-                  >
-                    <div className="w-full h-48 relative mb-4 rounded-xl overflow-hidden">
-                      <Image
-                        src={article.gambar_sampul}
-                        alt={article.judul}
-                        fill
-                        className="object-cover transition-transform group-hover:scale-105"
-                      />
-                    </div>
-
-                    <div className="flex items-center text-sm text-black/50 mb-2">
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <span>
-                        {new Date(article.tanggal_publikasi).toLocaleDateString("id-ID", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </span>
-                    </div>
-
-                    <h3 className="text-lg font-semibold text-black mb-2 line-clamp-2 hover:text-2">
-                      {article.judul}
-                    </h3>
-
-                    <p className="text-sm text-black/60 mb-4 line-clamp-2">
-                      {article.konten.substring(0, 100)}...
-                    </p>
-
-                    <div className="mb-4">
-                      <Link href={`/artikel/${article._id}`}>
-                        <button className="w-full bg-2 text-white hover:bg-2/90 px-4 py-2 rounded-lg transition-all">
-                          Baca Selengkapnya
-                        </button>
-                      </Link>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
+                  <Link href={`/artikel/${article._id}`} key={article._id}>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-7 rounded-2xl p-4 flex flex-col group cursor-pointer hover:shadow-lg transition-all duration-300"
+                    >
+                      <div className="w-full h-48 relative mb-4 rounded-xl overflow-hidden">
                         <Image
-                          src={article.penulis[0]?.avatar || "/images/home/avatar.png"}
-                          alt={article.penulis[0]?.nama || "Author"}
-                          width={32}
-                          height={32}
-                          className="rounded-full mr-2"
+                          src={article.gambar_sampul}
+                          alt={article.judul}
+                          fill
+                          className="object-cover transition-transform group-hover:scale-105"
                         />
-                        <span className="text-sm text-black/80">
-                          {article.penulis[0]?.nama || "Unknown"}
-                        </span>
                       </div>
-                      <button className="p-2 hover:scale-110 transition text-2">
+
+                      <div className="flex items-center text-sm text-black/50 mb-2">
                         <svg
-                          className="w-5 h-5"
+                          className="w-4 h-4 mr-2"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -159,12 +107,50 @@ export default function ArticlePage() {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M14 5l7 7m0 0l-7 7m7-7H3"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                      </button>
-                    </div>
-                  </motion.div>
+                        <span>
+                          {new Date(article.tanggal_publikasi).toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+
+                      <h3 className="text-lg font-semibold text-black mb-2 line-clamp-2 hover:text-2">
+                        {article.judul}
+                      </h3>
+
+                      <p className="text-sm text-black/60 mb-4 line-clamp-2">
+                        {article.konten.substring(0, 100)}...
+                      </p>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-black/80">
+                          {article.penulis[0]?.nama || "Unknown"}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <button className="p-2 hover:scale-110 transition text-2">
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M14 5l7 7m0 0l-7 7m7-7H3"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </Link>
                 ))}
             </div>
           )}

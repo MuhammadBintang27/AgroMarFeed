@@ -16,8 +16,13 @@ export async function POST(request: NextRequest) {
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
+  const orderId = searchParams.get('order_id');
   let url = `${API_BASE}/api/appointment`;
-  if (id) url += `/${id}`;
+  if (orderId) {
+    url += `/by-order-id?orderId=${orderId}`;
+  } else if (id) {
+    url += `/${id}`;
+  }
   const res = await fetch(url);
   const data = await res.json();
   return NextResponse.json(data, { status: res.status });

@@ -4,8 +4,12 @@ import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Clock } from "lucide-react";
-import { fetchArticleById, Article } from "@/lib/api/fetchArticles";
+import { ArrowLeft, Clock, Eye } from "lucide-react";
+import {
+  fetchArticleById,
+  Article,
+  incrementViewCount,
+} from "@/lib/api/fetchArticles";
 
 export default function ArticleDetail() {
   const params = useParams();
@@ -15,9 +19,14 @@ export default function ArticleDetail() {
 
   useEffect(() => {
     async function loadArticle() {
-      const fetchedArticle = await fetchArticleById(slug);
-      setArticle(fetchedArticle);
-      setLoading(false);
+      try {
+        const fetchedArticle = await fetchArticleById(slug);
+        setArticle(fetchedArticle);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error loading article:", error);
+        setLoading(false);
+      }
     }
     loadArticle();
   }, [slug]);
@@ -30,7 +39,7 @@ export default function ArticleDetail() {
     return <div className="text-center text-black">Article not found</div>;
   }
 
-  const primaryAuthor = article.penulis[0] || { nama: "Unknown", avatar: "/images/home/avatar.png" };
+  const primaryAuthor = article.penulis[0] || { nama: "Unknown" };
 
   return (
     <div className="min-h-screen pt-32 pb-16 bg-white">
@@ -51,26 +60,26 @@ export default function ArticleDetail() {
 
           {/* Article Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-4 text-black">{article.judul}</h1>
+            <h1 className="text-4xl font-bold mb-4 text-black">
+              {article.judul}
+            </h1>
             <div className="flex items-center gap-6 text-black/60">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
                 <span>
-                  {new Date(article.tanggal_publikasi).toLocaleDateString("id-ID", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
+                  {new Date(article.tanggal_publikasi).toLocaleDateString(
+                    "id-ID",
+                    {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    }
+                  )}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <Image
-                  src={primaryAuthor.avatar}
-                  alt={primaryAuthor.nama}
-                  width={24}
-                  height={24}
-                  className="rounded-full"
-                />
+              </div>
+              <div className="flex items-center gap-2">
                 <span>{primaryAuthor.nama}</span>
                 {primaryAuthor.role && (
                   <span className="text-black/40">• {primaryAuthor.role}</span>
@@ -100,15 +109,10 @@ export default function ArticleDetail() {
 
           {/* Author Box */}
           <div className="mt-12 flex items-start gap-4 bg-7 rounded-2xl p-6">
-            <Image
-              src={primaryAuthor.avatar}
-              alt={primaryAuthor.nama}
-              width={64}
-              height={64}
-              className="rounded-full"
-            />
             <div>
-              <h3 className="font-semibold text-black mb-1">{primaryAuthor.nama}</h3>
+              <h3 className="font-semibold text-black mb-1">
+                {primaryAuthor.nama}
+              </h3>
               {primaryAuthor.role && (
                 <p className="text-black/60 text-sm">{primaryAuthor.role}</p>
               )}

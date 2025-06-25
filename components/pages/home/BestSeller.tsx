@@ -25,7 +25,7 @@ const BestSeller = () => {
             {"\n"}hingga 30%! Beli pakan, bantu bumi.
           </p>
           <div className="flex justify-center md:justify-start">
-            <Button href="/katalog" size="md" className="bg-1 text-white mb-6">
+            <Button href="/katalog" size="md" className="hover:scale-105 hover:brightness-110 duration-300 bg-1 text-white mb-6">
               Lihat Produk
               <ArrowRight className="ml-2" />
             </Button>
@@ -44,7 +44,7 @@ const BestSeller = () => {
             alt="Banner Icon"
             width={320}
             height={320}
-            className="object-contain w-full max-w-xs md:max-w-md"
+            className="hover:scale-105 duration-300 object-contain w-full max-w-xs md:max-w-md"
           />
         </motion.div>
       </div>
