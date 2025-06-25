@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useUser } from '@/contexts/UserContext';
+import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useUser } from "@/contexts/UserContext";
 
 // Define appointment type
 interface AppointmentDetails {
@@ -22,38 +22,52 @@ export default function PaymentConsultationSuccessPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useUser();
-  const [appointmentDetails, setAppointmentDetails] = useState<AppointmentDetails | null>(null);
+  const [appointmentDetails, setAppointmentDetails] =
+    useState<AppointmentDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
 
-  const orderId = searchParams.get('order_id');
+  useEffect(() => {
+    // Cek apakah order_id di query param adalah format ORDER-...
+    const queryOrderId = searchParams.get("order_id");
+    if (queryOrderId && queryOrderId.startsWith("ORDER-")) {
+      setOrderId(queryOrderId);
+    } else {
+      // Ambil dari localStorage
+      const localOrderId = localStorage.getItem("last_appointment_order_id");
+      if (localOrderId) setOrderId(localOrderId);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (orderId) {
-      fetchAppointmentDetails();
+      fetchAppointmentDetails(orderId);
+      // Hapus dari localStorage setelah digunakan
+      localStorage.removeItem("last_appointment_order_id");
     }
   }, [orderId]);
 
-  const fetchAppointmentDetails = async () => {
+  const fetchAppointmentDetails = async (oid: string) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`/api/appointment?order_id=${orderId}`);
+      const response = await fetch(`/api/appointment?order_id=${oid}`);
       if (response.ok) {
         const data = await response.json();
         setAppointmentDetails(data);
       } else {
-        setError('Appointment tidak ditemukan.');
+        setError("Appointment tidak ditemukan.");
       }
     } catch (error) {
-      setError('Gagal mengambil data appointment.');
+      setError("Gagal mengambil data appointment.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleContinue = () => {
-    router.push('/konsultasi');
+    router.push("/konsultasi");
   };
 
   if (loading) {
@@ -61,61 +75,112 @@ export default function PaymentConsultationSuccessPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memproses pembayaran konsultasi...</p>
+          <p className="mt-4 text-gray-600">
+            Memproses pembayaran konsultasi...
+          </p>
         </div>
       </div>
     );
   }
 
-  let statusTitle = '';
-  let statusDesc = '';
+  let statusTitle = "";
+  let statusDesc = "";
   let statusIcon = null;
-  let statusColor = '';
+  let statusColor = "";
 
   if (error) {
-    statusTitle = 'Appointment Tidak Ditemukan';
+    statusTitle = "Appointment Tidak Ditemukan";
     statusDesc = error;
     statusIcon = (
       <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
-        <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+        <svg
+          className="h-8 w-8 text-red-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
         </svg>
       </div>
     );
-    statusColor = 'text-red-600';
-  } else if (appointmentDetails?.payment_status === 'paid' || appointmentDetails?.status === 'processing') {
-    statusTitle = 'Pembayaran Konsultasi Berhasil!';
-    statusDesc = 'Terima kasih telah melakukan pembayaran konsultasi. Appointment Anda telah berhasil diproses.';
+    statusColor = "text-red-600";
+  } else if (
+    appointmentDetails?.payment_status === "paid" ||
+    appointmentDetails?.status === "processing"
+  ) {
+    statusTitle = "Pembayaran Konsultasi Berhasil!";
+    statusDesc =
+      "Terima kasih telah melakukan pembayaran konsultasi. Appointment Anda telah berhasil diproses.";
     statusIcon = (
       <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
-        <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+        <svg
+          className="h-8 w-8 text-green-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M5 13l4 4L19 7"
+          ></path>
         </svg>
       </div>
     );
-    statusColor = 'text-green-600';
-  } else if (appointmentDetails?.payment_status === 'pending') {
-    statusTitle = 'Menunggu Pembayaran';
-    statusDesc = 'Appointment Anda masih menunggu pembayaran. Silakan selesaikan pembayaran sesuai instruksi.';
+    statusColor = "text-green-600";
+  } else if (appointmentDetails?.payment_status === "pending") {
+    statusTitle = "Menunggu Pembayaran";
+    statusDesc =
+      "Appointment Anda masih menunggu pembayaran. Silakan selesaikan pembayaran sesuai instruksi.";
     statusIcon = (
       <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 mb-6">
-        <svg className="h-8 w-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        <svg
+          className="h-8 w-8 text-yellow-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
         </svg>
       </div>
     );
-    statusColor = 'text-yellow-600';
-  } else if (appointmentDetails?.payment_status === 'failed' || appointmentDetails?.status === 'cancelled') {
-    statusTitle = 'Pembayaran Gagal / Dibatalkan';
-    statusDesc = 'Pembayaran konsultasi Anda gagal atau dibatalkan. Silakan lakukan appointment ulang.';
+    statusColor = "text-yellow-600";
+  } else if (
+    appointmentDetails?.payment_status === "failed" ||
+    appointmentDetails?.status === "cancelled"
+  ) {
+    statusTitle = "Pembayaran Gagal / Dibatalkan";
+    statusDesc =
+      "Pembayaran konsultasi Anda gagal atau dibatalkan. Silakan lakukan appointment ulang.";
     statusIcon = (
       <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
-        <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+        <svg
+          className="h-8 w-8 text-red-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
         </svg>
       </div>
     );
-    statusColor = 'text-red-600';
+    statusColor = "text-red-600";
   }
 
   return (
@@ -123,16 +188,28 @@ export default function PaymentConsultationSuccessPage() {
       <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
         <div className="text-center">
           {statusIcon}
-          <h1 className={`text-2xl font-bold mb-4 ${statusColor}`}>{statusTitle}</h1>
+          <h1 className={`text-2xl font-bold mb-4 ${statusColor}`}>
+            {statusTitle}
+          </h1>
           <p className="text-gray-600 mb-6">{statusDesc}</p>
 
           {appointmentDetails && (
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <h3 className="font-semibold text-gray-900 mb-2">Detail Appointment:</h3>
-              <p className="text-sm text-gray-600">Order ID: {appointmentDetails.orderId}</p>
-              <p className="text-sm text-gray-600">Total: Rp {appointmentDetails.totalAmount?.toLocaleString()}</p>
-              <p className="text-sm text-gray-600">Status: {appointmentDetails.status}</p>
-              <p className="text-sm text-gray-600">Pembayaran: {appointmentDetails.payment_status}</p>
+              <h3 className="font-semibold text-gray-900 mb-2">
+                Detail Appointment:
+              </h3>
+              <p className="text-sm text-gray-600">
+                Order ID: {appointmentDetails.orderId}
+              </p>
+              <p className="text-sm text-gray-600">
+                Total: Rp {appointmentDetails.totalAmount?.toLocaleString()}
+              </p>
+              <p className="text-sm text-gray-600">
+                Status: {appointmentDetails.status}
+              </p>
+              <p className="text-sm text-gray-600">
+                Pembayaran: {appointmentDetails.payment_status}
+              </p>
             </div>
           )}
 
@@ -146,10 +223,10 @@ export default function PaymentConsultationSuccessPage() {
           </div>
 
           <p className="text-xs text-gray-500 mt-6">
-            Email konfirmasi telah dikirim ke {user?.email || 'email Anda'}
+            Email konfirmasi telah dikirim ke {user?.email || "email Anda"}
           </p>
         </div>
       </div>
     </div>
   );
-} 
+}

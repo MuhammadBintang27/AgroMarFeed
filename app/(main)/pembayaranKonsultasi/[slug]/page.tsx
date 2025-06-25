@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Calendar, Clock, MapPin, User, Mail, Phone } from "lucide-react";
-import { useUser } from '@/contexts/UserContext';
+import { useUser } from "@/contexts/UserContext";
 
 export default function BookingPage() {
   const router = useRouter();
@@ -50,13 +50,14 @@ export default function BookingPage() {
   const handleConfirmBooking = async () => {
     if (!isFormValid() || isSubmitting) return;
     if (!user || !user._id) {
-      alert('Silakan login terlebih dahulu');
+      alert("Silakan login terlebih dahulu");
       return;
     }
     setIsSubmitting(true);
     try {
       // Find selected slot's jam_mulai & jam_berakhir
-      let jam_mulai = null, jam_berakhir = null;
+      let jam_mulai = null,
+        jam_berakhir = null;
       if (selectedTime) {
         const [mulai, akhir] = selectedTime.split(" - ");
         jam_mulai = mulai;
@@ -71,36 +72,43 @@ export default function BookingPage() {
         tanggal_konsultasi: selectedDate?.toISOString(),
         jadwal: { jam_mulai, jam_berakhir },
         total_harga: konsultan?.price || 0,
-        metode_pembayaran: 'midtrans',
+        metode_pembayaran: "midtrans",
       };
-      console.log('Appointment payload:', appointmentPayload);
+      console.log("Appointment payload:", appointmentPayload);
 
       // Step 1: Create appointment
-      const res = await fetch('/api/appointment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/appointment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(appointmentPayload),
       });
 
-
       const data = await res.json();
 
-      console.log('Appointment response:', data);
+      console.log("Appointment response:", data);
 
       if (res.ok && data._id) {
         // Step 2: Create payment for konsultasi
         const appointmentId = data._id;
-        const productId = konsultan?._id || '';
-        const name = konsultan?.nama ? `Konsultasi: ${konsultan.nama}` : 'Konsultasi';
-        const price = typeof konsultan?.price === 'number' ? konsultan.price : 0;
+        const productId = konsultan?._id || "";
+        const name = konsultan?.nama
+          ? `Konsultasi: ${konsultan.nama}`
+          : "Konsultasi";
+        const price =
+          typeof konsultan?.price === "number" ? konsultan.price : 0;
         const quantity = 1;
-        const description = konsultan?.nama && selectedDate && jam_mulai && jam_berakhir
-          ? `Konsultasi dengan ${konsultan.nama} pada ${selectedDate.toLocaleDateString('id-ID')} jam ${jam_mulai}-${jam_berakhir}`
-          : 'Konsultasi';
-        const customerName = formData.nama_lengkap || 'User';
-        const customerEmail = formData.email || 'user@email.com';
-        const customerPhone = formData.no_hp || '0000000000';
-        const userId = user._id || '';
+        const description =
+          konsultan?.nama && selectedDate && jam_mulai && jam_berakhir
+            ? `Konsultasi dengan ${
+                konsultan.nama
+              } pada ${selectedDate.toLocaleDateString(
+                "id-ID"
+              )} jam ${jam_mulai}-${jam_berakhir}`
+            : "Konsultasi";
+        const customerName = formData.nama_lengkap || "User";
+        const customerEmail = formData.email || "user@email.com";
+        const customerPhone = formData.no_hp || "0000000000";
+        const userId = user._id || "";
 
         const paymentData = {
           appointmentId,
@@ -122,36 +130,57 @@ export default function BookingPage() {
         };
         // Validasi payload payment
         if (!paymentData.appointmentId) {
-          alert('Gagal membuat appointmentId untuk pembayaran.');
+          alert("Gagal membuat appointmentId untuk pembayaran.");
           return;
         }
-        if (!paymentData.items || !Array.isArray(paymentData.items) || paymentData.items.length === 0) {
-          alert('Data item pembayaran konsultasi kosong.');
+        if (
+          !paymentData.items ||
+          !Array.isArray(paymentData.items) ||
+          paymentData.items.length === 0
+        ) {
+          alert("Data item pembayaran konsultasi kosong.");
           return;
         }
-        if (!paymentData.customerDetails || !paymentData.customerDetails.name || !paymentData.customerDetails.email || !paymentData.customerDetails.phone) {
-          alert('Data customer pembayaran konsultasi tidak lengkap.');
+        if (
+          !paymentData.customerDetails ||
+          !paymentData.customerDetails.name ||
+          !paymentData.customerDetails.email ||
+          !paymentData.customerDetails.phone
+        ) {
+          alert("Data customer pembayaran konsultasi tidak lengkap.");
           return;
         }
-        console.log('Payment payload:', paymentData);
-        const paymentRes = await fetch('/api/payment/consultation', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        console.log("Payment payload:", paymentData);
+        const paymentRes = await fetch("/api/payment/consultation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(paymentData),
         });
         const paymentResult = await paymentRes.json();
-        console.log('Payment response:', paymentResult);
+        console.log("Payment response:", paymentResult);
         if (paymentRes.ok && paymentResult.redirect_url) {
+          if (data.orderId) {
+            localStorage.setItem("last_appointment_order_id", data.orderId);
+          }
           window.location.href = paymentResult.redirect_url;
         } else {
-          alert(paymentResult.message || JSON.stringify(paymentResult) || 'Gagal membuat pembayaran konsultasi');
+          alert(
+            paymentResult.message ||
+              JSON.stringify(paymentResult) ||
+              "Gagal membuat pembayaran konsultasi"
+          );
         }
       } else {
-        alert(data.message || JSON.stringify(data) || 'Gagal membuat appointment');
+        alert(
+          data.message || JSON.stringify(data) || "Gagal membuat appointment"
+        );
       }
     } catch (error) {
-      console.error('Error submitting appointment:', error);
-      alert('There was an error processing your booking. Please try again.\n' + (error instanceof Error ? error.message : String(error)));
+      console.error("Error submitting appointment:", error);
+      alert(
+        "There was an error processing your booking. Please try again.\n" +
+          (error instanceof Error ? error.message : String(error))
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -176,7 +205,9 @@ export default function BookingPage() {
   }, [slug]);
 
   // Generate time slots from konsultan.jadwal
-  function generateTimeSlots(jadwal: { jam_mulai: string; jam_berakhir: string }[] = []) {
+  function generateTimeSlots(
+    jadwal: { jam_mulai: string; jam_berakhir: string }[] = []
+  ) {
     const slots: string[] = [];
     for (const j of jadwal) {
       let [startHour, startMin] = j.jam_mulai.split(":").map(Number);
@@ -187,7 +218,11 @@ export default function BookingPage() {
         const next = new Date(current.getTime() + 60 * 60 * 1000); // +1 hour
         if (next > end) break;
         const pad = (n: number) => n.toString().padStart(2, "0");
-        slots.push(`${pad(current.getHours())}:${pad(current.getMinutes())} - ${pad(next.getHours())}:${pad(next.getMinutes())}`);
+        slots.push(
+          `${pad(current.getHours())}:${pad(current.getMinutes())} - ${pad(
+            next.getHours()
+          )}:${pad(next.getMinutes())}`
+        );
         current = next;
       }
     }
@@ -265,18 +300,33 @@ export default function BookingPage() {
             <div className="text-center mb-8">Loading konsultan...</div>
           ) : konsultan ? (
             <div className="flex items-center gap-4 mb-8 bg-white p-4 rounded-xl shadow">
-              {konsultan.image_url && (
-                <img src={konsultan.image_url} alt={konsultan.nama} className="w-20 h-20 rounded-full object-cover border" />
-              )}
+              {/* Foto profil default berdasarkan jenis_kelamin */}
+              <img
+                src={
+                  konsultan.jenis_kelamin === "P"
+                    ? "/images/agromardoc-P.png"
+                    : "/images/agromardoc-L.png"
+                }
+                alt={konsultan.nama}
+                className="w-20 h-20 rounded-full object-cover border"
+              />
               <div>
-                <div className="font-bold text-lg text-black">{konsultan.nama}</div>
+                <div className="font-bold text-lg text-black">
+                  {konsultan.nama}
+                </div>
                 <div className="text-black/60 mb-1">{konsultan.profesi}</div>
-                <div className="text-black/60 text-sm">{konsultan.description}</div>
-                <div className="text-black/80 mt-1 font-semibold">Rp {konsultan.price?.toLocaleString("id-ID")}</div>
+                <div className="text-black/60 text-sm">
+                  {konsultan.description}
+                </div>
+                <div className="text-black/80 mt-1 font-semibold">
+                  Rp {konsultan.price?.toLocaleString("id-ID")}
+                </div>
               </div>
             </div>
           ) : (
-            <div className="text-center mb-8 text-red-500">Konsultan tidak ditemukan</div>
+            <div className="text-center mb-8 text-red-500">
+              Konsultan tidak ditemukan
+            </div>
           )}
           {/* Header with Icon */}
           <div className="text-center mb-12">
@@ -434,7 +484,11 @@ export default function BookingPage() {
                   Pilih Waktu
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
-                  {timeSlots.length === 0 && <div className="col-span-2 text-gray-400">Tidak ada jadwal tersedia</div>}
+                  {timeSlots.length === 0 && (
+                    <div className="col-span-2 text-gray-400">
+                      Tidak ada jadwal tersedia
+                    </div>
+                  )}
                   {timeSlots.map((time) => (
                     <button
                       key={time}
