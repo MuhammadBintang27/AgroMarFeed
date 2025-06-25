@@ -95,3 +95,16 @@ export const fetchProductById = async (id: string): Promise<Product> => {
     throw new Error(error.message || "Failed to fetch product");
   }
 };
+
+export const createProduct = async (product: Omit<Product, "_id" | "rating"> & { store_id: string }) => {
+  const response = await fetch("/api/products", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(product),
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.message || "Gagal menambah produk");
+  }
+  return await response.json();
+};

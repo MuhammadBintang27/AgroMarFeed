@@ -1,13 +1,26 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { getCurrentUser, logout } from '@/lib/auth';
-import { User } from '@/types';
-import Image from 'next/image';
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getCurrentUser, logout } from "@/lib/auth";
+import { User } from "@/types";
+import Image from "next/image";
+
+interface Store {
+  _id: string;
+  user_id: string;
+  nama: string;
+  nama_toko: string;
+  email: string;
+  nomor_hp: string;
+  deskripsi: string;
+  aktif: boolean;
+}
 
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
+  const [store, setStore] = useState<Store | null>(null);
+  const [loadingStore, setLoadingStore] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -16,21 +29,32 @@ export default function ProfilePage() {
         const response = await getCurrentUser();
         setUser(response.user ?? null);
       } catch (err: any) {
-        setError('Not authenticated');
-        router.push('/auth/login');
+        setError("Not authenticated");
+        router.push("/auth/login");
       }
     };
     fetchUser();
   }, [router]);
 
+  useEffect(() => {
+    if (user?._id) {
+      setLoadingStore(true);
+      fetch(`/api/stores/user/${user._id}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => setStore(data))
+        .catch(() => setStore(null))
+        .finally(() => setLoadingStore(false));
+    }
+  }, [user]);
+
   const handleLogout = async () => {
     try {
       await logout();
       setUser(null);
-      router.push('/auth/login');
+      router.push("/auth/login");
     } catch (err: any) {
-      console.error('Logout failed:', err);
-      setError('Logout failed');
+      console.error("Logout failed:", err);
+      setError("Logout failed");
     }
   };
 
@@ -44,7 +68,12 @@ export default function ProfilePage() {
           {/* Info User */}
           <div className="flex items-center mb-6">
             <div className="w-12 h-12 rounded-full bg-gray-300 overflow-hidden">
-              <Image src="/default-user.png" alt="User" width={48} height={48} />
+              <Image
+                src="/default-user.png"
+                alt="User"
+                width={48}
+                height={48}
+              />
             </div>
             <div className="ml-4">
               <p className="font-semibold text-black">{user.name}</p>
@@ -52,22 +81,53 @@ export default function ProfilePage() {
             </div>
           </div>
 
+          {/* Tombol Buka/Lihat Toko */}
+          <div className="mb-6">
+            {loadingStore ? (
+              <div className="text-gray-400 text-sm">Cek status toko...</div>
+            ) : store && store._id ? (
+              <button
+                className="w-full bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition mb-2"
+                onClick={() => router.push(`/tokoSaya`)}
+              >
+                Lihat Toko
+              </button>
+            ) : (
+              <button
+                className="w-full bg-yellow-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-yellow-600 transition mb-2"
+                onClick={() => router.push("/buatToko")}
+              >
+                Buka Toko
+              </button>
+            )}
+          </div>
+
           {/* Navigasi */}
           <nav className="flex flex-col gap-2">
             <div>
               <p className="font-semibold text-black">Akun Saya</p>
               <div className="ml-4 mt-1 flex flex-col gap-1 text-sm">
-                <button className="text-left text-black hover:underline">Profil</button>
-                <button className="text-left text-black hover:underline">Ubah Kata Sandi</button>
-                <button className="text-left text-black hover:underline">Pengaturan Notifikasi</button>
-                <button className="text-left text-black hover:underline">Pengaturan Privasi</button>
+                <button className="text-left text-black hover:underline">
+                  Profil
+                </button>
+                <button className="text-left text-black hover:underline">
+                  Ubah Kata Sandi
+                </button>
+                <button className="text-left text-black hover:underline">
+                  Pengaturan Notifikasi
+                </button>
+                <button className="text-left text-black hover:underline">
+                  Pengaturan Privasi
+                </button>
               </div>
             </div>
 
-            <button className="mt-4 font-semibold text-left text-black hover:underline">Pesanan Saya</button>
+            <button className="mt-4 font-semibold text-left text-black hover:underline">
+              Pesanan Saya
+            </button>
             <button
               className="font-semibold text-left text-black hover:underline"
-              onClick={() => router.push('/riwayatBelanja')}
+              onClick={() => router.push("/riwayatBelanja")}
             >
               Riwayat Pemesanan
             </button>
@@ -84,7 +144,8 @@ export default function ProfilePage() {
         <div className="w-full lg:w-[70%]">
           <h2 className="text-xl font-semibold mb-1">Profil Saya</h2>
           <p className="text-sm text-gray-600 mb-6">
-            Kelola informasi profil Anda untuk mengontrol, melindungi, dan mengamankan akun
+            Kelola informasi profil Anda untuk mengontrol, melindungi, dan
+            mengamankan akun
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm">
@@ -95,13 +156,17 @@ export default function ProfilePage() {
             <div>{user.email}</div>
 
             <div className="font-medium">Nomor Telepon</div>
-            <div>{user.detail?.[0]?.no_telpon || '-'}</div>
+            <div>{user.detail?.[0]?.no_telpon || "-"}</div>
 
             <div className="font-medium">Tanggal Lahir</div>
-            <div>{user.detail?.[0]?.tanggal_lahir ? new Date(user.detail[0].tanggal_lahir).toLocaleDateString() : '-'}</div>
+            <div>
+              {user.detail?.[0]?.tanggal_lahir
+                ? new Date(user.detail[0].tanggal_lahir).toLocaleDateString()
+                : "-"}
+            </div>
 
             <div className="font-medium">Jenis Kelamin</div>
-            <div>{user.detail?.[0]?.jenis_kelamin || '-'}</div>
+            <div>{user.detail?.[0]?.jenis_kelamin || "-"}</div>
           </div>
 
           <div className="mt-10">
@@ -111,18 +176,33 @@ export default function ProfilePage() {
                 {user.alamat.map((alamat, idx) => (
                   <div
                     key={idx}
-                    className={`border p-4 rounded-md ${alamat.is_active ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}
+                    className={`border p-4 rounded-md ${
+                      alamat.is_active
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200"
+                    }`}
                   >
-                    <p className="font-medium">{alamat.label_alamat || 'Alamat Tanpa Label'}</p>
-                    <p>{alamat.nama} - {alamat.nomor_hp}</p>
+                    <p className="font-medium">
+                      {alamat.label_alamat || "Alamat Tanpa Label"}
+                    </p>
+                    <p>
+                      {alamat.nama} - {alamat.nomor_hp}
+                    </p>
                     <p>{alamat.alamat_lengkap}</p>
-                    <p>{alamat.desa}, {alamat.kecamatan}, {alamat.kabupaten}, {alamat.provinsi} {alamat.kode_pos}</p>
-                    <p className="text-sm text-gray-500">Catatan: {alamat.catatan_kurir || '-'}</p>
+                    <p>
+                      {alamat.desa}, {alamat.kecamatan}, {alamat.kabupaten},{" "}
+                      {alamat.provinsi} {alamat.kode_pos}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Catatan: {alamat.catatan_kurir || "-"}
+                    </p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500">Belum ada alamat tersimpan.</p>
+              <p className="text-sm text-gray-500">
+                Belum ada alamat tersimpan.
+              </p>
             )}
           </div>
         </div>
