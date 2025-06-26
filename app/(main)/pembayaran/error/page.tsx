@@ -1,14 +1,14 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 
-export default function PaymentErrorPage() {
+function PaymentErrorContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const orderId = searchParams.get('order_id');
-  const [order, setOrder] = useState<any | null>(null);
+  const [order, setOrder] = useState<unknown | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -30,8 +30,9 @@ export default function PaymentErrorPage() {
       if (!data.status && !data.payment_status && retryCount < maxRetry) {
         retryTimeout.current = setTimeout(() => setRetryCount(c => c + 1), 2000);
       }
-    } catch (err: any) {
-      setFetchError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan';
+      setFetchError(errorMessage);
       if (retryCount < maxRetry) {
         retryTimeout.current = setTimeout(() => setRetryCount(c => c + 1), 2000);
       }
@@ -41,13 +42,13 @@ export default function PaymentErrorPage() {
   };
 
   useEffect(() => {
-    if (orderId && retryCount < maxRetry && (!order || (!order.status && !order.payment_status))) {
+    if (orderId && retryCount < maxRetry && (!order || (!(order as any)?.status && !(order as any)?.payment_status))) {
       fetchOrder();
     }
     return () => {
       if (retryTimeout.current) clearTimeout(retryTimeout.current);
     };
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId, retryCount]);
 
   const handleTryAgain = () => {
@@ -73,7 +74,7 @@ export default function PaymentErrorPage() {
             </svg>
           </div>
 
-          {loading || (retryCount > 0 && retryCount < maxRetry && (!order || (!order.status && !order.payment_status))) ? (
+          {loading || (retryCount > 0 && retryCount < maxRetry && (!order || (!(order as any)?.status && !(order as any)?.payment_status))) ? (
             <p className="text-blue-600 mb-4">Sedang memproses pesanan Anda, mohon tunggu beberapa detik...</p>
           ) : fetchError ? (
             <>
@@ -81,28 +82,28 @@ export default function PaymentErrorPage() {
               <p className="text-gray-600 mb-6">{fetchError}</p>
             </>
           ) : order ? (
-            order.payment_status === 'pending' || order.status === 'pending' || (!order.status && !order.payment_status) ? (
+            (order as any)?.payment_status === 'pending' || (order as any)?.status === 'pending' || (!(order as any)?.status && !(order as any)?.payment_status) ? (
               <>
                 <h1 className="text-2xl font-bold text-yellow-700 mb-4">Pesanan Berhasil Dibuat</h1>
                 <p className="text-gray-600 mb-6">Pesanan Anda berhasil dibuat dan menunggu pembayaran. Silakan selesaikan pembayaran sesuai instruksi.</p>
                 <div className="bg-gray-50 rounded-lg p-4 mb-6">
                   <p className="text-sm text-gray-600">Order ID: {orderId}</p>
-                  <p className="text-sm text-gray-600">Status pesanan: {order.status || order.statusPesanan || order.order_status || 'Belum dibayar'}, pembayaran: {order.payment_status || order.paymentStatus || 'Belum dibayar'}</p>
+                  <p className="text-sm text-gray-600">Status pesanan: {(order as any)?.status || (order as any)?.statusPesanan || (order as any)?.order_status || 'Belum dibayar'}, pembayaran: {(order as any)?.payment_status || (order as any)?.paymentStatus || 'Belum dibayar'}</p>
                 </div>
               </>
-            ) : order.payment_status === 'failed' || order.status === 'cancelled' ? (
+            ) : (order as any)?.payment_status === 'failed' || (order as any)?.status === 'cancelled' ? (
               <>
                 <h1 className="text-2xl font-bold text-red-600 mb-4">Pembayaran Gagal / Dibatalkan</h1>
                 <p className="text-gray-600 mb-6">Pembayaran Anda gagal atau dibatalkan. Silakan lakukan pemesanan ulang.</p>
                 <div className="bg-gray-50 rounded-lg p-4 mb-6">
                   <p className="text-sm text-gray-600">Order ID: {orderId}</p>
-                  <p className="text-sm text-gray-600">Status pesanan: {order.status || order.statusPesanan || order.order_status || 'Tidak ditemukan'}, pembayaran: {order.payment_status || order.paymentStatus || 'Tidak ditemukan'}</p>
+                  <p className="text-sm text-gray-600">Status pesanan: {(order as any)?.status || (order as any)?.statusPesanan || (order as any)?.order_status || 'Tidak ditemukan'}, pembayaran: {(order as any)?.payment_status || (order as any)?.paymentStatus || 'Tidak ditemukan'}</p>
                 </div>
               </>
             ) : (
               <>
                 <h1 className="text-2xl font-bold text-green-700 mb-4">Status Pesanan</h1>
-                <p className="text-gray-600 mb-6">Status pesanan: {order.status || order.statusPesanan || order.order_status || 'Belum dibayar'}, pembayaran: {order.payment_status || order.paymentStatus || 'Belum dibayar'}</p>
+                <p className="text-gray-600 mb-6">Status pesanan: {(order as any)?.status || (order as any)?.statusPesanan || (order as any)?.order_status || 'Belum dibayar'}, pembayaran: {(order as any)?.payment_status || (order as any)?.paymentStatus || 'Belum dibayar'}</p>
                 <div className="bg-gray-50 rounded-lg p-4 mb-6">
                   <p className="text-sm text-gray-600">Order ID: {orderId}</p>
                 </div>
@@ -142,5 +143,20 @@ export default function PaymentErrorPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentErrorPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat...</p>
+        </div>
+      </div>
+    }>
+      <PaymentErrorContent />
+    </Suspense>
   );
 } 

@@ -1,14 +1,14 @@
 "use client";
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 
-export default function PaymentConsultationErrorPage() {
+function PaymentConsultationErrorContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const orderId = searchParams.get('order_id');
-  const [appointment, setAppointment] = useState<any | null>(null);
+  const [appointment, setAppointment] = useState<unknown | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -25,11 +25,12 @@ export default function PaymentConsultationErrorPage() {
       const data = await res.json();
       setAppointment(data);
       // Jika data belum ada, retry
-      if (!data.status && !data.payment_status && retryCount < maxRetry) {
+      if (!(data.status) && !(data.payment_status) && retryCount < maxRetry) {
         retryTimeout.current = setTimeout(() => setRetryCount(c => c + 1), 2000);
       }
-    } catch (err: any) {
-      setFetchError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan';
+      setFetchError(errorMessage);
       if (retryCount < maxRetry) {
         retryTimeout.current = setTimeout(() => setRetryCount(c => c + 1), 2000);
       }
@@ -39,13 +40,13 @@ export default function PaymentConsultationErrorPage() {
   };
 
   useEffect(() => {
-    if (orderId && retryCount < maxRetry && (!appointment || (!appointment.status && !appointment.payment_status))) {
+    if (orderId && retryCount < maxRetry && (!appointment || !((appointment as any).status) && !((appointment as any).payment_status))) {
       fetchAppointment();
     }
     return () => {
       if (retryTimeout.current) clearTimeout(retryTimeout.current);
     };
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId, retryCount]);
 
   const handleTryAgain = () => {
@@ -71,7 +72,7 @@ export default function PaymentConsultationErrorPage() {
             </svg>
           </div>
 
-          {loading || (retryCount > 0 && retryCount < maxRetry && (!appointment || (!appointment.status && !appointment.payment_status))) ? (
+          {loading || (retryCount > 0 && retryCount < maxRetry && (!appointment || !((appointment as any).status) && !((appointment as any).payment_status))) ? (
             <p className="text-blue-600 mb-4">Sedang memproses appointment Anda, mohon tunggu beberapa detik...</p>
           ) : fetchError ? (
             <>
@@ -79,28 +80,28 @@ export default function PaymentConsultationErrorPage() {
               <p className="text-gray-600 mb-6">{fetchError}</p>
             </>
           ) : appointment ? (
-            appointment.payment_status === 'pending' || appointment.status === 'pending' || (!appointment.status && !appointment.payment_status) ? (
+            (appointment as any).payment_status === 'pending' || (appointment as any).status === 'pending' || (!(appointment as any).status && !(appointment as any).payment_status) ? (
               <>
                 <h1 className="text-2xl font-bold text-yellow-700 mb-4">Appointment Berhasil Dibuat</h1>
                 <p className="text-gray-600 mb-6">Appointment Anda berhasil dibuat dan menunggu pembayaran. Silakan selesaikan pembayaran sesuai instruksi.</p>
                 <div className="bg-gray-50 rounded-lg p-4 mb-6">
                   <p className="text-sm text-gray-600">Order ID: {orderId}</p>
-                  <p className="text-sm text-gray-600">Status appointment: {appointment.status || 'Belum dibayar'}, pembayaran: {appointment.payment_status || 'Belum dibayar'}</p>
+                  <p className="text-sm text-gray-600">Status appointment: {(appointment as any).status || 'Belum dibayar'}, pembayaran: {(appointment as any).payment_status || 'Belum dibayar'}</p>
                 </div>
               </>
-            ) : appointment.payment_status === 'failed' || appointment.status === 'cancelled' ? (
+            ) : (appointment as any).payment_status === 'failed' || (appointment as any).status === 'cancelled' ? (
               <>
                 <h1 className="text-2xl font-bold text-red-600 mb-4">Pembayaran Gagal / Dibatalkan</h1>
                 <p className="text-gray-600 mb-6">Pembayaran konsultasi Anda gagal atau dibatalkan. Silakan lakukan appointment ulang.</p>
                 <div className="bg-gray-50 rounded-lg p-4 mb-6">
                   <p className="text-sm text-gray-600">Order ID: {orderId}</p>
-                  <p className="text-sm text-gray-600">Status appointment: {appointment.status || 'Tidak ditemukan'}, pembayaran: {appointment.payment_status || 'Tidak ditemukan'}</p>
+                  <p className="text-sm text-gray-600">Status appointment: {(appointment as any).status || 'Tidak ditemukan'}, pembayaran: {(appointment as any).payment_status || 'Tidak ditemukan'}</p>
                 </div>
               </>
             ) : (
               <>
                 <h1 className="text-2xl font-bold text-green-700 mb-4">Status Appointment</h1>
-                <p className="text-gray-600 mb-6">Status appointment: {appointment.status || 'Belum dibayar'}, pembayaran: {appointment.payment_status || 'Belum dibayar'}</p>
+                <p className="text-gray-600 mb-6">Status appointment: {(appointment as any).status || 'Belum dibayar'}, pembayaran: {(appointment as any).payment_status || 'Belum dibayar'}</p>
                 <div className="bg-gray-50 rounded-lg p-4 mb-6">
                   <p className="text-sm text-gray-600">Order ID: {orderId}</p>
                 </div>
@@ -140,5 +141,20 @@ export default function PaymentConsultationErrorPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentConsultationErrorPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat...</p>
+        </div>
+      </div>
+    }>
+      <PaymentConsultationErrorContent />
+    </Suspense>
   );
 } 
