@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
 
@@ -27,7 +27,7 @@ interface OrderDetails {
   createdAt: string;
 }
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useUser();
@@ -41,6 +41,7 @@ export default function PaymentSuccessPage() {
     if (orderId) {
       fetchOrderDetails();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
 
   const fetchOrderDetails = async () => {
@@ -58,8 +59,8 @@ export default function PaymentSuccessPage() {
       } else {
         setError('Pesanan tidak ditemukan.');
       }
-    } catch (error) {
-      setError('Gagal mengambil data pesanan.');
+    } catch (err: unknown) {
+      console.error('Error fetching order details:', err);
     } finally {
       setLoading(false);
     }
@@ -175,5 +176,20 @@ export default function PaymentSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat...</p>
+        </div>
+      </div>
+    }>
+      <PaymentSuccessContent />
+    </Suspense>
   );
 } 

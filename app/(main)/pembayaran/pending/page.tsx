@@ -1,21 +1,21 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 
 interface Order {
   orderId: string;
   total: number;
   status: string;
   payment_status: string;
-  items: any[];
-  customerDetails: any;
-  shippingDetails: any;
+  items: unknown[];
+  customerDetails: unknown;
+  shippingDetails: unknown;
   snap_redirect_url?: string;
   redirect_url?: string;
 }
 
-export default function PaymentPendingPage() {
+function PaymentPendingContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [order, setOrder] = useState<Order | null>(null);
@@ -44,8 +44,9 @@ export default function PaymentPendingPage() {
       
       const data = await response.json();
       setOrder(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan';
+      setError(errorMessage);
       console.error('Error fetching order:', err);
     } finally {
       setLoading(false);
@@ -79,8 +80,9 @@ export default function PaymentPendingPage() {
         router.push(`/pembayaran/success?order_id=${orderId}`);
       }
       
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan';
+      setError(errorMessage);
       console.error('Error checking status:', err);
     } finally {
       setLoading(false);
@@ -100,6 +102,7 @@ export default function PaymentPendingPage() {
     if (orderId) {
       fetchOrderDetails();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
 
   return (
@@ -198,13 +201,28 @@ export default function PaymentPendingPage() {
             <h3 className="font-semibold text-blue-900 mb-2">Informasi Penting:</h3>
             <ul className="text-sm text-blue-800 space-y-1">
               <li>• Pembayaran akan diproses dalam 1x24 jam</li>
-              <li>• Pastikan pembayaran sesuai dengan nominal yang tertera</li>
-              <li>• Simpan bukti pembayaran Anda</li>
-              <li>• Klik "Refresh Status" untuk mengecek status terbaru</li>
+              <li>• Pastikan Anda menyelesaikan pembayaran sesuai instruksi</li>
+              <li>• Jika pembayaran gagal, Anda dapat mencoba lagi</li>
+              <li>• Hubungi customer service jika mengalami masalah</li>
             </ul>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentPendingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat...</p>
+        </div>
+      </div>
+    }>
+      <PaymentPendingContent />
+    </Suspense>
   );
 } 

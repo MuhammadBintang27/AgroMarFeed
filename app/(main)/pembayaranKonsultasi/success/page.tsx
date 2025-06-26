@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
 
@@ -18,7 +18,7 @@ interface AppointmentDetails {
   totalAmount: number;
 }
 
-export default function PaymentConsultationSuccessPage() {
+function PaymentConsultationSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useUser();
@@ -38,6 +38,7 @@ export default function PaymentConsultationSuccessPage() {
       const localOrderId = localStorage.getItem("last_appointment_order_id");
       if (localOrderId) setOrderId(localOrderId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   useEffect(() => {
@@ -46,6 +47,7 @@ export default function PaymentConsultationSuccessPage() {
       // Hapus dari localStorage setelah digunakan
       localStorage.removeItem("last_appointment_order_id");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
 
   const fetchAppointmentDetails = async (oid: string) => {
@@ -59,8 +61,8 @@ export default function PaymentConsultationSuccessPage() {
       } else {
         setError("Appointment tidak ditemukan.");
       }
-    } catch (error) {
-      setError("Gagal mengambil data appointment.");
+    } catch (err: unknown) {
+      console.error('Error fetching appointment details:', err);
     } finally {
       setLoading(false);
     }
@@ -210,6 +212,9 @@ export default function PaymentConsultationSuccessPage() {
               <p className="text-sm text-gray-600">
                 Pembayaran: {appointmentDetails.payment_status}
               </p>
+              <p className="text-sm text-gray-600">
+                Layanan: {appointmentDetails.service}
+              </p>
             </div>
           )}
 
@@ -218,15 +223,31 @@ export default function PaymentConsultationSuccessPage() {
               onClick={handleContinue}
               className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200"
             >
-              Lanjutkan Konsultasi
+              Lanjutkan ke Konsultasi
             </button>
           </div>
 
           <p className="text-xs text-gray-500 mt-6">
-            Email konfirmasi telah dikirim ke {user?.email || "email Anda"}
+            Email konfirmasi telah dikirim ke{" "}
+            {user?.email || "email Anda"}
           </p>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentConsultationSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat...</p>
+        </div>
+      </div>
+    }>
+      <PaymentConsultationSuccessContent />
+    </Suspense>
   );
 }

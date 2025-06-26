@@ -2,7 +2,7 @@
 import Button from "@/components/ui/Button";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import CityAutocomplete from '@/components/ui/CityAutocomplete';
 import CourierAutocomplete from '@/components/ui/CourierAutocomplete';
@@ -41,7 +41,7 @@ interface ShippingOption {
   etd: string;
 }
 
-const PaymentPage = () => {
+const PaymentPageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useUser();
@@ -689,6 +689,21 @@ const PaymentPage = () => {
         </motion.div>
       </div>
     </div>
+  );
+};
+
+const PaymentPage = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat...</p>
+        </div>
+      </div>
+    }>
+      <PaymentPageContent />
+    </Suspense>
   );
 };
 

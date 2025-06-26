@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 
 interface Appointment {
   orderId: string;
@@ -14,7 +14,7 @@ interface Appointment {
   redirect_url?: string;
 }
 
-export default function PaymentConsultationPendingPage() {
+function PaymentConsultationPendingContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [appointment, setAppointment] = useState<Appointment | null>(null);
@@ -35,8 +35,9 @@ export default function PaymentConsultationPendingPage() {
       }
       const data = await response.json();
       setAppointment(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan';
+      setError(errorMessage);
       console.error('Error fetching appointment:', err);
     } finally {
       setLoading(false);
@@ -60,8 +61,9 @@ export default function PaymentConsultationPendingPage() {
       if (data.payment_status === 'paid' || data.status === 'processing') {
         router.push(`/pembayaranKonsultasi/success?order_id=${orderId}`);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan';
+      setError(errorMessage);
       console.error('Error checking status:', err);
     } finally {
       setLoading(false);
@@ -77,6 +79,7 @@ export default function PaymentConsultationPendingPage() {
     if (orderId) {
       fetchAppointmentDetails();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
 
   return (
@@ -167,12 +170,27 @@ export default function PaymentConsultationPendingPage() {
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
             <h3 className="font-semibold text-blue-900 mb-2">Informasi Penting:</h3>
             <ul className="text-sm text-blue-800 space-y-1">
-              <li>a Pembayaran akan diproses dalam 1x24 jam</li>
-              <li>2a Jika ada kendala, silakan hubungi admin</li>
+              <li>• Pembayaran akan diproses dalam 1x24 jam</li>
+              <li>• Jika ada kendala, silakan hubungi admin</li>
             </ul>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentConsultationPendingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat...</p>
+        </div>
+      </div>
+    }>
+      <PaymentConsultationPendingContent />
+    </Suspense>
   );
 } 
