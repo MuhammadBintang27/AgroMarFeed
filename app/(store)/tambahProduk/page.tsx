@@ -7,17 +7,13 @@ import imageCompression from "browser-image-compression";
 const defaultWeight = { id: "", value: "", price: 0 };
 
 const kategoriOptions = [
-  "Pakan Ikan",
-  "Pakan Ternak",
-  "Pakan Ayam",
-  "Pakan Burung",
+  "Ruminansia", "Non-ruminansia", "Akuakultur"
 ];
 const limbahOptions = [
-  "Limbah Laut",
+  "Limbah Kelaut",
   "Limbah Pertanian",
   "Limbah Sayur & Buah",
-  "Limbah Roti & Biji",
-  "Limbah Maritim",
+  "Limbah Roti & Biji"
 ];
 const fisikOptions = [
   "Pelet",

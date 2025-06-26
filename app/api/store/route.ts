@@ -12,3 +12,4 @@ export async function POST(req: NextRequest) {
   const url = `data:${mimeType};base64,${base64}`;
   return NextResponse.json({ url });
 }
+

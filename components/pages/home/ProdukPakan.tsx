@@ -149,7 +149,7 @@ const ProdukPakan = () => {
           initial={{ y: 100, opacity: 0 }}
           whileInView={{ y: 0, opacity: 1 }}
           transition={{ duration: 1 }}
-          className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 w-full max-w-screen-xl"
+          className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-4 w-full max-w-screen-xl"
         >
           {filteredProducts.map((product) => (
             <Link

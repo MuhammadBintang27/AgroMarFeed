@@ -5,25 +5,14 @@ import imageCompression from "browser-image-compression";
 
 const defaultWeight = { id: "", value: "", price: 0 };
 
-const kategoriOptions = [
-  "Pakan Ikan",
-  "Pakan Ternak",
-  "Pakan Ayam",
-  "Pakan Burung",
-];
+const kategoriOptions = ["Ruminansia", "Non-ruminansia", "Akuakultur"];
 const limbahOptions = [
-  "Limbah Laut",
+  "Limbah Kelaut",
   "Limbah Pertanian",
   "Limbah Sayur & Buah",
   "Limbah Roti & Biji",
-  "Limbah Maritim",
 ];
-const fisikOptions = [
-  "Pelet",
-  "Fermentasi Padat",
-  "Serbuk",
-  "Granul Kasar",
-];
+const fisikOptions = ["Pelet", "Fermentasi Padat", "Serbuk", "Granul Kasar"];
 
 export default function EditProdukPage() {
   const router = useRouter();
@@ -61,16 +50,17 @@ export default function EditProdukPage() {
             price: data.price || 0,
             imageUrl: data.imageUrl || "",
             stock: data.stock || 0,
-            weights: data.weights && data.weights.length > 0 ? data.weights : [{ ...defaultWeight }],
+            weights:
+              data.weights && data.weights.length > 0
+                ? data.weights
+                : [{ ...defaultWeight }],
           });
         }
       })
       .finally(() => setLoading(false));
   }, [productId]);
 
-  const handleChange = (
-    e: React.ChangeEvent<any>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<any>) => {
     const { name, value, type } = e.target;
     let fieldValue: string | boolean = value;
     if (type === "checkbox" && e.target instanceof HTMLInputElement) {
@@ -120,7 +110,7 @@ export default function EditProdukPage() {
           });
           setImageFile(compressedFile);
         } catch (err) {
-          alert('Gagal kompres gambar, gunakan file asli.');
+          alert("Gagal kompres gambar, gunakan file asli.");
           setImageFile(file);
         }
       } else {
@@ -198,10 +188,14 @@ export default function EditProdukPage() {
   return (
     <section className="min-h-screen bg-[#F7F7F7] py-10 px-2 md:px-0 flex items-center justify-center">
       <div className="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-lg p-8">
-        <h1 className="text-3xl font-extrabold text-[#39381F] mb-8 text-center">Edit Produk</h1>
+        <h1 className="text-3xl font-extrabold text-[#39381F] mb-8 text-center">
+          Edit Produk
+        </h1>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-y-6">
           <div>
-            <label className="font-semibold block mb-2 text-[#39381F]">Nama Produk <span className="text-red-500">*</span></label>
+            <label className="font-semibold block mb-2 text-[#39381F]">
+              Nama Produk <span className="text-red-500">*</span>
+            </label>
             <input
               name="name"
               value={form.name}
@@ -211,7 +205,9 @@ export default function EditProdukPage() {
             />
           </div>
           <div>
-            <label className="font-semibold block mb-2 text-[#39381F]">Deskripsi <span className="text-red-500">*</span></label>
+            <label className="font-semibold block mb-2 text-[#39381F]">
+              Deskripsi <span className="text-red-500">*</span>
+            </label>
             <textarea
               name="description"
               value={form.description}
@@ -225,34 +221,55 @@ export default function EditProdukPage() {
             <label className="font-medium block mb-1">
               Kategori <span className="text-red-500">*</span>
             </label>
-            <input
+            <select
               name="categoryOptions"
               value={form.categoryOptions}
               onChange={handleChange}
               className="input input-bordered w-full rounded"
-            />
+            >
+              <option value="">Pilih Kategori</option>
+              {kategoriOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="font-medium block mb-1">
               Jenis Limbah <span className="text-red-500">*</span>
             </label>
-            <input
+            <select
               name="limbahOptions"
               value={form.limbahOptions}
               onChange={handleChange}
               className="input input-bordered w-full rounded"
-            />
+            >
+              <option value="">Pilih Jenis Limbah</option>
+              {limbahOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="font-medium block mb-1">
               Fisik <span className="text-red-500">*</span>
             </label>
-            <input
+            <select
               name="fisikOptions"
               value={form.fisikOptions}
               onChange={handleChange}
               className="input input-bordered w-full rounded"
-            />
+            >
+              <option value="">Pilih Bentuk Fisik</option>
+              {fisikOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="font-medium block mb-1">
@@ -279,29 +296,48 @@ export default function EditProdukPage() {
             />
           </div>
           <div>
-            <label className="font-semibold block mb-2 text-[#39381F]">Upload Gambar Produk <span className="text-red-500">*</span></label>
+            <label className="font-semibold block mb-2 text-[#39381F]">
+              Upload Gambar Produk <span className="text-red-500">*</span>
+            </label>
             <div className="flex items-center gap-4">
-              <input type="file" accept="image/*" onChange={handleImageChange} className="w-full px-4 py-2 rounded-lg border border-gray-200 bg-white" />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="w-full px-4 py-2 rounded-lg border border-gray-200 bg-white"
+              />
               {(imageFile || form.imageUrl) && (
-                <img src={imageFile ? URL.createObjectURL(imageFile) : form.imageUrl} alt="Preview" className="w-20 h-20 object-cover rounded-lg border" />
+                <img
+                  src={
+                    imageFile ? URL.createObjectURL(imageFile) : form.imageUrl
+                  }
+                  alt="Preview"
+                  className="w-20 h-20 object-cover rounded-lg border"
+                />
               )}
             </div>
           </div>
           <div>
-            <label className="font-medium block mb-1">Varian Berat & Harga</label>
+            <label className="font-medium block mb-1">
+              Varian Berat & Harga
+            </label>
             {form.weights.map((w, idx) => (
               <div key={idx} className="flex gap-2 mb-2">
                 <input
                   placeholder="Berat (misal: 1kg)"
                   value={w.value}
-                  onChange={(e) => handleWeightChange(idx, "value", e.target.value)}
+                  onChange={(e) =>
+                    handleWeightChange(idx, "value", e.target.value)
+                  }
                   className="input input-bordered w-1/2 rounded"
                 />
                 <input
                   placeholder="Harga"
                   type="number"
                   value={w.price}
-                  onChange={(e) => handleWeightChange(idx, "price", Number(e.target.value))}
+                  onChange={(e) =>
+                    handleWeightChange(idx, "price", Number(e.target.value))
+                  }
                   className="input input-bordered w-1/2 rounded"
                 />
                 <button
@@ -335,4 +371,4 @@ export default function EditProdukPage() {
       </div>
     </section>
   );
-} 
+}
