@@ -71,7 +71,7 @@ const Katalog = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const categories = ["Pakan Ikan", "Pakan Ternak", "Pakan Ayam", "Pakan Burung"];
+  const categories = ["Ruminansia", "Non-ruminansia", "Akuakultur"];
   const [isOpenLimbah, setIsOpenLimbah] = useState(false);
   const [isOpenFisik, setIsOpenFisik] = useState(false);
   const [selectedLimbah, setSelectedLimbah] = useState("Bahan dasar limbah");
@@ -79,11 +79,10 @@ const Katalog = () => {
 
   const limbahOptions = [
     "Semua bahan dasar",
-    "Limbah Laut",
+    "Limbah kelaut",
     "Limbah Pertanian",
     "Limbah Sayur & Buah",
-    "Limbah Roti & Biji",
-    "Limbah Maritim",
+    "Limbah Roti & Biji"
   ];
 
   const fisikOptions = [
@@ -258,7 +257,7 @@ const Katalog = () => {
           </h2>
 
           {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {filteredProducts.map((product: Product) => (
                 <Link
                   key={product._id}
