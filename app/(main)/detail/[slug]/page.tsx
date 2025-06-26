@@ -13,11 +13,82 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
 import WishlistButton from "@/components/ui/WishlistButton";
 
+// Rating Stars Component
+const RatingStars = ({ rating }: { rating: number }) => {
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 !== 0;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+  return (
+    <div className="flex items-center gap-1">
+      {/* Full Stars */}
+      {[...Array(fullStars)].map((_, i) => (
+        <svg
+          key={`full-${i}`}
+          className="w-4 h-4 text-yellow-500"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
+      ))}
+      
+      {/* Half Star */}
+      {hasHalfStar && (
+        <div className="relative w-4 h-4">
+          <svg
+            className="w-4 h-4 text-gray-300 absolute"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          </svg>
+          <div className="absolute overflow-hidden w-2 h-4">
+            <svg
+              className="w-4 h-4 text-yellow-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          </div>
+        </div>
+      )}
+      
+      {/* Empty Stars */}
+      {[...Array(emptyStars)].map((_, i) => (
+        <svg
+          key={`empty-${i}`}
+          className="w-4 h-4 text-gray-300"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
+      ))}
+    </div>
+  );
+};
+
+interface Review {
+  _id: string;
+  user_id: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  rating: number;
+  ulasan: string;
+  gambar?: string;
+  createdAt: string;
+}
+
 const Detail = () => {
   const [quantity, setQuantity] = useState(0);
   const [product, setProduct] = useState<Product | null>(null);
   const [store, setStore] = useState<any>(null);
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const params = useParams();
@@ -50,6 +121,17 @@ const Detail = () => {
           }
         }
 
+        // Fetch reviews
+        try {
+          const reviewsResponse = await fetch(`/api/productReviews/${slug}`);
+          if (reviewsResponse.ok) {
+            const reviewsData = await reviewsResponse.json();
+            setReviews(reviewsData);
+          }
+        } catch (reviewsError) {
+          console.error("Error fetching reviews:", reviewsError);
+        }
+
         const productsData = await fetchProducts();
         const bestSellersData = productsData.filter((p) => p.isBestSeller && p._id !== slug);
         setBestSellers(bestSellersData);
@@ -79,9 +161,10 @@ const Detail = () => {
         <h3 className="text-lg font-semibold text-left mb-2 text-black">{product.name}</h3>
         <div className="flex justify-between text-sm text-black/30 mb-2 px-1">
           <span>{product.categoryOptions}</span>
-          <span className="flex items-center gap-1 text-yellow-500 text-[16px]">
-            ★ <span className="text-black/60">({product.rating})</span>
-          </span>
+          <div className="flex items-center gap-1">
+            <RatingStars rating={product.rating || 0} />
+            <span className="text-black/60">({product.rating?.toFixed(1) || "0.0"})</span>
+          </div>
         </div>
         <div className="flex justify-between items-center px-1">
           <span className="text-base font-semibold text-black">
@@ -140,15 +223,7 @@ const Detail = () => {
 
             <div className="flex items-center gap-2 text-yellow-500 text-sm md:text-base">
               <span className="text-black">{product.rating}</span>
-              {[...Array(Math.floor(product.rating))].map((_, i) => (
-                <Star key={i} fill="currentColor" stroke="currentColor" className="w-5 h-5" />
-              ))}
-              {product.rating % 1 !== 0 && (
-                <Star fill="none" stroke="currentColor" className="w-5 h-5" />
-              )}
-              {[...Array(5 - Math.ceil(product.rating))].map((_, i) => (
-                <Star key={i} fill="none" stroke="currentColor" className="w-5 h-5" />
-              ))}
+              <RatingStars rating={product.rating || 0} />
             </div>
 
             <div className="text-2xl md:text-4xl font-semibold text-black">
@@ -281,9 +356,10 @@ const Detail = () => {
                     <h3 className="text-lg font-semibold text-left mb-2 text-black">{product.name}</h3>
                     <div className="flex justify-between text-sm text-black/30 mb-2 px-1">
                       <span>{product.categoryOptions}</span>
-                      <span className="flex items-center gap-1 text-yellow-500 text-[16px]">
-                        ★ <span className="text-black/60">({product.rating})</span>
-                      </span>
+                      <div className="flex items-center gap-1">
+                        <RatingStars rating={product.rating || 0} />
+                        <span className="text-black/60">({product.rating?.toFixed(1) || "0.0"})</span>
+                      </div>
                     </div>
                     <div className="flex justify-between items-center px-1">
                       <span className="text-base font-semibold text-black">
@@ -303,6 +379,73 @@ const Detail = () => {
               <div className="text-center text-gray-500">Tidak ada produk lain</div>
             )}
           </div>
+        </section>
+
+        {/* Reviews Section */}
+        <section className="w-full pt-8 border-t border-gray-200">
+          <h2 className="text-left text-xl md:text-2xl font-semibold text-black mb-6">Ulasan Produk</h2>
+          
+          {reviews.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Star className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-gray-500">Belum ada ulasan untuk produk ini</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {reviews.map((review) => (
+                <div key={review._id} className="bg-gray-50 rounded-xl p-6">
+                  {/* Review Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      {/* Profile Picture */}
+                      <div className="w-12 h-12 rounded-full bg-2 flex items-center justify-center">
+                        <span className="text-white font-semibold text-lg">
+                          {review.user_id.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      
+                      {/* User Info */}
+                      <div>
+                        <h4 className="font-semibold text-black">{review.user_id.name}</h4>
+                        <p className="text-sm text-gray-600">
+                          {new Date(review.createdAt).toLocaleDateString('id-ID', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Rating */}
+                    <div className="flex items-center gap-1">
+                      <RatingStars rating={review.rating} />
+                      <span className="text-sm text-gray-600 ml-2">{review.rating}/5</span>
+                    </div>
+                  </div>
+                  
+                  {/* Review Content */}
+                  <div className="mb-4">
+                    <p className="text-black leading-relaxed">{review.ulasan}</p>
+                  </div>
+                  
+                  {/* Review Image */}
+                  {review.gambar && (
+                    <div className="mt-4">
+                      <img 
+                        src={review.gambar} 
+                        alt="Review image" 
+                        className="w-full max-w-xs rounded-lg object-cover"
+                        style={{ maxHeight: '200px' }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </section>

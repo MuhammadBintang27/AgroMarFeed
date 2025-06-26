@@ -51,10 +51,26 @@ export default function OrderHistoryPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [reviewedProductIds, setReviewedProductIds] = useState<string[]>([]);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewProduct, setReviewProduct] = useState<any>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState('');
+  const [reviewImage, setReviewImage] = useState<File | null>(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
+
+  // Helper function to get product ID and name
+  const getProductIdAndName = (product: any) => {
+    if (typeof product === 'object' && product !== null) {
+      return { _id: product._id || product.id, name: product.name };
+    }
+    return { _id: product, name: '' };
+  };
 
   useEffect(() => {
     if (user) {
       fetchOrders();
+      fetchReviewedProducts();
     }
   }, [user]);
 
@@ -73,6 +89,19 @@ export default function OrderHistoryPage() {
       console.error('Error fetching orders:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchReviewedProducts = async () => {
+    if (!user) return;
+    try {
+      const res = await fetch(`/api/reviews/user/${user._id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setReviewedProductIds(data.map((r: any) => r.product_id));
+      }
+    } catch (error) {
+      console.error('Error fetching reviewed products:', error);
     }
   };
 
@@ -230,6 +259,21 @@ export default function OrderHistoryPage() {
                           <p className="text-sm text-gray-600">
                             {item.jumlah} x Rp {item.product_id.price.toLocaleString()}
                           </p>
+                          {/* Review Button Logic */}
+                          {order.status === 'delivered' && user && !reviewedProductIds.includes(getProductIdAndName(item.product_id)._id) && (
+                            <button
+                              className="text-xs bg-yellow-400 text-[#39381F] px-3 py-1 rounded font-bold mt-2"
+                              onClick={() => {
+                                setReviewProduct(getProductIdAndName(item.product_id));
+                                setShowReviewModal(true);
+                              }}
+                            >
+                              Beri Review
+                            </button>
+                          )}
+                          {order.status === 'delivered' && user && reviewedProductIds.includes(getProductIdAndName(item.product_id)._id) && (
+                            <span className="text-xs text-green-600 ml-2">Sudah direview</span>
+                          )}
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-medium text-gray-900">
@@ -308,6 +352,90 @@ export default function OrderHistoryPage() {
           </div>
         )}
       </div>
+      {showReviewModal && reviewProduct && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-bold mb-2">Review untuk {reviewProduct.name}</h3>
+            <div className="mb-2">
+              <label className="block mb-1">Rating:</label>
+              <select value={reviewRating} onChange={e => setReviewRating(Number(e.target.value))} className="border rounded px-2 py-1">
+                {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} Bintang</option>)}
+              </select>
+            </div>
+            <div className="mb-2">
+              <label className="block mb-1">Ulasan:</label>
+              <textarea value={reviewText} onChange={e => setReviewText(e.target.value)} className="border rounded w-full px-2 py-1" rows={3} />
+            </div>
+            <div className="mb-2">
+              <label className="block mb-1">Gambar (opsional):</label>
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={e => setReviewImage(e.target.files?.[0] || null)} 
+                className="border rounded px-2 py-1 w-full"
+              />
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button
+                className="bg-green-500 text-white px-4 py-2 rounded"
+                disabled={reviewLoading}
+                onClick={async () => {
+                  setReviewLoading(true);
+                  try {
+                    let gambarBase64 = null;
+                    
+                    // Convert image to base64 if selected
+                    if (reviewImage) {
+                      const reader = new FileReader();
+                      gambarBase64 = await new Promise((resolve) => {
+                        reader.onload = () => resolve(reader.result);
+                        reader.readAsDataURL(reviewImage);
+                      });
+                    }
+
+                    const requestBody: any = {
+                      product_id: reviewProduct._id,
+                      rating: reviewRating,
+                      ulasan: reviewText,
+                      user_id: user?._id || '',
+                    };
+
+                    if (gambarBase64) {
+                      requestBody.gambar = gambarBase64;
+                    }
+
+                    const res = await fetch('/api/productReviews', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(requestBody),
+                    });
+                    
+                    if (res.ok) {
+                      alert('Review berhasil dikirim!');
+                      setShowReviewModal(false);
+                      setReviewedProductIds(ids => [...ids, reviewProduct._id]);
+                      setReviewText('');
+                      setReviewRating(5);
+                      setReviewImage(null);
+                    } else {
+                      const data = await res.json();
+                      alert(data.message || 'Gagal mengirim review');
+                    }
+                  } catch (error) {
+                    console.error('Error submitting review:', error);
+                    alert('Gagal mengirim review');
+                  } finally {
+                    setReviewLoading(false);
+                  }
+                }}
+              >
+                {reviewLoading ? 'Mengirim...' : 'Kirim Review'}
+              </button>
+              <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setShowReviewModal(false)}>Batal</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
