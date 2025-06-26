@@ -10,10 +10,8 @@ const kategoriOptions = [
   "Ruminansia", "Non-ruminansia", "Akuakultur"
 ];
 const limbahOptions = [
-  "Limbah Kelaut",
   "Limbah Pertanian",
-  "Limbah Sayur & Buah",
-  "Limbah Roti & Biji"
+  "Limbah Kelautan",
 ];
 const fisikOptions = [
   "Pelet",

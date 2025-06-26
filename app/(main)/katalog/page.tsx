@@ -79,10 +79,8 @@ const Katalog = () => {
 
   const limbahOptions = [
     "Semua bahan dasar",
-    "Limbah kelaut",
     "Limbah Pertanian",
-    "Limbah Sayur & Buah",
-    "Limbah Roti & Biji"
+    "Limbah Kelautan",
   ];
 
   const fisikOptions = [
