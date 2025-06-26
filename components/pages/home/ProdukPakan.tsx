@@ -14,13 +14,19 @@ const ProdukPakan = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const categories = ["Pakan Ikan", "Pakan Ternak", "Pakan Ayam", "Pakan Burung"];
+  const categories = [
+    { label: "Ruminansia", image: "/images/kategori/Ruminansia.png" },
+    { label: "Non-ruminansia", image: "/images/kategori/Non-ruminansia.png" },
+    { label: "Akuakultur", image: "/images/kategori/Akuakultur.png" },
+  ];
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
         const data = await fetchProducts();
-        const validProducts = data.filter((product: Product) => product._id && typeof product._id === "string");
+        const validProducts = data.filter(
+          (product: Product) => product._id && typeof product._id === "string"
+        );
         setProducts(validProducts);
       } catch (err: any) {
         setError(err.message || "Gagal memuat produk");
@@ -60,7 +66,8 @@ const ProdukPakan = () => {
           <div className="flex justify-between text-xs md:text-sm text-black/40 mb-1 px-1">
             <span>{product.categoryOptions}</span>
             <span className="flex items-center gap-1 text-yellow-500 text-[12px] md:text-[14px]">
-              ★ <span className="text-black/60">({product.rating ?? "0.0"})</span>
+              ★{" "}
+              <span className="text-black/60">({product.rating ?? "0.0"})</span>
             </span>
           </div>
 
@@ -68,23 +75,22 @@ const ProdukPakan = () => {
             <span className="text-sm md:text-base font-semibold text-black">
               Rp{product.price.toLocaleString()}
             </span>
-            <div className="flex gap-2">
-              <button className="w-6 h-6 rounded-full bg-black text-white border border-black/10 flex items-center justify-center text-sm">
-                +
-              </button>
-              <WishlistButton productId={product._id} />
-            </div>
           </div>
         </div>
-
       </Link>
     );
   };
 
-  // Filter dan batasi 6 produk dari kategori aktif
+  // Filter dan batasi 6 produk random jika tidak ada kategori aktif
   const filteredProducts = activeCategory
-    ? products.filter((product) => product.categoryOptions === activeCategory).slice(0, 6)
-    : products.slice(0, 6); // Jika tidak ada kategori aktif, tampilkan 6 pertama
+    ? products
+        .filter((product) => product.categoryOptions === activeCategory)
+        .slice(0, 6)
+    : (() => {
+        // Ambil 6 produk random dari semua produk
+        const shuffled = [...products].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, 6);
+      })();
 
   return (
     <section className="bg-white w-full px-6 md:px-16 lg:px-48 py-10">
@@ -106,21 +112,32 @@ const ProdukPakan = () => {
       >
         {categories.map((category) => (
           <Button
-            key={category}
+            key={category.label}
             href=""
             size="sm"
-            className={`hover:brightness-110 whitespace-nowrap text-xs md:text-sm px-4 py-2 ${activeCategory === category ? "bg-1 text-white" : "bg-2 text-white"
-              }`}
+            className={`hover:brightness-110 whitespace-nowrap text-xs md:text-sm px-4 py-2 flex items-center gap-2 ${
+              activeCategory === category.label
+                ? "bg-1 text-white"
+                : "bg-2 text-white"
+            }`}
             onClick={(e) => {
               e.preventDefault();
-              setActiveCategory(category);
+              setActiveCategory(
+                activeCategory === category.label ? "" : category.label
+              );
             }}
           >
-            {category}
+            <Image
+              src={category.image}
+              alt={category.label}
+              width={24}
+              height={24}
+              className="object-contain w-8 h-8"
+            />
+            {category.label}
           </Button>
         ))}
       </motion.div>
-
 
       {/* Lihat semua */}
       <div className="flex justify-end mb-4">
@@ -142,13 +159,15 @@ const ProdukPakan = () => {
       ) : error ? (
         <p className="text-red-500 text-center">Gagal: {error}</p>
       ) : filteredProducts.length === 0 ? (
-        <p className="text-black/60 text-center">Tidak ada produk untuk kategori ini.</p>
+        <p className="text-black/60 text-center">
+          Tidak ada produk untuk kategori ini.
+        </p>
       ) : (
         <motion.div
           initial={{ y: 100, opacity: 0 }}
           whileInView={{ y: 0, opacity: 1 }}
           transition={{ duration: 1 }}
-          className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-4 w-full max-w-screen-xl"
+          className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-4 w-full max-w-screen-xl"
         >
           {filteredProducts.map((product) => (
             <Link
@@ -174,7 +193,10 @@ const ProdukPakan = () => {
                 <div className="flex justify-between text-xs md:text-sm text-black/40 mb-1 px-1">
                   <span>{product.categoryOptions}</span>
                   <span className="flex items-center gap-1 text-yellow-500 text-[12px] md:text-[14px]">
-                    ★ <span className="text-black/60">({product.rating ?? "0.0"})</span>
+                    ★{" "}
+                    <span className="text-black/60">
+                      ({product.rating ?? "0.0"})
+                    </span>
                   </span>
                 </div>
 
@@ -182,21 +204,13 @@ const ProdukPakan = () => {
                   <span className="text-sm md:text-base font-semibold text-black">
                     Rp{product.price.toLocaleString()}
                   </span>
-                  <div className="flex gap-2">
-                    <button className="w-6 h-6 rounded-full bg-black text-white border border-black/10 flex items-center justify-center text-sm">
-                      +
-                    </button>
-                    <WishlistButton productId={product._id} />
-                  </div>
                 </div>
               </div>
-
             </Link>
           ))}
         </motion.div>
       )}
     </section>
-
   );
 };
 

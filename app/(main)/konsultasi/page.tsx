@@ -99,7 +99,7 @@ export default function ConsultationPage() {
                 ${
                   isActive
                     ? "bg-1 text-white border-2"
-                    : "bg-2 bg-opacity-20 text-2 border-transparent"
+                    : "bg-2 bg-opacity-20 text-2 border-transparent text-white"
                 }
                 transition-colors duration-200`}
               >

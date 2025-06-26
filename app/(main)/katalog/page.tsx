@@ -28,7 +28,7 @@ const RatingStars = ({ rating }: { rating: number }) => {
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
         </svg>
       ))}
-      
+
       {/* Half Star */}
       {hasHalfStar && (
         <div className="relative w-4 h-4">
@@ -50,7 +50,7 @@ const RatingStars = ({ rating }: { rating: number }) => {
           </div>
         </div>
       )}
-      
+
       {/* Empty Stars */}
       {[...Array(emptyStars)].map((_, i) => (
         <svg
@@ -71,11 +71,18 @@ const Katalog = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const categories = ["Ruminansia", "Non-ruminansia", "Akuakultur"];
+  const categories = [
+    { label: "Ruminansia", image: "/images/kategori/Ruminansia.png" },
+    { label: "Non-ruminansia", image: "/images/kategori/Non-ruminansia.png" },
+    { label: "Akuakultur", image: "/images/kategori/Akuakultur.png" },
+  ];
   const [isOpenLimbah, setIsOpenLimbah] = useState(false);
   const [isOpenFisik, setIsOpenFisik] = useState(false);
   const [selectedLimbah, setSelectedLimbah] = useState("Bahan dasar limbah");
   const [selectedFisik, setSelectedFisik] = useState("Bentuk fisik");
+  const [searchInput, setSearchInput] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [visibleCount, setVisibleCount] = useState(12);
 
   const limbahOptions = [
     "Semua bahan dasar",
@@ -95,7 +102,9 @@ const Katalog = () => {
     const loadProducts = async () => {
       try {
         const data = await fetchProducts();
-        const validProducts = data.filter((product: Product) => product._id && typeof product._id === "string");
+        const validProducts = data.filter(
+          (product: Product) => product._id && typeof product._id === "string"
+        );
         setProducts(validProducts);
         setLoading(false);
       } catch (err: any) {
@@ -107,15 +116,25 @@ const Katalog = () => {
   }, []);
 
   const filteredProducts = products.filter((product: Product) => {
-    const matchesCategory = activeCategory ? product.categoryOptions === activeCategory : true;
-    const matchesLimbah = selectedLimbah === "Bahan dasar limbah" || selectedLimbah === "Semua bahan dasar"
-      ? true
-      : product.limbahOptions === selectedLimbah;
-    const matchesFisik = selectedFisik === "Bentuk fisik" || selectedFisik === "Semua bentuk fisik"
-      ? true
-      : product.fisikOptions === selectedFisik;
-    return matchesCategory && matchesLimbah && matchesFisik;
+    const matchesCategory = activeCategory
+      ? product.categoryOptions === activeCategory
+      : true;
+    const matchesLimbah =
+      selectedLimbah === "Bahan dasar limbah" ||
+      selectedLimbah === "Semua bahan dasar"
+        ? true
+        : product.limbahOptions === selectedLimbah;
+    const matchesFisik =
+      selectedFisik === "Bentuk fisik" || selectedFisik === "Semua bentuk fisik"
+        ? true
+        : product.fisikOptions === selectedFisik;
+    const matchesSearch = product.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    return matchesCategory && matchesLimbah && matchesFisik && matchesSearch;
   });
+
+  const displayedProducts = filteredProducts.slice(0, visibleCount);
 
   const renderProductCard = (product: Product) => {
     if (!product._id) return null;
@@ -125,32 +144,37 @@ const Katalog = () => {
         href={`/detail/${product._id}`}
         className="flex-shrink-0 w-full sm:w-72 h-[400px]"
       >
-        <div className="bg-7 rounded-2xl p-4 flex flex-col justify-between hover:shadow-lg transition cursor-pointer h-full">
-          <div className="w-full flex justify-center items-center mb-6 pt-2 h-60">
+        <div className="bg-7 rounded-2xl p-2 sm:p-3 md:p-4 flex flex-col justify-between hover:shadow-lg transition cursor-pointer h-full">
+          <div className="w-full flex justify-center items-center mb-2 sm:mb-3 md:mb-4 pt-1 sm:pt-2 h-24 sm:h-32 md:h-44">
             <Image
-              src={product.imageUrl}
+              src={product.imageUrl || "/images/placeholder.png"}
               alt={product.name}
-              width={200}
-              height={200}
+              width={120}
+              height={120}
               className="object-contain w-full h-full"
             />
           </div>
-          <h3 className="text-lg font-semibold text-left text-black line-clamp-2">{product.name}</h3>
-          <div className="flex justify-between text-sm text-black/30 mb-2 px-1">
-            <span>{product.categoryOptions}</span>
-            <div className="flex items-center gap-1">
-              <RatingStars rating={product.rating || 0} />
-              <span className="text-black/60">({product.rating?.toFixed(1) || "0.0"})</span>
+          <h3 className="text-xs sm:text-sm md:text-base font-semibold text-left text-black leading-tight mb-0.5 sm:mb-1 line-clamp-2">
+            {product.name}
+          </h3>
+          <div className="flex justify-between text-[10px] sm:text-xs md:text-sm text-black/40 mb-0.5 sm:mb-1 px-0.5 sm:px-1">
+            <span className="truncate max-w-[48px] sm:max-w-[80px] md:max-w-none">
+              {product.categoryOptions}
+            </span>
+            <div className="flex items-center gap-0.5 sm:gap-1">
+              <span className="scale-90 sm:scale-100">
+                <RatingStars rating={product.rating || 0} />
+              </span>
+              <span className="text-black/60">
+                ({product.rating?.toFixed(1) || "0.0"})
+              </span>
             </div>
           </div>
-          <div className="flex justify-between items-center px-1">
-            <span className="text-base font-semibold text-black">
+          <div className="flex justify-between items-center px-0.5 sm:px-1">
+            <span className="text-xs sm:text-sm md:text-base font-semibold text-black">
               Rp{product.price.toLocaleString()}
             </span>
-            <div className="flex gap-2">
-              <button className="w-6 h-6 rounded-full bg-black text-white border border-black/10 flex items-center justify-center">
-                +
-              </button>
+            <div className="flex items-center">
               <WishlistButton productId={product._id} />
             </div>
           </div>
@@ -160,7 +184,8 @@ const Katalog = () => {
   };
 
   if (loading) return <div className="text-center py-40">Loading...</div>;
-  if (error) return <div className="text-center py-40 text-red-500">Error: {error}</div>;
+  if (error)
+    return <div className="text-center py-40 text-red-500">Error: {error}</div>;
 
   return (
     <section className="bg-white py-20 sm:py-40 w-full">
@@ -171,21 +196,34 @@ const Katalog = () => {
         transition={{ duration: 0.8, delay: 0.1 }}
         className="w-full max-w-6xl px-4 mx-auto flex flex-col items-center text-center mb-12"
       >
-        <h2 className="text-3xl sm:text-4xl font-normal text-black mb-6">Cari Pakan</h2>
+        <h2 className="text-3xl sm:text-4xl font-normal text-black mb-6">
+          Cari Pakan
+        </h2>
         <p className="text-black/50 max-w-2xl mb-10">
-          Pelet ikan, pakan ayam, dan ternak dari limbah agro-maritim. Hemat hingga 30%! Beli
-          pakan, bantu bumi.
+          Pelet ikan, pakan ayam, dan ternak dari limbah agro-maritim. Hemat
+          hingga 30%! Beli pakan, bantu bumi.
         </p>
         <div className="flex flex-wrap justify-center gap-4 mb-6">
           {categories.map((category) => (
             <Button
-              key={category}
+              key={category.label}
               href=""
               size="md"
-              className={`px-6 ${activeCategory === category ? "bg-1 text-white" : "bg-2 text-white"}`}
-              onClick={() => setActiveCategory(category)}
+              className={`px-6 flex items-center gap-2 ${
+                activeCategory === category.label
+                  ? "bg-1 text-white"
+                  : "bg-2 text-white"
+              }`}
+              onClick={() => setActiveCategory(category.label)}
             >
-              {category}
+              <Image
+                src={category.image}
+                alt={category.label}
+                width={24}
+                height={24}
+                className="object-contain w-8 h-8"
+              />
+              {category.label}
             </Button>
           ))}
         </div>
@@ -196,6 +234,13 @@ const Katalog = () => {
               type="text"
               placeholder="Cari pakan…"
               className="bg-transparent outline-none text-black/80 placeholder:text-black/50 w-full"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setSearchTerm(searchInput);
+                }
+              }}
             />
           </div>
           <div className="relative w-full md:w-auto">
@@ -254,57 +299,73 @@ const Katalog = () => {
             {activeCategory || "Semua Produk"}
           </h2>
 
-          {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {filteredProducts.map((product: Product) => (
-                <Link
-                  key={product._id}
-                  href={`/detail/${product._id}`}
-                  className="flex-shrink-0 w-full"
-                >
-                  <div className="bg-7 rounded-2xl p-4 flex flex-col justify-between hover:shadow-lg transition cursor-pointer h-full">
-                    <div className="w-full flex justify-center items-center mb-4 pt-2 h-36 md:h-60">
-                      <Image
-                        src={product.imageUrl || "/images/placeholder.png"}
-                        alt={product.name}
-                        width={200}
-                        height={200}
-                        className="object-contain w-full h-full"
-                      />
-                    </div>
+          {displayedProducts.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {displayedProducts.map((product: Product) => (
+                  <Link
+                    key={product._id}
+                    href={`/detail/${product._id}`}
+                    className="flex-shrink-0 w-full"
+                  >
+                    <div className="bg-7 rounded-2xl p-2 sm:p-3 md:p-4 flex flex-col justify-between hover:shadow-lg transition cursor-pointer h-full">
+                      <div className="w-full flex justify-center items-center mb-2 sm:mb-3 md:mb-4 pt-1 sm:pt-2 h-24 sm:h-32 md:h-44">
+                        <Image
+                          src={product.imageUrl || "/images/placeholder.png"}
+                          alt={product.name}
+                          width={120}
+                          height={120}
+                          className="object-contain w-full h-full"
+                        />
+                      </div>
 
-                    <h3 className="text-sm md:text-base font-semibold text-left text-black leading-tight mb-1">
-                      {product.name}
-                    </h3>
+                      <h3 className="text-xs sm:text-sm md:text-base font-semibold text-left text-black leading-tight mb-0.5 sm:mb-1 line-clamp-2">
+                        {product.name}
+                      </h3>
 
-                    <div className="flex justify-between text-xs md:text-sm text-black/40 mb-1 px-1">
-                      <span>{product.categoryOptions}</span>
-                      <div className="flex items-center gap-1">
-                        <RatingStars rating={product.rating || 0} />
-                        <span className="text-black/60">({product.rating?.toFixed(1) || "0.0"})</span>
+                      <div className="flex justify-between text-[10px] sm:text-xs md:text-sm text-black/40 mb-0.5 sm:mb-1 px-0.5 sm:px-1">
+                        <span className="truncate max-w-[48px] sm:max-w-[80px] md:max-w-none">
+                          {product.categoryOptions}
+                        </span>
+                        <div className="flex items-center gap-0.5 sm:gap-1">
+                          <span className="scale-90 sm:scale-100">
+                            <RatingStars rating={product.rating || 0} />
+                          </span>
+                          <span className="text-black/60">
+                            ({product.rating?.toFixed(1) || "0.0"})
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center px-0.5 sm:px-1">
+                        <span className="text-xs sm:text-sm md:text-base font-semibold text-black">
+                          Rp{product.price.toLocaleString()}
+                        </span>
+                        <div className="flex items-center">
+                          <WishlistButton productId={product._id} />
+                        </div>
                       </div>
                     </div>
-
-                    <div className="flex justify-between items-center px-1">
-                      <span className="text-sm md:text-base font-semibold text-black">
-                        Rp{product.price.toLocaleString()}
-                      </span>
-                      <div className="flex gap-2">
-                        <button className="w-6 h-6 rounded-full bg-black text-white border border-black/10 flex items-center justify-center text-sm">
-                          +
-                        </button>
-                        <WishlistButton productId={product._id} />
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                  </Link>
+                ))}
+              </div>
+              {visibleCount < filteredProducts.length && (
+                <div className="flex justify-center mt-8">
+                  <button
+                    onClick={() => setVisibleCount((prev) => prev + 12)}
+                    className="px-8 py-2 rounded-full bg-1 text-white font-semibold hover:brightness-110 shadow-md"
+                  >
+                    Load More
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
-            <p className="text-black/50 mt-6 text-center">Tidak ada produk ditemukan.</p>
+            <p className="text-black/50 mt-6 text-center">
+              Tidak ada produk ditemukan.
+            </p>
           )}
         </section>
-
       </motion.div>
     </section>
   );

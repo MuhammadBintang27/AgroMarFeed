@@ -27,7 +27,7 @@ const Hero = () => {
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.3 }}
-          className="hover:scale-105 duration-300 text-white text-2xl sm:text-3xl md:text-5xl font-normal mb-4 md:mb-6 leading-snug"
+          className="hover:scale-105 duration-300 text-white text-2xl sm:text-3xl md:text-5xl font-bold mb-4 md:mb-6 leading-snug"
         >
           Diskon Pakan Ramah Lingkungan <br className="hidden md:block" />
           Mulai Hari Ini!
@@ -72,7 +72,7 @@ const Hero = () => {
               key={i}
               className=" rounded-lg p-4 md:p-6 hover:scale-110 hover:shadow-xl transition-all duration-300 cursor-default"
             >
-              <h2 className="text-white text-2xl sm:text-3xl md:text-5xl font-normal">
+              <h2 className="text-white text-2xl sm:text-3xl md:text-5xl font-semibold">
                 {["20+", "6.200kg", "500+", "85%"][i]}
               </h2>
               <p className="text-white text-xs sm:text-sm mt-4 leading-relaxed">

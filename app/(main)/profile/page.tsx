@@ -136,7 +136,7 @@ export default function ProfilePage() {
             </button>
             <button
               onClick={handleLogout}
-              className="font-semibold text-left text-black hover:underline"
+              className="font-semibold text-left text-red-500 hover:underline"
             >
               Keluar
             </button>
