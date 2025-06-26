@@ -7,6 +7,7 @@ import { Search, Filter, Heart } from "lucide-react";
 import Link from "next/link";
 import { fetchProducts, Product } from "@/lib/api/fetchProducts";
 import ChatbotWidget from "@/components/ChatbotWidget";
+import WishlistButton from "@/components/ui/WishlistButton";
 
 const Katalog = () => {
   const [activeCategory, setActiveCategory] = useState("");
@@ -92,12 +93,10 @@ const Katalog = () => {
               Rp{product.price.toLocaleString()}
             </span>
             <div className="flex gap-2">
-              <button className="w-6 h-6 rounded-full bg-black text-xl text-white border border-black/10 flex items-center justify-center">
+              <button className="w-6 h-6 rounded-full bg-black text-white border border-black/10 flex items-center justify-center">
                 +
               </button>
-              <button className="w-6 h-6 text-[#C7C7CC] hover:text-red-500 transition flex items-center justify-center">
-                <Heart className="w-6 h-6" />
-              </button>
+              <WishlistButton productId={product._id} />
             </div>
           </div>
         </div>
@@ -238,9 +237,7 @@ const Katalog = () => {
                         <button className="w-6 h-6 rounded-full bg-black text-white border border-black/10 flex items-center justify-center text-sm">
                           +
                         </button>
-                        <button className="w-6 h-6 text-[#C7C7CC] hover:text-red-500 transition flex items-center justify-center">
-                          <Heart className="w-5 h-5" />
-                        </button>
+                        <WishlistButton productId={product._id} />
                       </div>
                     </div>
                   </div>

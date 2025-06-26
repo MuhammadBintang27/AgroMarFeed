@@ -11,6 +11,7 @@ import { fetchProductById, fetchProducts, Product, Weight, fetchStoreById } from
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
+import WishlistButton from "@/components/ui/WishlistButton";
 
 const Detail = () => {
   const [quantity, setQuantity] = useState(0);
@@ -90,9 +91,7 @@ const Detail = () => {
             <button className="w-6 h-6 rounded-full bg-black text-xl text-white border border-black/10 flex items-center justify-center">
               +
             </button>
-            <button className="w-6 h-6 text-[#C7C7CC] hover:text-red-500 transition flex items-center justify-center">
-              <Heart className="w-6 h-6" />
-            </button>
+            <WishlistButton productId={product._id} />
           </div>
         </div>
       </div>
@@ -256,9 +255,7 @@ const Detail = () => {
                 >
                   Beli Sekarang
                 </button>
-                <button className="w-8 h-8 text-black hover:text-red-500 transition flex items-center justify-center">
-                  <Heart className="w-6 h-6" />
-                </button>
+                <WishlistButton productId={product._id} size="lg" />
               </div>
             </div>
           </div>
@@ -296,9 +293,7 @@ const Detail = () => {
                         <button className="w-6 h-6 rounded-full bg-black text-xl text-white border border-black/10 flex items-center justify-center">
                           +
                         </button>
-                        <button className="w-6 h-6 text-[#C7C7CC] hover:text-red-500 transition flex items-center justify-center">
-                          <Heart className="w-6 h-6" />
-                        </button>
+                        <WishlistButton productId={product._id} />
                       </div>
                     </div>
                   </div>

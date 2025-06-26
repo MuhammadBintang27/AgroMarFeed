@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { fetchProducts, Product } from "@/lib/api/fetchProducts";
+import WishlistButton from "@/components/ui/WishlistButton";
 
 const ProdukPakan = () => {
   const [activeCategory, setActiveCategory] = useState("");
@@ -71,9 +72,7 @@ const ProdukPakan = () => {
               <button className="w-6 h-6 rounded-full bg-black text-white border border-black/10 flex items-center justify-center text-sm">
                 +
               </button>
-              <button className="w-6 h-6 text-[#C7C7CC] hover:text-red-500 transition flex items-center justify-center">
-                <Heart className="w-5 h-5" />
-              </button>
+              <WishlistButton productId={product._id} />
             </div>
           </div>
         </div>
@@ -187,9 +186,7 @@ const ProdukPakan = () => {
                     <button className="w-6 h-6 rounded-full bg-black text-white border border-black/10 flex items-center justify-center text-sm">
                       +
                     </button>
-                    <button className="w-6 h-6 text-[#C7C7CC] hover:text-red-500 transition flex items-center justify-center">
-                      <Heart className="w-5 h-5" />
-                    </button>
+                    <WishlistButton productId={product._id} />
                   </div>
                 </div>
               </div>
