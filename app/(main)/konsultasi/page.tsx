@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Clock } from "lucide-react";
+import { Clock, Search } from "lucide-react";
 import ChatbotWidget from "@/components/ChatbotWidget";
 import Button from "../../../components/ui/Button";
 import SearchBar from "../../../components/ui/SearchBar";
@@ -26,6 +26,9 @@ export default function ConsultationPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [konsultanList, setKonsultanList] = useState<Konsultan[]>([]);
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [visibleCount, setVisibleCount] = useState(9);
 
   useEffect(() => {
     setIsMounted(true);
@@ -65,37 +68,41 @@ export default function ConsultationPage() {
     setSelectedType((prev) => (prev === type ? null : type));
   };
 
-  // Filter hanya konsultan yang aktif
+  // Filter hanya konsultan yang aktif dan sesuai search
   const filteredKonsultanList = (
     selectedType
       ? konsultanList.filter((k) => k.profesi === selectedType)
       : konsultanList
-  ).filter((k) => k.aktif === true);
+  )
+    .filter((k) => k.aktif === true)
+    .filter((k) => k.nama.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const displayedKonsultan = filteredKonsultanList.slice(0, visibleCount);
 
   return (
-    <div className="min-h-screen pt-32 pb-16 bg-white">
+    <div className="min-h-screen pt-20 sm:pt-24 md:pt-32 pb-8 sm:pb-12 md:pb-16 lg:px-30 bg-white">
       <ChatbotWidget />
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 sm:px-6 md:px-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2 text-black">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-black">
             Konsultasi Ahli Pakan & Dokter Hewan Langsung
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             Paket ikan, pakan ayam, dan ternak dari limbah agro-maritim. Hemat
             hingga 30%! Beli pakan, bantu bumi.
           </p>
         </div>
 
         {/* Filter */}
-        <div className="flex flex-wrap justify-center gap-2 mb-12">
+        <div className="flex flex-wrap justify-center gap-1 sm:gap-2 mb-8 sm:mb-12 lg:px-30">
           {consultationTypes.map((type) => {
             const isActive = selectedType === type;
             return (
               <button
                 key={type}
                 onClick={() => handleTypeClick(type)}
-                className={`px-4 py-1 rounded-full text-sm border 
+                className={`px-2 sm:px-3 md:px-4 py-1 rounded-full text-xs sm:text-sm border 
                 ${
                   isActive
                     ? "bg-1 text-white border-2"
@@ -110,20 +117,36 @@ export default function ConsultationPage() {
         </div>
 
         {/* Search */}
-        <SearchBar placeholder="Cari Konsultasi..." className="mb-12" />
+        <div className="w-full flex justify-center mt-4 mb-14">
+          <div className="flex items-center gap-3 bg-6 rounded-full px-5 py-3 w-full max-w-xl mx-auto">
+            <Search className="w-5 h-5 text-black/50" />
+            <input
+              type="text"
+              placeholder="Cari konsultan…"
+              className="bg-transparent outline-none text-black/80 placeholder:text-black/50 w-full"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setSearchTerm(searchInput);
+                }
+              }}
+            />
+          </div>
+        </div>
 
         {/* List Konsultan */}
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
           <motion.section
             initial={{ y: 100, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
             transition={{ duration: 1 }}
           >
-            <h2 className="text-2xl font-bold mb-4 text-black">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4 text-black">
               {selectedType || "Semua"} Konsultan
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {filteredKonsultanList.map((konsultan) => {
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              {displayedKonsultan.map((konsultan) => {
                 // Foto profil default berdasarkan jenis_kelamin
                 let profileImg = "/images/agromardoc-L.png"; // fallback default
                 if (konsultan.jenis_kelamin === "P") {
@@ -135,54 +158,57 @@ export default function ConsultationPage() {
                   <div
                     key={konsultan._id}
                     onClick={() => handleBooking(konsultan._id)}
-                    className="bg-white rounded-lg p-4 shadow-md group transition-all duration-300 hover:shadow-lg cursor-pointer flex gap-4"
+                    className="bg-white rounded-lg p-3 sm:p-4 shadow-md group transition-all duration-300 hover:shadow-lg cursor-pointer flex gap-3 sm:gap-4"
                   >
                     {/* Gambar Profil */}
                     <div className="flex-shrink-0">
                       <img
                         src={profileImg}
                         alt={konsultan.nama}
-                        className="w-20 h-20 rounded-full object-cover border border-gray-300"
+                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border border-gray-300"
                       />
                     </div>
 
                     {/* Info Konsultan */}
                     <div className="flex-1">
-                      <h3 className="font-medium mb-2 text-black">
+                      <h3 className="font-medium mb-1 sm:mb-2 text-black text-sm sm:text-base">
                         {konsultan.nama} - {konsultan.profesi}
                       </h3>
 
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        <span className="flex items-center bg-2 text-white text-xs px-2 py-1 rounded-full">
-                          <Clock size={12} className="mr-1" />
+                      <div className="flex flex-wrap gap-1 sm:gap-2 mb-1 sm:mb-2">
+                        <span className="flex items-center bg-2 text-white text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
+                          <Clock
+                            size={10}
+                            className="sm:w-3 sm:h-3 mr-0.5 sm:mr-1"
+                          />
                           Durasi : 60 Menit
                         </span>
-                        <span className="bg-3 text-white text-xs px-2 py-1 rounded-full">
+                        <span className="bg-3 text-white text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
                           Harga : {konsultan.price.toLocaleString("id-ID")}
                         </span>
                       </div>
 
-                      <div className="flex items-center mb-2">
+                      <div className="flex items-center mb-1 sm:mb-2">
                         <span className="text-yellow-400">★</span>
-                        <span className="ml-1 text-black">
+                        <span className="ml-1 text-black text-xs sm:text-sm">
                           {konsultan.rating?.toFixed(1) || "0.0"}
                         </span>
-                        <span className="ml-3 text-gray-500 text-sm">
+                        <span className="ml-2 sm:ml-3 text-gray-500 text-xs sm:text-sm">
                           {konsultan.jumlah_penanganan || 0} Penanganan
                         </span>
                       </div>
 
-                      <div className="overflow-hidden max-h-0 opacity-0 group-hover:max-h-[100px] group-hover:opacity-100 transition-all duration-500 ease-in-out mb-2">
-                        <p className="text-sm text-black/40">
+                      <div className="overflow-hidden max-h-0 opacity-0 group-hover:max-h-[80px] sm:group-hover:max-h-[100px] group-hover:opacity-100 transition-all duration-500 ease-in-out mb-1 sm:mb-2">
+                        <p className="text-xs sm:text-sm text-black/40">
                           {konsultan.description}
                         </p>
                       </div>
 
-                      <div className="mt-2 text-left">
-                        <span className="inline-flex items-center text-2 text-sm text-black">
+                      <div className="mt-1 sm:mt-2 text-left">
+                        <span className="inline-flex items-center text-2 text-xs sm:text-sm text-black">
                           Klik untuk pesan
                           <svg
-                            className="w-4 h-4 ml-2"
+                            className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -201,6 +227,16 @@ export default function ConsultationPage() {
                 );
               })}
             </div>
+            {visibleCount < filteredKonsultanList.length && (
+              <div className="flex justify-center mt-8">
+                <button
+                  onClick={() => setVisibleCount((prev) => prev + 9)}
+                  className="px-8 py-2 rounded-full bg-1 text-white font-semibold hover:brightness-110 shadow-md"
+                >
+                  Tampilkan Lebih Banyak
+                </button>
+              </div>
+            )}
           </motion.section>
         </div>
       </div>

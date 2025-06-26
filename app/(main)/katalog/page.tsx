@@ -214,7 +214,11 @@ const Katalog = () => {
                   ? "bg-1 text-white"
                   : "bg-2 text-white"
               }`}
-              onClick={() => setActiveCategory(category.label)}
+              onClick={() =>
+                setActiveCategory((prev) =>
+                  prev === category.label ? "" : category.label
+                )
+              }
             >
               <Image
                 src={category.image}

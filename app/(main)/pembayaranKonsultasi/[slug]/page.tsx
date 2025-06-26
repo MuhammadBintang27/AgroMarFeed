@@ -288,7 +288,7 @@ export default function BookingPage() {
   };
 
   return (
-    <div className="min-h-screen pt-32 pb-16 bg-7">
+    <div className="min-h-screen pt-32 pb-16 bg-white">
       <div className="container mx-auto px-4 max-w-4xl">
         <motion.div
           initial={{ y: 20, opacity: 0 }}
