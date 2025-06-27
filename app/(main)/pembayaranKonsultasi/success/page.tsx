@@ -90,13 +90,17 @@ function PaymentConsultationSuccessContent() {
   let statusIcon = null;
   let statusColor = "";
 
+  // Get transaction status from URL params
+  const transactionStatus = searchParams.get('transaction_status');
+  const statusCode = searchParams.get('status_code');
+
   if (error) {
-    statusTitle = "Appointment Tidak Ditemukan";
-    statusDesc = error;
+    statusTitle = "Pemesanan Konsultasi Berhasil Dibuat!";
+    statusDesc = "Terima kasih telah melakukan pemesanan konsultasi. Silakan selesaikan pembayaran sesuai instruksi yang telah dikirim.";
     statusIcon = (
-      <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
+      <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-6">
         <svg
-          className="h-8 w-8 text-red-600"
+          className="h-8 w-8 text-blue-600"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -105,15 +109,17 @@ function PaymentConsultationSuccessContent() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="2"
-            d="M6 18L18 6M6 6l12 12"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
       </div>
     );
-    statusColor = "text-red-600";
+    statusColor = "text-blue-600";
   } else if (
     appointmentDetails?.payment_status === "paid" ||
-    appointmentDetails?.status === "processing"
+    appointmentDetails?.status === "processing" ||
+    transactionStatus === "settlement" ||
+    transactionStatus === "capture"
   ) {
     statusTitle = "Pembayaran Konsultasi Berhasil!";
     statusDesc =
@@ -136,7 +142,10 @@ function PaymentConsultationSuccessContent() {
       </div>
     );
     statusColor = "text-green-600";
-  } else if (appointmentDetails?.payment_status === "pending") {
+  } else if (
+    appointmentDetails?.payment_status === "pending" ||
+    transactionStatus === "pending"
+  ) {
     statusTitle = "Menunggu Pembayaran";
     statusDesc =
       "Appointment Anda masih menunggu pembayaran. Silakan selesaikan pembayaran sesuai instruksi.";
@@ -160,7 +169,10 @@ function PaymentConsultationSuccessContent() {
     statusColor = "text-yellow-600";
   } else if (
     appointmentDetails?.payment_status === "failed" ||
-    appointmentDetails?.status === "cancelled"
+    appointmentDetails?.status === "cancelled" ||
+    transactionStatus === "cancel" ||
+    transactionStatus === "deny" ||
+    transactionStatus === "expire"
   ) {
     statusTitle = "Pembayaran Gagal / Dibatalkan";
     statusDesc =
@@ -183,6 +195,28 @@ function PaymentConsultationSuccessContent() {
       </div>
     );
     statusColor = "text-red-600";
+  } else {
+    // Default case - appointment created but payment status unknown
+    statusTitle = "Pemesanan Konsultasi Berhasil Dibuat!";
+    statusDesc = "Terima kasih telah melakukan pemesanan konsultasi. Silakan selesaikan pembayaran sesuai instruksi yang telah dikirim.";
+    statusIcon = (
+      <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-6">
+        <svg
+          className="h-8 w-8 text-blue-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      </div>
+    );
+    statusColor = "text-blue-600";
   }
 
   return (
@@ -212,18 +246,60 @@ function PaymentConsultationSuccessContent() {
               <p className="text-sm text-gray-600">
                 Pembayaran: {appointmentDetails.payment_status}
               </p>
+              {appointmentDetails.service && (
+                <p className="text-sm text-gray-600">
+                  Layanan: {appointmentDetails.service}
+                </p>
+              )}
+              {transactionStatus && (
+                <p className="text-sm text-gray-600">
+                  Status Midtrans: {transactionStatus}
+                </p>
+              )}
+            </div>
+          )}
+
+          {!appointmentDetails && orderId && (
+            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <h3 className="font-semibold text-gray-900 mb-2">
+                Informasi Pemesanan:
+              </h3>
               <p className="text-sm text-gray-600">
-                Layanan: {appointmentDetails.service}
+                Order ID: {orderId}
+              </p>
+              {transactionStatus && (
+                <p className="text-sm text-gray-600">
+                  Status Pembayaran: {transactionStatus}
+                </p>
+              )}
+              <p className="text-sm text-gray-600">
+                Pemesanan konsultasi Anda telah berhasil dibuat dan sedang menunggu pembayaran.
               </p>
             </div>
           )}
 
           <div className="space-y-3">
+            {transactionStatus === 'pending' && (
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full bg-yellow-600 text-white py-3 px-4 rounded-lg hover:bg-yellow-700 transition duration-200"
+              >
+                Refresh Status Pembayaran
+              </button>
+            )}
+            
             <button
               onClick={handleContinue}
-              className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200"
+              className={`w-full py-3 px-4 rounded-lg transition duration-200 ${
+                transactionStatus === 'pending' 
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
             >
-              Lanjutkan ke Konsultasi
+              {transactionStatus === 'pending' 
+                ? 'Lihat Instruksi Pembayaran' 
+                : 'Lanjutkan ke Konsultasi'
+              }
             </button>
           </div>
 
