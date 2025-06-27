@@ -3,25 +3,18 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createProduct } from "@/lib/api/fetchProducts";
 import imageCompression from "browser-image-compression";
+import { useUser } from "@/contexts/UserContext";
 
 const defaultWeight = { id: "", value: "", price: 0 };
 
-const kategoriOptions = [
-  "Ruminansia", "Non-ruminansia", "Akuakultur"
-];
-const limbahOptions = [
-  "Limbah Pertanian",
-  "Limbah Kelautan",
-];
-const fisikOptions = [
-  "Pelet",
-  "Fermentasi Padat",
-  "Serbuk",
-  "Granul Kasar",
-];
+const kategoriOptions = ["Ruminansia", "Non-ruminansia", "Akuakultur"];
+const limbahOptions = ["Limbah Pertanian", "Limbah Kelautan"];
+const fisikOptions = ["Pelet", "Fermentasi Padat", "Serbuk", "Granul Kasar"];
 
 export default function TambahProdukPage() {
   const router = useRouter();
+  const { user } = useUser();
+  const [storeId, setStoreId] = useState<string>("");
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -33,7 +26,6 @@ export default function TambahProdukPage() {
     stock: 0,
     weights: [{ ...defaultWeight }],
   });
-  const [storeId, setStoreId] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -43,12 +35,8 @@ export default function TambahProdukPage() {
     // Ambil store user (endpoint /api/stores?user_id=xxx)
     const fetchStore = async () => {
       try {
-        const resUser = await fetch("/api/auth/current-user");
-        const userData = await resUser.json();
-        if (!userData?.user?._id) return;
-        const resStore = await fetch(
-          `/api/stores?user_id=${userData.user._id}`
-        );
+        if (!user?._id) return;
+        const resStore = await fetch(`/api/stores?user_id=${user._id}`);
         const storeData = await resStore.json();
         // storeData bisa array atau object tergantung backend
         if (
@@ -67,11 +55,9 @@ export default function TambahProdukPage() {
       }
     };
     fetchStore();
-  }, []);
+  }, [user]);
 
-  const handleChange = (
-    e: React.ChangeEvent<any>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<any>) => {
     const { name, value, type } = e.target;
     let fieldValue: string | boolean = value;
     if (type === "checkbox" && e.target instanceof HTMLInputElement) {
@@ -121,7 +107,7 @@ export default function TambahProdukPage() {
           });
           setImageFile(compressedFile);
         } catch (err) {
-          alert('Gagal kompres gambar, gunakan file asli.');
+          alert("Gagal kompres gambar, gunakan file asli.");
           setImageFile(file);
         }
       } else {
@@ -198,10 +184,14 @@ export default function TambahProdukPage() {
   return (
     <section className="min-h-screen bg-[#F7F7F7] py-10 px-2 md:px-0 flex items-center justify-center">
       <div className="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-lg p-8">
-        <h1 className="text-3xl font-extrabold text-[#39381F] mb-8 text-center">Tambah Produk</h1>
+        <h1 className="text-3xl font-extrabold text-[#39381F] mb-8 text-center">
+          Tambah Produk
+        </h1>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-y-6">
           <div>
-            <label className="font-semibold block mb-2 text-[#39381F]">Nama Produk <span className="text-red-500">*</span></label>
+            <label className="font-semibold block mb-2 text-[#39381F]">
+              Nama Produk <span className="text-red-500">*</span>
+            </label>
             <input
               name="name"
               value={form.name}
@@ -211,7 +201,9 @@ export default function TambahProdukPage() {
             />
           </div>
           <div>
-            <label className="font-semibold block mb-2 text-[#39381F]">Deskripsi <span className="text-red-500">*</span></label>
+            <label className="font-semibold block mb-2 text-[#39381F]">
+              Deskripsi <span className="text-red-500">*</span>
+            </label>
             <textarea
               name="description"
               value={form.description}
@@ -223,7 +215,9 @@ export default function TambahProdukPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="font-semibold block mb-2 text-[#39381F]">Kategori <span className="text-red-500">*</span></label>
+              <label className="font-semibold block mb-2 text-[#39381F]">
+                Kategori <span className="text-red-500">*</span>
+              </label>
               <select
                 name="categoryOptions"
                 value={form.categoryOptions}
@@ -232,12 +226,16 @@ export default function TambahProdukPage() {
               >
                 <option value="">Pilih Kategori</option>
                 {kategoriOptions.map((opt) => (
-                  <option key={opt} value={opt}>{opt}</option>
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="font-semibold block mb-2 text-[#39381F]">Jenis Limbah <span className="text-red-500">*</span></label>
+              <label className="font-semibold block mb-2 text-[#39381F]">
+                Jenis Limbah <span className="text-red-500">*</span>
+              </label>
               <select
                 name="limbahOptions"
                 value={form.limbahOptions}
@@ -246,12 +244,16 @@ export default function TambahProdukPage() {
               >
                 <option value="">Pilih Jenis Limbah</option>
                 {limbahOptions.map((opt) => (
-                  <option key={opt} value={opt}>{opt}</option>
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="font-semibold block mb-2 text-[#39381F]">Bentuk Fisik <span className="text-red-500">*</span></label>
+              <label className="font-semibold block mb-2 text-[#39381F]">
+                Bentuk Fisik <span className="text-red-500">*</span>
+              </label>
               <select
                 name="fisikOptions"
                 value={form.fisikOptions}
@@ -260,14 +262,18 @@ export default function TambahProdukPage() {
               >
                 <option value="">Pilih Bentuk Fisik</option>
                 {fisikOptions.map((opt) => (
-                  <option key={opt} value={opt}>{opt}</option>
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="font-semibold block mb-2 text-[#39381F]">Harga Satuan <span className="text-red-500">*</span></label>
+              <label className="font-semibold block mb-2 text-[#39381F]">
+                Harga Satuan <span className="text-red-500">*</span>
+              </label>
               <input
                 name="price"
                 type="number"
@@ -278,7 +284,9 @@ export default function TambahProdukPage() {
               />
             </div>
             <div>
-              <label className="font-semibold block mb-2 text-[#39381F]">Stok <span className="text-red-500">*</span></label>
+              <label className="font-semibold block mb-2 text-[#39381F]">
+                Stok <span className="text-red-500">*</span>
+              </label>
               <input
                 name="stock"
                 type="number"
@@ -290,30 +298,47 @@ export default function TambahProdukPage() {
             </div>
           </div>
           <div>
-            <label className="font-semibold block mb-2 text-[#39381F]">Upload Gambar Produk <span className="text-red-500">*</span></label>
+            <label className="font-semibold block mb-2 text-[#39381F]">
+              Upload Gambar Produk <span className="text-red-500">*</span>
+            </label>
             <div className="flex items-center gap-4">
-              <input type="file" accept="image/*" onChange={handleImageChange} className="w-full px-4 py-2 rounded-lg border border-gray-200 bg-white" />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="w-full px-4 py-2 rounded-lg border border-gray-200 bg-white"
+              />
               {imageFile && (
-                <img src={URL.createObjectURL(imageFile)} alt="Preview" className="w-20 h-20 object-cover rounded-lg border" />
+                <img
+                  src={URL.createObjectURL(imageFile)}
+                  alt="Preview"
+                  className="w-20 h-20 object-cover rounded-lg border"
+                />
               )}
             </div>
           </div>
           <div>
-            <label className="font-semibold block mb-2 text-[#39381F]">Varian Berat & Harga <span className="text-red-500">*</span></label>
+            <label className="font-semibold block mb-2 text-[#39381F]">
+              Varian Berat & Harga <span className="text-red-500">*</span>
+            </label>
             <div className="flex flex-col gap-2">
               {form.weights.map((w, idx) => (
                 <div key={idx} className="flex gap-2 items-center">
                   <input
                     placeholder="Berat (misal: 1kg)"
                     value={w.value}
-                    onChange={(e) => handleWeightChange(idx, "value", e.target.value)}
+                    onChange={(e) =>
+                      handleWeightChange(idx, "value", e.target.value)
+                    }
                     className="input input-bordered rounded"
                   />
                   <input
                     placeholder="Harga"
                     type="number"
                     value={w.price}
-                    onChange={(e) => handleWeightChange(idx, "price", Number(e.target.value))}
+                    onChange={(e) =>
+                      handleWeightChange(idx, "price", Number(e.target.value))
+                    }
                     className="input input-bordered rounded"
                   />
                   {form.weights.length > 1 && (

@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser, logout } from "@/lib/auth";
-import { User } from "@/types";
+import { logout } from "@/lib/auth";
+import { useUser } from "@/contexts/UserContext";
 import Image from "next/image";
 
 interface Store {
@@ -18,24 +18,18 @@ interface Store {
 }
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading, error: userError } = useUser();
   const [error, setError] = useState<string>("");
   const [store, setStore] = useState<Store | null>(null);
   const [loadingStore, setLoadingStore] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await getCurrentUser();
-        setUser(response.user ?? null);
-      } catch (err: any) {
-        setError("Not authenticated");
-        router.push("/auth/login");
-      }
-    };
-    fetchUser();
-  }, [router]);
+    if (userError) {
+      setError("Not authenticated");
+      router.push("/auth/login");
+    }
+  }, [userError, router]);
 
   useEffect(() => {
     if (user?._id) {
@@ -55,15 +49,15 @@ export default function ProfilePage() {
   const handleLogout = async () => {
     try {
       await logout();
-      setUser(null);
-      router.push("/auth/login");
+      router.push("/");
     } catch (err: any) {
       console.error("Logout failed:", err);
       setError("Logout failed");
     }
   };
 
-  if (!user) return <div>Loading...</div>;
+  if (loading) return <div>Loading...</div>;
+  if (!user) return <div>Not authenticated</div>;
 
   return (
     <section className="bg-white w-full text-black py-20 px-4 sm:px-6 lg:px-8 lg:py-40 md:py-30">

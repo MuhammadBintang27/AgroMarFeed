@@ -5,7 +5,9 @@ import Link from "next/link";
 type ButtonProps = {
   children: React.ReactNode;
   href?: string;
-  onClick?: (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => void;
+  onClick?: (
+    e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>
+  ) => void;
   className?: string;
   size?: "sm" | "md" | "lg";
   disabled?: boolean;
@@ -33,16 +35,25 @@ const Button: React.FC<ButtonProps> = ({
 
   if (href) {
     return (
-      <Link href={href} legacyBehavior>
-        <a className={combinedClassName} onClick={onClick} aria-disabled={disabled} tabIndex={disabled ? -1 : 0}>
-          {children}
-        </a>
+      <Link
+        href={href}
+        className={combinedClassName}
+        onClick={onClick}
+        aria-disabled={disabled}
+        tabIndex={disabled ? -1 : 0}
+      >
+        {children}
       </Link>
     );
   }
 
   return (
-    <button type="button" onClick={onClick} className={combinedClassName} disabled={disabled}>
+    <button
+      type="button"
+      onClick={onClick}
+      className={combinedClassName}
+      disabled={disabled}
+    >
       {children}
     </button>
   );

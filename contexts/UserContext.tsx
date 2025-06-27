@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+} from "react";
 import { User } from "@/types";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -17,12 +23,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+  const hasInitialized = useRef(false);
+  const isFetching = useRef(false);
 
   const fetchUser = async () => {
+    // Prevent multiple simultaneous calls
+    if (isFetching.current) return;
+
     try {
+      isFetching.current = true;
       setLoading(true);
       setError(null);
+
       const response = await getCurrentUser();
 
       // Check different possible response structures
@@ -42,15 +54,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
     } finally {
       setLoading(false);
-      setHasCheckedAuth(true);
+      isFetching.current = false;
     }
   };
 
+  // Initial authentication check - only runs once
   useEffect(() => {
-    fetchUser();
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      fetchUser();
+    }
   }, []);
 
-  // Auto-refresh after OAuth redirect (client-side only)
+  // Handle OAuth redirect - only runs if there's an OAuth parameter
   useEffect(() => {
     if (typeof window !== "undefined") {
       const isOAuthRedirect = window.location.search.includes("oauth=success");
@@ -68,17 +84,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }, []);
-
-  // Single retry after initial check if user is null (only once)
-  useEffect(() => {
-    if (hasCheckedAuth && !user && !loading && typeof window !== "undefined") {
-      const timeout = setTimeout(() => {
-        fetchUser();
-      }, 3000); // Single retry after 3 seconds
-
-      return () => clearTimeout(timeout);
-    }
-  }, [hasCheckedAuth, user, loading]);
 
   const value = {
     user,

@@ -1,34 +1,17 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   FaShoppingBasket,
   FaHeart,
   FaUserCircle,
   FaBars,
 } from "react-icons/fa";
-import { getCurrentUser } from "@/lib/auth";
-import { User } from "@/types";
+import { useUser } from "@/contexts/UserContext";
 import Link from "next/link";
 
 export default function Header() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await getCurrentUser();
-        setUser(response.user ?? null);
-      } catch (error) {
-        console.error("Failed to fetch user:", error);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUser();
-  }, []);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
