@@ -88,18 +88,22 @@ export default function AboutUsPage() {
               {
                 name: "Muhammad Habil Aswad",
                 role: "Machine Learning Engineer",
-                description: '"My models may overfit, but my passion doesn’t."',
+                description:
+                  '"My models may overfit, but my passion doesn\'t."',
+                image: "/images/team/habil.png",
               },
               {
                 name: "Muhammad Bintang Indra Hidayat",
                 role: "Full Stack Developer",
-                description: '"Wong liyo ngerti opo."',
+                description: '"commit, I push, I build. Just like I do in life."',
+                image: "/images/team/bintang.png",
               },
               {
                 name: "Azzariyat Azra",
                 role: "UI UX Designer",
                 description:
                   "Mengintegrasikan limbah pertanian dan kelautan sebagai bahan baku utama.",
+                image: "/images/team/azra.png",
               },
             ].map((member, index) => (
               <div
@@ -108,7 +112,7 @@ export default function AboutUsPage() {
               >
                 <div className="w-50 h-50 mb-4 flex items-center justify-center overflow-hidden">
                   <Image
-                    src={`/images/team/${member.name.toLowerCase()}.png`}
+                    src={member.image}
                     alt={`Foto ${member.name}`}
                     width={240}
                     height={240}

@@ -7,7 +7,13 @@ import React, { useState, useEffect } from "react";
 import { Heart, Minus, Plus, Star } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { fetchProductById, fetchProducts, Product, Weight, fetchStoreById } from "@/lib/api/fetchProducts";
+import {
+  fetchProductById,
+  fetchProducts,
+  Product,
+  Weight,
+  fetchStoreById,
+} from "@/lib/api/fetchProducts";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
@@ -33,7 +39,7 @@ const RatingStars = ({ rating }: { rating: number }) => {
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
         </svg>
       ))}
-      
+
       {/* Half Star */}
       {hasHalfStar && (
         <div className="relative w-4 h-4">
@@ -55,7 +61,7 @@ const RatingStars = ({ rating }: { rating: number }) => {
           </div>
         </div>
       )}
-      
+
       {/* Empty Stars */}
       {[...Array(emptyStars)].map((_, i) => (
         <svg
@@ -134,7 +140,9 @@ const Detail = () => {
         }
 
         const productsData = await fetchProducts();
-        const bestSellersData = productsData.filter((p) => p.isBestSeller && p._id !== slug);
+        const bestSellersData = productsData.filter(
+          (p) => p.isBestSeller && p._id !== slug
+        );
         setBestSellers(bestSellersData);
 
         setLoading(false);
@@ -159,12 +167,16 @@ const Detail = () => {
             className="object-contain"
           />
         </div>
-        <h3 className="text-lg font-semibold text-left mb-2 text-black">{product.name}</h3>
+        <h3 className="text-lg font-semibold text-left mb-2 text-black">
+          {product.name}
+        </h3>
         <div className="flex justify-between text-sm text-black/30 mb-2 px-1">
           <span>{product.categoryOptions}</span>
           <div className="flex items-center gap-1">
             <RatingStars rating={product.rating || 0} />
-            <span className="text-black/60">({product.rating?.toFixed(1) || "0.0"})</span>
+            <span className="text-black/60">
+              ({product.rating?.toFixed(1) || "0.0"})
+            </span>
           </div>
         </div>
         <div className="flex justify-between items-center px-1">
@@ -187,7 +199,11 @@ const Detail = () => {
   }
 
   if (error || !product) {
-    return <div className="text-center py-40 text-red-500">Error: {error || "Product not found"}</div>;
+    return (
+      <div className="text-center py-40 text-red-500">
+        Error: {error || "Product not found"}
+      </div>
+    );
   }
 
   const router = useRouter();
@@ -203,7 +219,9 @@ const Detail = () => {
           <ArrowLeft className="w-6 h-6 mr-1" />
         </button>
 
-        <h2 className="text-left text-2xl font-semibold text-black mb-8">Detail Produk</h2>
+        <h2 className="text-left text-2xl font-semibold text-black mb-8">
+          Detail Produk
+        </h2>
 
         {/* Detail Produk */}
         <div className="flex flex-col md:flex-row gap-8 mb-12">
@@ -220,7 +238,24 @@ const Detail = () => {
 
           {/* Info Produk */}
           <div className="w-full md:w-3/5 flex flex-col gap-4">
-            <h3 className="text-2xl md:text-3xl font-semibold text-black">{product.name}</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-2xl md:text-3xl font-semibold text-black">
+                {product.name}
+              </h3>
+              {store && (
+                <button
+                  className="flex items-center justify-between bg-white border border-orange-200 text-black text-xs py-2 px-3 rounded-[25px] font-semibold hover:scale-105 duration-300 transition text-left"
+                  onClick={() => router.push(`/toko/${store._id}`)}
+                >
+                  <span className="text-left">{store.nama_toko}</span>
+                  <img
+                    src="/images/icons/toko.png"
+                    alt="Toko"
+                    className="w-5 h-5 ml-2"
+                  />
+                </button>
+              )}
+            </div>
 
             <div className="flex items-center gap-2 text-yellow-500 text-sm md:text-base">
               <span className="text-black">{product.rating}</span>
@@ -228,33 +263,58 @@ const Detail = () => {
             </div>
 
             <div className="text-2xl md:text-4xl font-semibold text-black">
-              {selectedWeight ? `Rp${selectedWeight.price.toLocaleString()}` : `Rp${product.price.toLocaleString()}`}
+              {selectedWeight
+                ? `Rp${selectedWeight.price.toLocaleString()}`
+                : `Rp${product.price.toLocaleString()}`}
             </div>
 
-            <p className="text-black/60 text-sm">{product.description}</p>
+            {/* Deskripsi Produk */}
+            <div className="bg-white p-6 mt-4">
+              <h4 className="text-lg font-semibold text-black mb-3">
+                Deskripsi Produk
+              </h4>
+              <div className="text-black/70 text-sm leading-relaxed whitespace-pre-line">
+                {product.description}
+              </div>
+            </div>
 
             {/* Info Toko */}
             {store && (
               <div className="bg-gray-50 rounded-xl p-4 mt-4">
-                <h4 className="text-sm font-medium text-black mb-3">Dijual oleh:</h4>
+                <h4 className="text-sm font-medium text-black mb-3">
+                  Dijual oleh:
+                </h4>
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-2 flex items-center justify-center">
                     <span className="text-white font-semibold text-lg">
-                      {store.nama_toko?.charAt(0)?.toUpperCase() || 'T'}
+                      {store.nama_toko?.charAt(0)?.toUpperCase() || "T"}
                     </span>
                   </div>
                   <div>
-                    <h5 className="font-semibold text-black">{store.nama_toko}</h5>
-                    <p className="text-sm text-gray-600">{store.alamat?.kabupaten || 'Lokasi tidak tersedia'}</p>
+                    <h5 className="font-semibold text-black">
+                      {store.nama_toko}
+                    </h5>
+                    <p className="text-sm text-gray-600">
+                      {store.alamat?.kabupaten || "Lokasi tidak tersedia"}
+                    </p>
                   </div>
                 </div>
               </div>
             )}
 
-            <p className="text-black text-base md:text-lg font-medium mt-4">Tersedia Dalam:</p>
+            <p className="text-black text-base md:text-lg font-medium mt-4">
+              Tersedia Dalam:
+            </p>
             <div className="flex flex-wrap gap-2">
               {product.weights.map((weight) => (
-                <label key={weight.id} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm cursor-pointer border transition ${selectedWeight?.id === weight.id ? 'bg-2 text-white border-2 border-2' : 'bg-white text-black border-gray-300'}`}>
+                <label
+                  key={weight.id}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm cursor-pointer border transition ${
+                    selectedWeight?.id === weight.id
+                      ? "bg-2 text-white border-2 border-2"
+                      : "bg-white text-black border-gray-300"
+                  }`}
+                >
                   <input
                     type="radio"
                     name="weight"
@@ -274,7 +334,9 @@ const Detail = () => {
                 <button onClick={decrement} className="text-black text-lg">
                   <Minus />
                 </button>
-                <span className="text-lg font-medium text-black">{quantity}</span>
+                <span className="text-lg font-medium text-black">
+                  {quantity}
+                </span>
                 <button onClick={increment} className="text-black text-lg">
                   <Plus />
                 </button>
@@ -287,7 +349,7 @@ const Detail = () => {
                   quantity={quantity}
                   weight={selectedWeight}
                   onSuccess={() => {
-                    alert('Produk berhasil ditambahkan ke keranjang!');
+                    alert("Produk berhasil ditambahkan ke keranjang!");
                     setQuantity(0);
                   }}
                   onError={(message) => alert(message)}
@@ -296,22 +358,22 @@ const Detail = () => {
                   className="bg-3 px-5 py-2 rounded-full text-black font-medium hover:bg-3/90 transition"
                   onClick={async () => {
                     if (!user) {
-                      alert('Silakan login terlebih dahulu');
-                      router.push('/auth/login');
+                      alert("Silakan login terlebih dahulu");
+                      router.push("/auth/login");
                       return;
                     }
                     if (quantity < 1) {
-                      alert('Jumlah produk harus minimal 1');
+                      alert("Jumlah produk harus minimal 1");
                       return;
                     }
                     if (!selectedWeight) {
-                      alert('Pilih berat produk terlebih dahulu');
+                      alert("Pilih berat produk terlebih dahulu");
                       return;
                     }
                     // Tambahkan ke keranjang dengan jumlah dan berat yang dipilih
-                    const response = await fetch('/api/cart/add', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
+                    const response = await fetch("/api/cart/add", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
                         user_id: user._id,
                         product_id: product._id,
@@ -322,10 +384,10 @@ const Detail = () => {
                       }),
                     });
                     if (response.ok) {
-                      router.push('/pembayaran');
+                      router.push("/pembayaran");
                     } else {
                       const data = await response.json();
-                      alert(data.message || 'Gagal menambahkan ke keranjang');
+                      alert(data.message || "Gagal menambahkan ke keranjang");
                     }
                   }}
                 >
@@ -339,11 +401,16 @@ const Detail = () => {
 
         {/* Produk Lain */}
         <section className="w-full pt-4">
-          <h2 className="text-left text-xl md:text-2xl font-semibold text-black mb-4">Produk Lain</h2>
+          <h2 className="text-left text-xl md:text-2xl font-semibold text-black mb-4">
+            Produk Lain
+          </h2>
           <div className="flex overflow-x-auto gap-4 pb-2 hide-scrollbar">
             {bestSellers.length > 0 ? (
               bestSellers.map((product) => (
-                <Link href={`/detail/${product._id}`} className="flex-shrink-0 w-60 md:w-72">
+                <Link
+                  href={`/detail/${product._id}`}
+                  className="flex-shrink-0 w-60 md:w-72"
+                >
                   <div className="bg-7 rounded-2xl p-4 flex flex-col hover:shadow-lg transition cursor-pointer h-full">
                     <div className="w-full h-48 md:h-60 flex justify-center items-center mb-4">
                       <Image
@@ -354,12 +421,16 @@ const Detail = () => {
                         className="object-contain w-full h-full"
                       />
                     </div>
-                    <h3 className="text-lg font-semibold text-left mb-2 text-black">{product.name}</h3>
+                    <h3 className="text-lg font-semibold text-left mb-2 text-black">
+                      {product.name}
+                    </h3>
                     <div className="flex justify-between text-sm text-black/30 mb-2 px-1">
                       <span>{product.categoryOptions}</span>
                       <div className="flex items-center gap-1">
                         <RatingStars rating={product.rating || 0} />
-                        <span className="text-black/60">({product.rating?.toFixed(1) || "0.0"})</span>
+                        <span className="text-black/60">
+                          ({product.rating?.toFixed(1) || "0.0"})
+                        </span>
                       </div>
                     </div>
                     <div className="flex justify-between items-center px-1">
@@ -377,15 +448,19 @@ const Detail = () => {
                 </Link>
               ))
             ) : (
-              <div className="text-center text-gray-500">Tidak ada produk lain</div>
+              <div className="text-center text-gray-500">
+                Tidak ada produk lain
+              </div>
             )}
           </div>
         </section>
 
         {/* Reviews Section */}
         <section className="w-full pt-8 border-t border-gray-200">
-          <h2 className="text-left text-xl md:text-2xl font-semibold text-black mb-6">Ulasan Produk</h2>
-          
+          <h2 className="text-left text-xl md:text-2xl font-semibold text-black mb-6">
+            Ulasan Produk
+          </h2>
+
           {reviews.length === 0 ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -406,40 +481,49 @@ const Detail = () => {
                           {review.user_id.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
-                      
+
                       {/* User Info */}
                       <div>
-                        <h4 className="font-semibold text-black">{review.user_id.name}</h4>
+                        <h4 className="font-semibold text-black">
+                          {review.user_id.name}
+                        </h4>
                         <p className="text-sm text-gray-600">
-                          {new Date(review.createdAt).toLocaleDateString('id-ID', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
+                          {new Date(review.createdAt).toLocaleDateString(
+                            "id-ID",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            }
+                          )}
                         </p>
                       </div>
                     </div>
-                    
+
                     {/* Rating */}
                     <div className="flex items-center gap-1">
                       <RatingStars rating={review.rating} />
-                      <span className="text-sm text-gray-600 ml-2">{review.rating}/5</span>
+                      <span className="text-sm text-gray-600 ml-2">
+                        {review.rating}/5
+                      </span>
                     </div>
                   </div>
-                  
+
                   {/* Review Content */}
                   <div className="mb-4">
-                    <p className="text-black leading-relaxed">{review.ulasan}</p>
+                    <p className="text-black leading-relaxed">
+                      {review.ulasan}
+                    </p>
                   </div>
-                  
+
                   {/* Review Image */}
                   {review.gambar && (
                     <div className="mt-4">
-                      <img 
-                        src={review.gambar} 
-                        alt="Review image" 
+                      <img
+                        src={review.gambar}
+                        alt="Review image"
                         className="w-full max-w-xs rounded-lg object-cover"
-                        style={{ maxHeight: '200px' }}
+                        style={{ maxHeight: "200px" }}
                       />
                     </div>
                   )}

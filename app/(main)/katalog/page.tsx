@@ -251,7 +251,7 @@ const Katalog = () => {
             </Button>
           ))}
         </div>
-        <div className="w-full flex flex-col md:flex-row gap-3 md:gap-8 mt-4 mb-10 justify-center">
+        <div className="w-full flex flex-col md:flex-row gap-3 md:gap-12 mt-4 mb-10 justify-center">
           <div className="flex items-center gap-2 sm:gap-3 bg-6 rounded-full px-3 py-2 sm:px-5 sm:py-3 w-full md:w-1/2">
             <Search className="w-4 h-4 sm:w-5 sm:h-5 text-black/50" />
             <input
