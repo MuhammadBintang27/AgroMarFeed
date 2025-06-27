@@ -9,7 +9,8 @@ export default function AboutUsPage() {
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-black mb-4">Tentang Kami</h1>
           <p className="text-gray-600 text-lg">
-            Inovasi Pakan Ternak Berbasis Limbah Agro-Maritim untuk Masa Depan yang Berkelanjutan
+            Inovasi Pakan Ternak Berbasis Limbah Agro-Maritim untuk Masa Depan
+            yang Berkelanjutan
           </p>
         </div>
 
@@ -20,10 +21,16 @@ export default function AboutUsPage() {
               Misi Kami
             </h2>
             <p className="text-gray-700 mb-4 text-justify">
-              Kami percaya bahwa masa depan peternakan Indonesia bergantung pada solusi yang tidak hanya efisien, tapi juga berkelanjutan. Kami menghadirkan pakan ternak dari limbah agro-maritim untuk membantu peternak mengurangi biaya operasional hingga 30%, sekaligus menjaga lingkungan dari pencemaran limbah organik.
+              Kami percaya bahwa masa depan peternakan Indonesia bergantung pada
+              solusi yang tidak hanya efisien, tapi juga berkelanjutan. Kami
+              menghadirkan pakan ternak dari limbah agro-maritim untuk membantu
+              peternak mengurangi biaya operasional hingga 30%, sekaligus
+              menjaga lingkungan dari pencemaran limbah organik.
             </p>
             <p className="text-gray-700 text-justify">
-              Dari penelitian hingga produksi, kami berkomitmen menjadikan setiap langkah dalam rantai pasok lebih ramah lingkungan dan bermanfaat bagi masyarakat lokal.
+              Dari penelitian hingga produksi, kami berkomitmen menjadikan
+              setiap langkah dalam rantai pasok lebih ramah lingkungan dan
+              bermanfaat bagi masyarakat lokal.
             </p>
           </div>
           <div className="lg:w-1/2">
@@ -39,24 +46,33 @@ export default function AboutUsPage() {
 
         {/* Values Section */}
         <div className="mb-16">
-          <h2 className="text-2xl font-semibold text-black mb-6 text-center">Nilai-Nilai Kami</h2>
+          <h2 className="text-2xl font-semibold text-black mb-6 text-center">
+            Nilai-Nilai Kami
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-gray-50 rounded-2xl p-6 shadow">
+            <div className="hover:scale-105 duration-300 bg-gray-50 rounded-2xl p-6 shadow">
               <h3 className="text-xl font-bold text-black mb-2">Inovatif</h3>
               <p className="text-gray-600 text-justify">
-                Kami terus mengembangkan produk berbasis riset ilmiah dan teknologi terbaru untuk meningkatkan efisiensi pakan ternak.
+                Kami terus mengembangkan produk berbasis riset ilmiah dan
+                teknologi terbaru untuk meningkatkan efisiensi pakan ternak.
               </p>
             </div>
-            <div className="bg-gray-50 rounded-2xl p-6 shadow">
-              <h3 className="text-xl font-bold text-black mb-2">Berkelanjutan</h3>
+            <div className="hover:scale-105 duration-300 bg-gray-50 rounded-2xl p-6 shadow">
+              <h3 className="text-xl font-bold text-black mb-2">
+                Berkelanjutan
+              </h3>
               <p className="text-gray-600 text-justify">
-                Semua bahan kami berasal dari limbah agro-maritim yang diolah secara ramah lingkungan, tanpa bahan kimia berbahaya.
+                Semua bahan kami berasal dari limbah agro-maritim yang diolah
+                secara ramah lingkungan, tanpa bahan kimia berbahaya.
               </p>
             </div>
-            <div className="bg-gray-50 rounded-2xl p-6 shadow">
-              <h3 className="text-xl font-bold text-black mb-2">Memberdayakan</h3>
+            <div className="hover:scale-105 duration-300 bg-gray-50 rounded-2xl p-6 shadow">
+              <h3 className="text-xl font-bold text-black mb-2">
+                Memberdayakan
+              </h3>
               <p className="text-gray-600 text-justify">
-                Kami berkolaborasi dengan petani, peternak, dan nelayan lokal untuk menciptakan ekosistem yang saling menguntungkan.
+                Kami berkolaborasi dengan petani, peternak, dan nelayan lokal
+                untuk menciptakan ekosistem yang saling menguntungkan.
               </p>
             </div>
           </div>
@@ -64,59 +80,55 @@ export default function AboutUsPage() {
 
         {/* Team Section */}
         <div className="mb-16">
-        <h2 className="text-2xl font-semibold text-black mb-6 text-center">Tim Kami</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <h2 className="text-2xl font-semibold text-black mb-6 text-center">
+            Tim Kami
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 transition-transform duration-300">
             {[
-            {
-                name: "Andi",
-                role: "Lead Penelitian",
-                description: "Memimpin pengembangan formula pakan berbasis riset ilmiah dan nutrisi ternak.",
-            },
-            {
-                name: "Sari",
-                role: "Manajer Produk",
-                description: "Mengelola siklus hidup produk dan kebutuhan pengguna dari peternak lokal.",
-            },
-            {
-                name: "Rizky",
-                role: "Ahli Agro-Maritim",
-                description: "Mengintegrasikan limbah pertanian dan kelautan sebagai bahan baku utama.",
-            },
-            {
-                name: "Budi",
-                role: "Pengembang Teknologi",
-                description: "Mengembangkan platform digital untuk distribusi dan monitoring pakan.",
-            },
-            {
-                name: "Cici",
-                role: "Manajer Komunitas",
-                description: "Membangun komunitas peternak dan edukasi keberlanjutan melalui pelatihan.",
-            },
-            {
-                name: "Dodi",
-                role: "Analis Dampak Lingkungan",
-                description: "Mengevaluasi dampak emisi karbon dan limbah selama siklus produksi.",
-            },
+              {
+                name: "Muhammad Habil Aswad",
+                role: "Machine Learning Engineer",
+                description: '"My models may overfit, but my passion doesn’t."',
+              },
+              {
+                name: "Muhammad Bintang Indra Hidayat",
+                role: "Full Stack Developer",
+                description: '"Wong liyo ngerti opo."',
+              },
+              {
+                name: "Azzariyat Azra",
+                role: "UI UX Designer",
+                description:
+                  "Mengintegrasikan limbah pertanian dan kelautan sebagai bahan baku utama.",
+              },
             ].map((member, index) => (
-            <div
+              <div
                 key={index}
-                className="flex flex-col items-center bg-white rounded-xl shadow p-6 text-center"
-            >
-                <Image
-                src={`/images/team/${member.name.toLowerCase()}.png`}
-                alt={`Foto ${member.name}`}
-                width={100}
-                height={100}
-                className="rounded-full mb-4 object-cover"
-                />
-                <h4 className="font-semibold text-black text-lg">{member.name}</h4>
-                <p className="text-yellow-600 text-sm font-medium">{member.role}</p>
-                <p className="text-gray-600 text-sm mt-2">{member.description}</p>
-            </div>
+                className="hover:scale-110 duration-300 flex flex-col items-center bg-white rounded-xl shadow p-6 text-center"
+              >
+                <div className="w-50 h-50 mb-4 flex items-center justify-center overflow-hidden">
+                  <Image
+                    src={`/images/team/${member.name.toLowerCase()}.png`}
+                    alt={`Foto ${member.name}`}
+                    width={240}
+                    height={240}
+                    className="object-cover w-full h-full"
+                    priority
+                  />
+                </div>
+                <h4 className="font-semibold text-black text-lg">
+                  {member.name}
+                </h4>
+                <p className="text-yellow-600 text-sm font-medium">
+                  {member.role}
+                </p>
+                <p className="text-gray-600 text-sm mt-2">
+                  {member.description}
+                </p>
+              </div>
             ))}
+          </div>
         </div>
-        </div>
-
 
         {/* CTA */}
         <div className="text-center mt-12">
@@ -124,11 +136,14 @@ export default function AboutUsPage() {
             Siap Menjadi Bagian dari Revolusi Hijau Peternakan?
           </h3>
           <p className="text-gray-600 mb-6">
-            Bergabunglah dengan kami dalam misi menyediakan pakan ternak berkualitas dan berkelanjutan.
+            Bergabunglah dengan kami dalam misi menyediakan pakan ternak
+            berkualitas dan berkelanjutan.
           </p>
           <a
-            href="https://api.whatsapp.com/send?phone=6281264020484"
-            className="inline-block bg-3 text-white px-6 py-3 rounded-full hover:bg-yellow-600 transition"
+            href="https://mail.google.com/mail/?view=cm&fs=1&to=agromarfeeds@gmail.com&su=Tanya%20tentang%20AgroMarFeed"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:scale-105 duration-300 inline-block bg-3 text-white px-6 py-3 rounded-full hover:bg-yellow-600 transition"
           >
             Hubungi Kami
           </a>

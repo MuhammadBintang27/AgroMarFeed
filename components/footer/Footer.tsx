@@ -45,7 +45,7 @@ const Footer: React.FC = () => {
           <h3 className="font-semibold mb-4">Company</h3>
           <ul className="space-y-2 text-sm text-gray-300">
             <li>
-              <a href="/blog" className="hover:text-white">Blog</a>
+              <a href="/artikel" className="hover:text-white">Blog</a>
             </li>
             <li>
               <a href="/artikel" className="hover:text-white">Artikel & Tips</a>
@@ -61,10 +61,10 @@ const Footer: React.FC = () => {
           <h3 className="font-semibold mb-4">Informasi</h3>
           <ul className="space-y-2 text-sm text-gray-300">
             <li>
-              <a href="#" className="hover:text-white">Akun Saya</a>
+              <a href="/profile" className="hover:text-white">Akun Saya</a>
             </li>
             <li>
-              <a href="#" className="hover:text-white">Keranjang Anda</a>
+              <a href="/keranjang" className="hover:text-white">Keranjang Anda</a>
             </li>
             <li>
               <a href="#" className="hover:text-white">FAQ</a>
@@ -85,7 +85,7 @@ const Footer: React.FC = () => {
             <div className="text-white">
               <FaEnvelope size={20} />
             </div>
-            <span className="text-sm text-gray-300">agromarfeed@gmail.com</span>
+            <span className="text-sm text-gray-300">agromarfeeds@gmail.com</span>
           </div>
         </div>
       </div>

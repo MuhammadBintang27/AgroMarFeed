@@ -33,16 +33,16 @@ export default function Header() {
         {/* Desktop Navigation Centered */}
         <div className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <nav className="flex items-center bg-1 text-white px-8 py-3 rounded-full gap-6 text-sm font-medium">
-            <Link href="/" className="hover:underline">
+            <Link href="/" className="hover:scale-105">
               Beranda
             </Link>
-            <Link href="/katalog" className="hover:underline">
+            <Link href="/katalog" className="hover:scale-105">
               Cari Pakan
             </Link>
-            <Link href="/konsultasi" className="hover:underline">
+            <Link href="/konsultasi" className="hover:scale-105">
               Konsul Pakan
             </Link>
-            <Link href="/artikel" className="hover:underline">
+            <Link href="/artikel" className="hover:scale-105">
               Artikel & Tips
             </Link>
           </nav>
@@ -55,12 +55,12 @@ export default function Header() {
           ) : user ? (
             <>
               <Link href="/keranjang">
-                <button className="bg-1 text-white p-2 rounded-full">
+                <button className="bg-1 text-white p-2 rounded-full transition-transform duration-150 hover:scale-105">
                   <FaShoppingBasket />
                 </button>
               </Link>
               <Link href="/profile">
-                <button className="bg-4 text-white p-2 rounded-full">
+                <button className="bg-4 text-white p-2 rounded-full transition-transform duration-150 hover:scale-105">
                   <FaUserCircle />
                 </button>
               </Link>
@@ -69,13 +69,13 @@ export default function Header() {
             <>
               <Link
                 href="/auth/login"
-                className="bg-1 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-opacity-90"
+                className="bg-1 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-opacity-90 transition-transform duration-150 hover:scale-105"
               >
                 Sign In
               </Link>
               <Link
                 href="/auth/register"
-                className="bg-4 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-opacity-90"
+                className="bg-4 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-opacity-90 transition-transform duration-150 hover:scale-105"
               >
                 Sign Up
               </Link>
