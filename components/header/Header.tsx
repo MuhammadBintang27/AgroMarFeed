@@ -1,6 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
-import { FaShoppingBasket, FaHeart, FaUserCircle, FaBars } from "react-icons/fa";
+import {
+  FaShoppingBasket,
+  FaHeart,
+  FaUserCircle,
+  FaBars,
+} from "react-icons/fa";
 import { getCurrentUser } from "@/lib/auth";
 import { User } from "@/types";
 import Link from "next/link";
@@ -28,23 +33,37 @@ export default function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
       <div
-        className={`max-w-7xl mx-auto px-6 py-4 flex items-center justify-between 
-    transition ${menuOpen ? 'bg-white shadow-md' : 'bg-transparent lg:bg-transparent'}`}
+        className={`relative max-w-7xl mx-auto px-6 py-4 flex items-center justify-between 
+    transition ${
+      menuOpen ? "bg-white shadow-md" : "bg-transparent lg:bg-transparent"
+    }`}
       >
-
-
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
-          <img src="/images/agromarfeed-logo.png" alt="Logo" className="h-10 w-auto" />
+          <img
+            src="/images/agromarfeed-logo.png"
+            alt="Logo"
+            className="h-10 w-auto"
+          />
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center bg-1 text-white px-8 py-3 rounded-full gap-6 text-sm font-medium">
-          <Link href="/" className="hover:underline">Beranda</Link>
-          <Link href="/katalog" className="hover:underline">Cari Pakan</Link>
-          <Link href="/konsultasi" className="hover:underline">Konsul Pakan</Link>
-          <Link href="/artikel" className="hover:underline">Artikel & Tips</Link>
-        </nav>
+        {/* Desktop Navigation Centered */}
+        <div className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <nav className="flex items-center bg-1 text-white px-8 py-3 rounded-full gap-6 text-sm font-medium">
+            <Link href="/" className="hover:underline">
+              Beranda
+            </Link>
+            <Link href="/katalog" className="hover:underline">
+              Cari Pakan
+            </Link>
+            <Link href="/konsultasi" className="hover:underline">
+              Konsul Pakan
+            </Link>
+            <Link href="/artikel" className="hover:underline">
+              Artikel & Tips
+            </Link>
+          </nav>
+        </div>
 
         {/* Icons / Auth Buttons */}
         <div className="hidden lg:flex items-center space-x-4">
@@ -57,11 +76,6 @@ export default function Header() {
                   <FaShoppingBasket />
                 </button>
               </Link>
-              <Link href="/wishlist">
-                <button className="bg-1 text-white p-2 rounded-full">
-                  <FaHeart />
-                </button>
-              </Link>
               <Link href="/profile">
                 <button className="bg-4 text-white p-2 rounded-full">
                   <FaUserCircle />
@@ -70,10 +84,16 @@ export default function Header() {
             </>
           ) : (
             <>
-              <Link href="/auth/login" className="bg-1 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-opacity-90">
+              <Link
+                href="/auth/login"
+                className="bg-1 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-opacity-90"
+              >
                 Sign In
               </Link>
-              <Link href="/auth/register" className="bg-4 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-opacity-90">
+              <Link
+                href="/auth/register"
+                className="bg-4 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-opacity-90"
+              >
                 Sign Up
               </Link>
             </>
@@ -92,10 +112,30 @@ export default function Header() {
       {/* Mobile Menu Dropdown */}
       {menuOpen && (
         <div className="lg:hidden px-6 pb-4 pt-2 bg-white shadow-md">
-          <Link href="/" className="block text-sm font-medium text-black hover:underline">Beranda</Link>
-          <Link href="/katalog" className="block text-sm font-medium text-black hover:underline">Cari Pakan</Link>
-          <Link href="/konsultasi" className="block text-sm font-medium text-black hover:underline">Konsul Pakan</Link>
-          <Link href="/artikel" className="block text-sm font-medium text-black hover:underline">Artikel & Tips</Link>
+          <Link
+            href="/"
+            className="block text-sm font-medium text-black hover:underline"
+          >
+            Beranda
+          </Link>
+          <Link
+            href="/katalog"
+            className="block text-sm font-medium text-black hover:underline"
+          >
+            Cari Pakan
+          </Link>
+          <Link
+            href="/konsultasi"
+            className="block text-sm font-medium text-black hover:underline"
+          >
+            Konsul Pakan
+          </Link>
+          <Link
+            href="/artikel"
+            className="block text-sm font-medium text-black hover:underline"
+          >
+            Artikel & Tips
+          </Link>
 
           <hr className="my-2" />
 
@@ -103,14 +143,30 @@ export default function Header() {
             <div>Loading...</div>
           ) : user ? (
             <div className="space-y-2">
-              <Link href="/keranjang" className="block text-sm text-black">Keranjang</Link>
-              <Link href="/wishlist" className="block text-sm text-black">Wishlist</Link>
-              <Link href="/profile" className="block text-sm text-black">Profil Saya</Link>
+              <Link href="/keranjang" className="block text-sm text-black">
+                Keranjang
+              </Link>
+              <Link href="/wishlist" className="block text-sm text-black">
+                Wishlist
+              </Link>
+              <Link href="/profile" className="block text-sm text-black">
+                Profil Saya
+              </Link>
             </div>
           ) : (
             <div className="space-y-2">
-              <Link href="/auth/login" className="block bg-1 text-white px-4 py-2 rounded-full text-sm text-center">Sign In</Link>
-              <Link href="/auth/register" className="block bg-4 text-white px-4 py-2 rounded-full text-sm text-center">Sign Up</Link>
+              <Link
+                href="/auth/login"
+                className="block bg-1 text-white px-4 py-2 rounded-full text-sm text-center"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/auth/register"
+                className="block bg-4 text-white px-4 py-2 rounded-full text-sm text-center"
+              >
+                Sign Up
+              </Link>
             </div>
           )}
         </div>

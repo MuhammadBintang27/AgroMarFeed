@@ -304,8 +304,8 @@ export default function BookingPage() {
               <img
                 src={
                   konsultan.jenis_kelamin === "P"
-                    ? "/images/agromardoc-P.png"
-                    : "/images/agromardoc-L.png"
+                    ? "/images/AgroMarDoc-P.png"
+                    : "/images/AgroMarDoc-L.png"
                 }
                 alt={konsultan.nama}
                 className="w-20 h-20 rounded-full object-cover border"

@@ -26,6 +26,7 @@ export default function ConsultationPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [konsultanList, setKonsultanList] = useState<Konsultan[]>([]);
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(9);
 
   useEffect(() => {
     setIsMounted(true);
@@ -71,11 +72,12 @@ export default function ConsultationPage() {
       ? konsultanList.filter((k) => k.profesi === selectedType)
       : konsultanList
   ).filter((k) => k.aktif === true);
+  const displayedKonsultan = filteredKonsultanList.slice(0, visibleCount);
 
   return (
     <div className="min-h-screen pt-32 pb-16 bg-white">
       <ChatbotWidget />
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 md:px-20">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2 text-black">
@@ -88,7 +90,7 @@ export default function ConsultationPage() {
         </div>
 
         {/* Filter */}
-        <div className="flex flex-wrap justify-center gap-2 mb-12">
+        <div className="flex flex-wrap justify-center gap-2 mb-12 md:px-24">
           {consultationTypes.map((type) => {
             const isActive = selectedType === type;
             return (
@@ -123,13 +125,13 @@ export default function ConsultationPage() {
               {selectedType || "Semua"} Konsultan
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {filteredKonsultanList.map((konsultan) => {
+              {displayedKonsultan.map((konsultan) => {
                 // Foto profil default berdasarkan jenis_kelamin
-                let profileImg = "/images/agromardoc-L.png"; // fallback default
+                let profileImg = "/images/AgroMarDoc-L.png"; // fallback default
                 if (konsultan.jenis_kelamin === "P") {
-                  profileImg = "/images/agromardoc-P.png";
+                  profileImg = "/images/AgroMarDoc-P.png";
                 } else if (konsultan.jenis_kelamin === "L") {
-                  profileImg = "/images/agromardoc-L.png";
+                  profileImg = "/images/AgroMarDoc-L.png";
                 }
                 return (
                   <div
@@ -201,6 +203,16 @@ export default function ConsultationPage() {
                 );
               })}
             </div>
+            {visibleCount < filteredKonsultanList.length && (
+              <div className="flex justify-center mt-8">
+                <button
+                  onClick={() => setVisibleCount((prev) => prev + 9)}
+                  className="px-8 py-2 rounded-full bg-1 text-white font-semibold hover:brightness-110 shadow-md"
+                >
+                  Lihat lebih banyak
+                </button>
+              </div>
+            )}
           </motion.section>
         </div>
       </div>

@@ -82,7 +82,7 @@ const Katalog = () => {
   const [selectedFisik, setSelectedFisik] = useState("Bentuk fisik");
   const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [visibleCount, setVisibleCount] = useState(12);
+  const [visibleCount, setVisibleCount] = useState(8);
 
   const limbahOptions = [
     "Semua bahan dasar",
@@ -175,7 +175,14 @@ const Katalog = () => {
               Rp{product.price.toLocaleString()}
             </span>
             <div className="flex items-center">
-              <WishlistButton productId={product._id} />
+              <span
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
+                <WishlistButton productId={product._id} />
+              </span>
             </div>
           </div>
         </div>
@@ -203,37 +210,41 @@ const Katalog = () => {
           Pelet ikan, pakan ayam, dan ternak dari limbah agro-maritim. Hemat
           hingga 30%! Beli pakan, bantu bumi.
         </p>
-        <div className="flex flex-wrap justify-center gap-4 mb-6">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-6">
           {categories.map((category) => (
             <Button
               key={category.label}
               href=""
-              size="md"
-              className={`px-6 flex items-center gap-2 ${
+              size="sm"
+              className={`px-3 py-1.5 sm:px-6 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm rounded-full ${
                 activeCategory === category.label
                   ? "bg-1 text-white"
                   : "bg-2 text-white"
               }`}
-              onClick={() => setActiveCategory(category.label)}
+              onClick={() =>
+                setActiveCategory(
+                  activeCategory === category.label ? "" : category.label
+                )
+              }
             >
               <Image
                 src={category.image}
                 alt={category.label}
-                width={24}
-                height={24}
-                className="object-contain w-8 h-8"
+                width={20}
+                height={20}
+                className="object-contain w-6 h-6 sm:w-8 sm:h-8"
               />
               {category.label}
             </Button>
           ))}
         </div>
-        <div className="w-full flex flex-col md:flex-row gap-4 md:gap-8 mt-4 mb-14">
-          <div className="flex items-center gap-3 bg-6 rounded-full px-5 py-3 w-full md:w-1/2">
-            <Search className="w-5 h-5 text-black/50" />
+        <div className="w-full flex flex-col md:flex-row gap-3 md:gap-8 mt-4 mb-10 justify-center">
+          <div className="flex items-center gap-2 sm:gap-3 bg-6 rounded-full px-3 py-2 sm:px-5 sm:py-3 w-full md:w-1/2">
+            <Search className="w-4 h-4 sm:w-5 sm:h-5 text-black/50" />
             <input
               type="text"
               placeholder="Cari pakan…"
-              className="bg-transparent outline-none text-black/80 placeholder:text-black/50 w-full"
+              className="bg-transparent outline-none text-black/80 placeholder:text-black/50 w-full text-xs sm:text-sm"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => {
@@ -246,13 +257,13 @@ const Katalog = () => {
           <div className="relative w-full md:w-auto">
             <button
               onClick={() => setIsOpenLimbah(!isOpenLimbah)}
-              className="flex items-center justify-between gap-3 bg-2 text-white rounded-full px-5 py-3 w-full md:w-max"
+              className="flex items-center justify-between gap-2 sm:gap-3 bg-2 text-white rounded-full px-3 py-2 sm:px-5 sm:py-3 w-full md:w-max text-xs sm:text-sm"
             >
               <span>{selectedLimbah}</span>
               <Filter className="w-4 h-4" />
             </button>
             {isOpenLimbah && (
-              <ul className="absolute z-10 mt-2 bg-[#3B3B3B]/50 rounded-xl shadow-md w-56">
+              <ul className="absolute z-10 mt-2 bg-[#3B3B3B]/50 rounded-xl shadow-md w-44 sm:w-56 text-xs sm:text-sm">
                 {limbahOptions.map((option) => (
                   <li
                     key={option}
@@ -271,13 +282,13 @@ const Katalog = () => {
           <div className="relative w-full md:w-auto">
             <button
               onClick={() => setIsOpenFisik(!isOpenFisik)}
-              className="flex items-center justify-between gap-3 bg-2 text-white rounded-full px-5 py-3 w-full md:w-max"
+              className="flex items-center justify-between gap-2 sm:gap-3 bg-2 text-white rounded-full px-3 py-2 sm:px-5 sm:py-3 w-full md:w-max text-xs sm:text-sm"
             >
               <span>{selectedFisik}</span>
               <Filter className="w-4 h-4" />
             </button>
             {isOpenFisik && (
-              <ul className="absolute z-10 mt-2 bg-[#3B3B3B]/50 rounded-xl shadow-md w-56">
+              <ul className="absolute z-10 mt-2 bg-[#3B3B3B]/50 rounded-xl shadow-md w-44 sm:w-56 text-xs sm:text-sm">
                 {fisikOptions.map((option) => (
                   <li
                     key={option}
@@ -294,7 +305,7 @@ const Katalog = () => {
             )}
           </div>
         </div>
-        <section className="w-full py-10 px-4 md:px-0">
+        <section className="w-full px-4 md:px-0">
           <h2 className="text-left text-2xl font-semibold text-black mb-6">
             {activeCategory || "Semua Produk"}
           </h2>
@@ -342,7 +353,14 @@ const Katalog = () => {
                           Rp{product.price.toLocaleString()}
                         </span>
                         <div className="flex items-center">
-                          <WishlistButton productId={product._id} />
+                          <span
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                          >
+                            <WishlistButton productId={product._id} />
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -355,7 +373,7 @@ const Katalog = () => {
                     onClick={() => setVisibleCount((prev) => prev + 12)}
                     className="px-8 py-2 rounded-full bg-1 text-white font-semibold hover:brightness-110 shadow-md"
                   >
-                    Load More
+                    Lihat lebih banyak
                   </button>
                 </div>
               )}

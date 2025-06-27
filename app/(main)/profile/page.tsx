@@ -125,8 +125,11 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <button className="mt-4 font-semibold text-left text-black hover:underline">
-              Pesanan Saya
+            <button
+              onClick={() => router.push("/wishlist")}
+              className="mt-4 font-semibold text-left text-black hover:underline"
+            >
+              Wishlist
             </button>
             <button
               className="font-semibold text-left text-black hover:underline"

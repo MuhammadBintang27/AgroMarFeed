@@ -67,17 +67,36 @@ const Hero = () => {
         className="relative z-20 mt-10 md:mt-20 mx-auto bg-black/20 py-6 px-4 md:py-10 md:px-12 rounded-xl max-w-[95%] md:max-w-[1150px]"
       >
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-center">
-          {[...Array(4)].map((_, i) => (
+          {[
+            {
+              value: "50+ Juta Ton",
+              description:
+                "Potensi tahunan limbah pertanian Indonesia untuk pakan ruminansia.",
+            },
+            {
+              value: "500.000+ Ton",
+              description: "Limbah kelautan terbuang percuma tiap tahunnya.",
+            },
+            {
+              value: "93,3% Peternak",
+              description:
+                "Telah memanfaatkan limbah pertanian sebagai pakan alternatif.",
+            },
+            {
+              value: "40% Lebih Murah",
+              description:
+                "Biaya pakan ternak dengan formula limbah fermentasi.",
+            },
+          ].map((stat, i) => (
             <div
               key={i}
               className=" rounded-lg p-4 md:p-6 hover:scale-110 hover:shadow-xl transition-all duration-300 cursor-default"
             >
-              <h2 className="text-white text-2xl sm:text-3xl md:text-5xl font-semibold">
-                {["20+", "6.200kg", "500+", "85%"][i]}
+              <h2 className="text-white text-2xl sm:text-3xl md:text-[2.59rem] font-semibold">
+                {stat.value}
               </h2>
               <p className="text-white text-xs sm:text-sm mt-4 leading-relaxed">
-                Dari jerami, kulit udang, hingga roti sisa, jadi pakan
-                bernutrisi
+                {stat.description}
               </p>
             </div>
           ))}

@@ -9,7 +9,14 @@ const nextConfig: NextConfig = {
   },
   // Konfigurasi lain jika ada
   images: {
-    domains: ['your-domain.com'], // ✅ kalau pakai next/image
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'your-domain.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
 };
 
