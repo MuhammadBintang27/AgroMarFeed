@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
 import { fetchOrderDetails, OrderDetails } from '@/lib/api/paymentApi';
+import { PageLoading } from '@/components/ui/loading';
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
@@ -55,14 +56,7 @@ function PaymentSuccessContent() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memproses pembayaran...</p>
-        </div>
-      </div>
-    );
+    return <PageLoading text="Memproses pembayaran..." color="secondary" />;
   }
 
   let statusTitle = '';
@@ -161,14 +155,7 @@ function PaymentSuccessContent() {
 
 export default function PaymentSuccessPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<PageLoading color="secondary" />}>
       <PaymentSuccessContent />
     </Suspense>
   );

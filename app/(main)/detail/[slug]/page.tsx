@@ -12,6 +12,7 @@ import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
 import WishlistButton from "@/components/ui/WishlistButton";
+import PageLoading from "@/components/ui/PageLoading";
 
 // Rating Stars Component
 const RatingStars = ({ rating }: { rating: number }) => {
@@ -182,7 +183,7 @@ const Detail = () => {
   );
 
   if (loading) {
-    return <div className="text-center py-40">Loading...</div>;
+    return <PageLoading text="Memuat detail produk..." />;
   }
 
   if (error || !product) {

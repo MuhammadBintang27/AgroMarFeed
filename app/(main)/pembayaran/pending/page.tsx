@@ -3,6 +3,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 import { fetchOrderDetails, refreshPaymentStatus, OrderDetails } from '@/lib/api/paymentApi';
+import { PageLoading, ButtonLoading } from '@/components/ui/loading';
 
 function PaymentPendingContent() {
   const searchParams = useSearchParams();
@@ -152,7 +153,7 @@ function PaymentPendingContent() {
               disabled={loading}
               className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 disabled:bg-gray-400"
             >
-              {loading ? 'Memuat...' : 'Refresh Status Pembayaran'}
+              {loading ? <ButtonLoading text="Memuat..." /> : 'Refresh Status Pembayaran'}
             </button>
 
             <button
@@ -200,14 +201,7 @@ function PaymentPendingContent() {
 
 export default function PaymentPendingPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<PageLoading color="secondary" />}>
       <PaymentPendingContent />
     </Suspense>
   );

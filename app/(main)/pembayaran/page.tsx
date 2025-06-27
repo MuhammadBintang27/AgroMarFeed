@@ -10,6 +10,7 @@ import ServiceAutocomplete from '@/components/ui/ServiceAutocomplete';
 import { useUser } from '@/contexts/UserContext';
 import { fetchStoreById } from '@/lib/api/fetchProducts';
 import { fetchOrderDetails, createOrder, createPayment } from '@/lib/api/paymentApi';
+import { PageLoading, ButtonLoading } from '@/components/ui/loading';
 
 interface CartItem {
   _id: string;
@@ -357,14 +358,7 @@ const PaymentPageContent = () => {
   // Render jika ada order_id (mode instruksi pembayaran)
   if (finalOrderId) {
     if (orderLoading) {
-      return (
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Memuat detail pesanan...</p>
-          </div>
-        </div>
-      );
+      return <PageLoading text="Memuat detail pesanan..." />;
     }
     if (!orderDetails) {
       return (
@@ -758,10 +752,7 @@ const PaymentPageContent = () => {
                   onClick={handleCheckout}
                 >
                   {isLoading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Memproses...</span>
-                    </>
+                    <ButtonLoading text="Memproses..." />
                   ) : (
                     <>
                       <span>Bayar Sekarang</span>
@@ -780,14 +771,7 @@ const PaymentPageContent = () => {
 
 const PaymentPage = () => {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<PageLoading />}>
       <PaymentPageContent />
     </Suspense>
   );

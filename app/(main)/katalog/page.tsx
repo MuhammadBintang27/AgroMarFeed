@@ -8,6 +8,7 @@ import Link from "next/link";
 import { fetchProducts, Product } from "@/lib/api/fetchProducts";
 import ChatbotWidget from "@/components/ChatbotWidget";
 import WishlistButton from "@/components/ui/WishlistButton";
+import { PageLoading } from "@/components/ui/loading";
 
 // Rating Stars Component
 const RatingStars = ({ rating }: { rating: number }) => {
@@ -190,9 +191,21 @@ const Katalog = () => {
     );
   };
 
-  if (loading) return <div className="text-center py-40">Loading...</div>;
+  if (loading) return <PageLoading text="Memuat produk..." />;
   if (error)
-    return <div className="text-center py-40 text-red-500">Error: {error}</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 text-lg mb-4">Error: {error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      </div>
+    );
 
   return (
     <section className="bg-white py-20 sm:py-40 w-full">
