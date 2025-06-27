@@ -68,6 +68,7 @@ interface Appointment {
   updatedAt: string;
   snap_redirect_url?: string;
   payment_url?: string;
+  zoom_link?: string;
 }
 
 type HistoryItemType = Order | Appointment;
@@ -483,6 +484,12 @@ export default function OrderHistoryPage() {
                                 {item.no_hp}
                               </p>
                             </div>
+                            {item.zoom_link && item.payment_status === 'paid' && (
+                              <div className="md:col-span-2 mt-2">
+                                <span className="text-sm text-gray-600">Link Zoom: </span>
+                                <a href={item.zoom_link} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all text-sm">{item.zoom_link}</a>
+                              </div>
+                            )}
                           </>
                         ) : (
                           <div className="md:col-span-2">

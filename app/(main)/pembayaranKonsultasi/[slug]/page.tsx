@@ -20,6 +20,7 @@ interface AppointmentDetails {
   total_harga: number;
   snap_redirect_url?: string;
   payment_url?: string;
+  zoom_link?: string;
 }
 
 const BookingPageContent = () => {
@@ -446,6 +447,12 @@ const BookingPageContent = () => {
                   <span className="text-gray-600">Layanan:</span>
                   <span className="font-medium text-gray-900">{appointmentDetails.service}</span>
                 </div>
+                {appointmentDetails.zoom_link && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Link Zoom:</span>
+                    <a href={appointmentDetails.zoom_link} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 underline break-all">{appointmentDetails.zoom_link}</a>
+                  </div>
+                )}
               </div>
             </div>
             <button onClick={() => router.push('/riwayatBelanja')} className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition duration-200 mb-2">Lihat Riwayat Pesanan</button>
@@ -490,6 +497,12 @@ const BookingPageContent = () => {
                 <span className="text-gray-600">Layanan:</span>
                 <span className="font-medium text-gray-900">{appointmentDetails.service}</span>
               </div>
+              {appointmentDetails.zoom_link && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Link Zoom:</span>
+                  <a href={appointmentDetails.zoom_link} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 underline break-all">{appointmentDetails.zoom_link}</a>
+                </div>
+              )}
               {transactionStatus && (
                 <div className="flex justify-between">
                   <span className="text-gray-600">Status Midtrans:</span>
