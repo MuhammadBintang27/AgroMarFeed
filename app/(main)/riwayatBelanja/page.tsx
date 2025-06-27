@@ -45,12 +45,40 @@ interface Order {
   updatedAt: string;
 }
 
+interface Appointment {
+  _id: string;
+  orderId: string;
+  total_harga: number;
+  status: string;
+  payment_status: string;
+  nama_lengkap: string;
+  email: string;
+  no_hp: string;
+  konsultan_id: {
+    _id: string;
+    nama: string;
+    profesi: string;
+  };
+  tanggal_konsultasi: string;
+  jadwal: {
+    jam_mulai: string;
+    jam_berakhir: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+  snap_redirect_url?: string;
+  payment_url?: string;
+}
+
+type HistoryItemType = Order | Appointment;
+
 export default function OrderHistoryPage() {
   const router = useRouter();
   const { user } = useUser();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedItem, setSelectedItem] = useState<HistoryItemType | null>(null);
   const [reviewedProductIds, setReviewedProductIds] = useState<string[]>([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewProduct, setReviewProduct] = useState<any>(null);
@@ -58,6 +86,8 @@ export default function OrderHistoryPage() {
   const [reviewText, setReviewText] = useState('');
   const [reviewImage, setReviewImage] = useState<File | null>(null);
   const [reviewLoading, setReviewLoading] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPaymentItem, setSelectedPaymentItem] = useState<HistoryItemType | null>(null);
 
   // Helper function to get product ID and name
   const getProductIdAndName = (product: any) => {
@@ -67,9 +97,15 @@ export default function OrderHistoryPage() {
     return { _id: product, name: '' };
   };
 
+  // Helper function to check if item is an appointment
+  const isAppointment = (item: HistoryItemType): item is Appointment => {
+    return 'konsultan_id' in item;
+  };
+
   useEffect(() => {
     if (user) {
       fetchOrders();
+      fetchAppointments();
       fetchReviewedProducts();
     }
   }, [user]);
@@ -87,6 +123,22 @@ export default function OrderHistoryPage() {
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
+    }
+  };
+
+  const fetchAppointments = async () => {
+    try {
+      const response = await fetch(`/api/appointment?user_id=${user?._id}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true"
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAppointments(data);
+      }
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
     } finally {
       setLoading(false);
     }
@@ -107,7 +159,7 @@ export default function OrderHistoryPage() {
 
   const handleRefreshOrders = async () => {
     setLoading(true);
-    await fetchOrders();
+    await Promise.all([fetchOrders(), fetchAppointments()]);
   };
 
   const getStatusColor = (status: string) => {
@@ -152,9 +204,28 @@ export default function OrderHistoryPage() {
     });
   };
 
-  const handleOrderClick = (order: Order) => {
-    setSelectedOrder(selectedOrder?._id === order._id ? null : order);
+  const formatConsultationDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
+
+  const handleItemClick = (item: HistoryItemType) => {
+    setSelectedItem(selectedItem?._id === item._id ? null : item);
+  };
+
+  const handlePayNow = (item: HistoryItemType) => {
+    setSelectedPaymentItem(item);
+    setShowPaymentModal(true);
+  };
+
+  // Combine and sort all items by date
+  const allItems: HistoryItemType[] = [
+    ...orders.map(order => ({ ...order, type: 'order' as const })),
+    ...appointments.map(appointment => ({ ...appointment, type: 'appointment' as const }))
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   if (loading) {
     return (
@@ -173,8 +244,8 @@ export default function OrderHistoryPage() {
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Riwayat Pesanan</h1>
-              <p className="text-gray-600">Lihat semua pesanan Anda</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Riwayat Pesanan & Konsultasi</h1>
+              <p className="text-gray-600">Lihat semua pesanan dan konsultasi Anda</p>
             </div>
             <button
               onClick={handleRefreshOrders}
@@ -189,125 +260,181 @@ export default function OrderHistoryPage() {
           </div>
         </div>
 
-        {orders.length === 0 ? (
+        {allItems.length === 0 ? (
           <div className="text-center py-12">
             <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
               <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Belum ada pesanan</h3>
-            <p className="text-gray-600 mb-6">Mulai berbelanja untuk melihat riwayat pesanan Anda</p>
-            <button
-              onClick={() => router.push('/katalog')}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition duration-200"
-            >
-              Mulai Belanja
-            </button>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Belum ada pesanan atau konsultasi</h3>
+            <p className="text-gray-600 mb-6">Mulai berbelanja atau booking konsultasi untuk melihat riwayat Anda</p>
+            <div className="space-x-4">
+              <button
+                onClick={() => router.push('/katalog')}
+                className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition duration-200"
+              >
+                Mulai Belanja
+              </button>
+              <button
+                onClick={() => router.push('/konsultasi')}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-200"
+              >
+                Booking Konsultasi
+              </button>
+            </div>
           </div>
         ) : (
           <div className="space-y-6">
-            {orders.map((order) => (
-              <div key={order._id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                {/* Order Header */}
+            {allItems.map((item) => (
+              <div key={item._id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                {/* Item Header */}
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        Order #{order.orderId}
-                      </h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {isAppointment(item) ? 'Konsultasi' : 'Order'} #{item.orderId}
+                        </h3>
+                        {isAppointment(item) && (
+                          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                            Konsultasi
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-600 mt-1">
-                        {formatDate(order.createdAt)}
+                        {formatDate(item.createdAt)}
                       </p>
-                      <p className="text-sm text-gray-600">
-                        {order.shipping_address.nama} - {order.shipping_address.alamat}, {order.shipping_address.kota}
-                      </p>
+                      {isAppointment(item) ? (
+                        <p className="text-sm text-gray-600">
+                          {item.nama_lengkap} - {item.email}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-gray-600">
+                          {item.shipping_address.nama} - {item.shipping_address.alamat}, {item.shipping_address.kota}
+                        </p>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-bold text-gray-900">
-                        Rp {order.total_bayar.toLocaleString()}
+                        Rp {(isAppointment(item) ? item.total_harga : item.total_bayar).toLocaleString()}
                       </p>
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium mt-2 ${getStatusColor(order.payment_status)}`}>
-                        {getStatusText(order.payment_status)}
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium mt-2 ${getStatusColor(item.payment_status)}`}>
+                        {getStatusText(item.payment_status)}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Order Items */}
+                {/* Item Content */}
                 <div className="p-6">
-                  <div className="space-y-4">
-                    {order.order_item.map((item, index) => (
-                      <div key={index} className="flex items-center space-x-4">
-                        <div className="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                          {item.product_id.image ? (
-                            <img
-                              src={item.product_id.image}
-                              alt={item.product_id.name}
-                              className="w-full h-full object-cover rounded-lg"
-                            />
-                          ) : (
-                            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                            </svg>
-                          )}
+                  {isAppointment(item) ? (
+                    // Appointment Content
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex-shrink-0 w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                          </svg>
                         </div>
                         <div className="flex-1">
                           <h4 className="text-sm font-medium text-gray-900">
-                            {item.product_id.name}
+                            Konsultasi dengan {item.konsultan_id.nama}
                           </h4>
                           <p className="text-sm text-gray-600">
-                            {item.jumlah} x Rp {item.product_id.price.toLocaleString()}
+                            {item.konsultan_id.profesi}
                           </p>
-                          {/* Review Button Logic */}
-                          {order.status === 'delivered' && user && !reviewedProductIds.includes(getProductIdAndName(item.product_id)._id) && (
-                            <button
-                              className="text-xs bg-yellow-400 text-[#39381F] px-3 py-1 rounded font-bold mt-2"
-                              onClick={() => {
-                                setReviewProduct(getProductIdAndName(item.product_id));
-                                setShowReviewModal(true);
-                              }}
-                            >
-                              Beri Review
-                            </button>
-                          )}
-                          {order.status === 'delivered' && user && reviewedProductIds.includes(getProductIdAndName(item.product_id)._id) && (
-                            <span className="text-xs text-green-600 ml-2">Sudah direview</span>
-                          )}
+                          <p className="text-sm text-gray-600">
+                            {formatConsultationDate(item.tanggal_konsultasi)} • {item.jadwal.jam_mulai} - {item.jadwal.jam_berakhir}
+                          </p>
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-medium text-gray-900">
-                            Rp {item.subtotal.toLocaleString()}
+                            Rp {item.total_harga.toLocaleString()}
                           </p>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ) : (
+                    // Order Content
+                    <div className="space-y-4">
+                      {item.order_item.map((orderItem, index) => (
+                        <div key={index} className="flex items-center space-x-4">
+                          <div className="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                            {orderItem.product_id.image ? (
+                              <img
+                                src={orderItem.product_id.image}
+                                alt={orderItem.product_id.name}
+                                className="w-full h-full object-cover rounded-lg"
+                              />
+                            ) : (
+                              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                              </svg>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-sm font-medium text-gray-900">
+                              {orderItem.product_id.name}
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              {orderItem.jumlah} x Rp {orderItem.product_id.price.toLocaleString()}
+                            </p>
+                            {/* Review Button Logic */}
+                            {item.status === 'delivered' && user && !reviewedProductIds.includes(getProductIdAndName(orderItem.product_id)._id) && (
+                              <button
+                                className="text-xs bg-yellow-400 text-[#39381F] px-3 py-1 rounded font-bold mt-2"
+                                onClick={() => {
+                                  setReviewProduct(getProductIdAndName(orderItem.product_id));
+                                  setShowReviewModal(true);
+                                }}
+                              >
+                                Beri Review
+                              </button>
+                            )}
+                            {item.status === 'delivered' && user && reviewedProductIds.includes(getProductIdAndName(orderItem.product_id)._id) && (
+                              <span className="text-xs text-green-600 ml-2">Sudah direview</span>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-medium text-gray-900">
+                              Rp {orderItem.subtotal.toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                  {/* Order Actions */}
+                  {/* Item Actions */}
                   <div className="mt-6 pt-6 border-t border-gray-200">
                     <div className="flex justify-between items-center">
                       <div className="text-sm text-gray-600">
-                        <p>Status: <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${getStatusColor(order.status)}`}>
-                          {getStatusText(order.status)}
+                        <p>Status: <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${getStatusColor(item.status)}`}>
+                          {getStatusText(item.status)}
                         </span></p>
                       </div>
                       <div className="space-x-3">
                         <button
-                          onClick={() => handleOrderClick(order)}
+                          onClick={() => handleItemClick(item)}
                           className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                         >
-                          {selectedOrder?._id === order._id ? 'Sembunyikan Detail' : 'Lihat Detail'}
+                          {selectedItem?._id === item._id ? 'Sembunyikan Detail' : 'Lihat Detail'}
                         </button>
-                        {order.payment_status === 'pending' && (
+                        {item.payment_status === 'pending' && (
                           <>
                             <button
-                              onClick={() => router.push(`/pembayaran?order_id=${order.orderId}`)}
+                              onClick={() => handlePayNow(item)}
                               className="text-sm bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-200"
                             >
                               Bayar Sekarang
                             </button>
-                            <p className="text-xs text-gray-500 mt-1">Klik untuk melihat instruksi pembayaran tanpa input ulang.</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {isAppointment(item) 
+                                ? 'Klik untuk melanjutkan pembayaran konsultasi.' 
+                                : 'Klik untuk melihat instruksi pembayaran tanpa input ulang.'
+                              }
+                            </p>
                           </>
                         )}
                       </div>
@@ -315,34 +442,58 @@ export default function OrderHistoryPage() {
                   </div>
 
                   {/* Expanded Details */}
-                  {selectedOrder?._id === order._id && (
+                  {selectedItem?._id === item._id && (
                     <div className="mt-6 pt-6 border-t border-gray-200">
-                      <h4 className="font-medium text-gray-900 mb-4">Detail Pesanan</h4>
+                      <h4 className="font-medium text-gray-900 mb-4">Detail {isAppointment(item) ? 'Konsultasi' : 'Pesanan'}</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div>
                           <p className="text-gray-600">Order ID:</p>
-                          <p className="font-medium">{order.orderId}</p>
+                          <p className="font-medium">{item.orderId}</p>
                         </div>
                         <div>
-                          <p className="text-gray-600">Tanggal Pesanan:</p>
-                          <p className="font-medium">{formatDate(order.createdAt)}</p>
+                          <p className="text-gray-600">Tanggal {isAppointment(item) ? 'Konsultasi' : 'Pesanan'}:</p>
+                          <p className="font-medium">{formatDate(item.createdAt)}</p>
                         </div>
                         <div>
                           <p className="text-gray-600">Status Pembayaran:</p>
-                          <p className="font-medium">{getStatusText(order.payment_status)}</p>
+                          <p className="font-medium">{getStatusText(item.payment_status)}</p>
                         </div>
                         <div>
-                          <p className="text-gray-600">Status Pesanan:</p>
-                          <p className="font-medium">{getStatusText(order.status)}</p>
+                          <p className="text-gray-600">Status {isAppointment(item) ? 'Konsultasi' : 'Pesanan'}:</p>
+                          <p className="font-medium">{getStatusText(item.status)}</p>
                         </div>
-                        <div className="md:col-span-2">
-                          <p className="text-gray-600">Alamat Pengiriman:</p>
-                          <p className="font-medium">
-                            {order.shipping_address.nama}<br />
-                            {order.shipping_address.alamat}<br />
-                            {order.shipping_address.kota}
-                          </p>
-                        </div>
+                        {isAppointment(item) ? (
+                          <>
+                            <div>
+                              <p className="text-gray-600">Konsultan:</p>
+                              <p className="font-medium">{item.konsultan_id.nama} - {item.konsultan_id.profesi}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-600">Jadwal:</p>
+                              <p className="font-medium">
+                                {formatConsultationDate(item.tanggal_konsultasi)}<br />
+                                {item.jadwal.jam_mulai} - {item.jadwal.jam_berakhir}
+                              </p>
+                            </div>
+                            <div className="md:col-span-2">
+                              <p className="text-gray-600">Data Pribadi:</p>
+                              <p className="font-medium">
+                                {item.nama_lengkap}<br />
+                                {item.email}<br />
+                                {item.no_hp}
+                              </p>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="md:col-span-2">
+                            <p className="text-gray-600">Alamat Pengiriman:</p>
+                            <p className="font-medium">
+                              {item.shipping_address.nama}<br />
+                              {item.shipping_address.alamat}<br />
+                              {item.shipping_address.kota}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -352,6 +503,55 @@ export default function OrderHistoryPage() {
           </div>
         )}
       </div>
+      
+      {/* Payment Modal */}
+      {showPaymentModal && selectedPaymentItem && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-bold mb-4">Opsi Pembayaran</h3>
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">
+                {isAppointment(selectedPaymentItem) 
+                  ? `Konsultasi dengan ${selectedPaymentItem.konsultan_id.nama}`
+                  : 'Pesanan Produk'
+                }
+              </p>
+              <p className="text-sm font-medium">
+                Total: Rp {isAppointment(selectedPaymentItem) 
+                  ? selectedPaymentItem.total_harga?.toLocaleString()
+                  : selectedPaymentItem.total_bayar?.toLocaleString()
+                }
+              </p>
+            </div>
+            
+            <div className="space-y-3">
+            
+              {/* Tombol Bayar Sekarang (redirect ke halaman pembayaran) */}
+              <button
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  if (isAppointment(selectedPaymentItem)) {
+                    router.push(`/pembayaranKonsultasi/${selectedPaymentItem.konsultan_id._id}?order_id=${selectedPaymentItem.orderId}`);
+                  } else {
+                    router.push(`/pembayaran?order_id=${selectedPaymentItem.orderId}`);
+                  }
+                }}
+                className="w-full bg-orange-600 text-white py-3 px-4 rounded-lg hover:bg-orange-700 transition duration-200"
+              >
+                Bayar Sekarang
+              </button>
+            </div>
+            
+            <button 
+              onClick={() => setShowPaymentModal(false)}
+              className="w-full mt-3 bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition duration-200"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      )}
+      
       {showReviewModal && reviewProduct && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-md">

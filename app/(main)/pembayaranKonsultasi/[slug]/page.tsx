@@ -1,13 +1,31 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Calendar, Clock, MapPin, User, Mail, Phone } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
+import { PageLoading, ButtonLoading } from '@/components/ui/loading';
 
-export default function BookingPage() {
+// Define appointment type
+interface AppointmentDetails {
+  _id: string;
+  orderId: string;
+  status: string;
+  payment_status: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  service: string;
+  createdAt: string;
+  total_harga: number;
+  snap_redirect_url?: string;
+  payment_url?: string;
+}
+
+const BookingPageContent = () => {
   const router = useRouter();
   const { slug } = useParams();
+  const searchParams = useSearchParams();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
@@ -25,6 +43,54 @@ export default function BookingPage() {
 
   // Add loading state
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Tambahan untuk appointment detail jika ada order_id
+  const [appointmentDetails, setAppointmentDetails] = useState<AppointmentDetails | null>(null);
+  const [appointmentLoading, setAppointmentLoading] = useState(false);
+  const orderId = searchParams.get('order_id');
+
+  // Check for Midtrans redirect parameters
+  const transactionStatus = searchParams.get('transaction_status');
+  const orderIdFromMidtrans = searchParams.get('order_id');
+  const finalOrderId = orderId || orderIdFromMidtrans;
+
+  // Jika ada order_id, fetch detail appointment
+  useEffect(() => {
+    if (finalOrderId) {
+      setAppointmentLoading(true);
+      fetchAppointmentDetails(finalOrderId)
+        .then(data => {
+          console.log('Appointment data received:', data);
+          if (data) {
+            setAppointmentDetails(data);
+          } else {
+            console.error('No appointment data received');
+            setAppointmentDetails(null);
+          }
+        })
+        .catch((error) => {
+          console.error('Error fetching appointment:', error);
+          setAppointmentDetails(null);
+        })
+        .finally(() => setAppointmentLoading(false));
+    }
+  }, [finalOrderId]);
+
+  const fetchAppointmentDetails = async (oid: string) => {
+    try {
+      const response = await fetch(`/api/appointment?order_id=${oid}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      } else {
+        console.error('Failed to fetch appointment details');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error fetching appointment details:', error);
+      return null;
+    }
+  };
 
   // Add form handler
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -286,6 +352,175 @@ export default function BookingPage() {
         ?.scrollIntoView({ behavior: "smooth" });
     }
   };
+
+  // Render jika ada order_id (mode instruksi pembayaran)
+  if (finalOrderId) {
+    if (appointmentLoading) {
+      return <PageLoading text="Memuat detail appointment..." />;
+    }
+    if (!appointmentDetails) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-500">Appointment tidak ditemukan.</p>
+            <button onClick={() => router.push('/konsultasi')} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded">Kembali ke Konsultasi</button>
+          </div>
+        </div>
+      );
+    }
+    
+    // Handle Midtrans redirect status
+    let statusMessage = '';
+    let statusColor = '';
+    let statusIcon = null;
+    
+    if (transactionStatus === 'capture' || transactionStatus === 'settlement') {
+      statusMessage = 'Pembayaran Konsultasi Berhasil!';
+      statusColor = 'text-green-600';
+      statusIcon = (
+        <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+          <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+      );
+    } else if (transactionStatus === 'pending') {
+      statusMessage = 'Menunggu Pembayaran Konsultasi';
+      statusColor = 'text-yellow-600';
+      statusIcon = (
+        <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 mb-6">
+          <svg className="h-8 w-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+      );
+    } else if (transactionStatus === 'cancel' || transactionStatus === 'deny' || transactionStatus === 'expire') {
+      statusMessage = 'Pembayaran Konsultasi Gagal';
+      statusColor = 'text-red-600';
+      statusIcon = (
+        <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
+          <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </div>
+      );
+    }
+    
+    // Cek tipe ID
+    const isOrder = appointmentDetails.orderId?.startsWith('ORDER-');
+    const isConsultation = appointmentDetails.orderId?.startsWith('KONSULTASI-');
+
+    // Jika sudah dibayar (paid/settlement)
+    if (appointmentDetails.payment_status === 'paid' || transactionStatus === 'settlement') {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+              <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Pembayaran Konsultasi Sudah Diterima</h1>
+            <p className="text-gray-600 mb-6">Terima kasih, appointment Anda sudah dibayar dan sedang diproses.</p>
+            {/* Detail Appointment */}
+            <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+              <h3 className="font-semibold text-gray-900 mb-3">Detail Appointment:</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Order ID:</span>
+                  <span className="font-medium text-gray-900">{appointmentDetails.orderId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total:</span>
+                  <span className="font-medium text-gray-900">Rp {appointmentDetails.total_harga?.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status:</span>
+                  <span className="font-medium text-gray-900">{appointmentDetails.status}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Pembayaran:</span>
+                  <span className="font-medium text-gray-900">{appointmentDetails.payment_status}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Layanan:</span>
+                  <span className="font-medium text-gray-900">{appointmentDetails.service}</span>
+                </div>
+              </div>
+            </div>
+            <button onClick={() => router.push('/riwayatBelanja')} className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition duration-200 mb-2">Lihat Riwayat Pesanan</button>
+            <button onClick={() => router.push('/konsultasi')} className="w-full bg-gray-300 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-400 transition duration-200">Kembali ke Konsultasi</button>
+          </div>
+        </div>
+      );
+    }
+    // Jika masih pending
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
+          {statusIcon}
+          <h1 className={`text-2xl font-bold mb-4 ${statusColor || 'text-gray-900'}`}>{statusMessage || 'Menunggu Pembayaran Konsultasi'}</h1>
+          <p className="text-gray-600 mb-6">
+            {transactionStatus === 'pending' 
+              ? 'Silakan selesaikan pembayaran konsultasi Anda sesuai instruksi berikut:'
+              : 'Status pembayaran konsultasi Anda saat ini:'
+            }
+          </p>
+          {/* Detail Appointment */}
+          <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+            <h3 className="font-semibold text-gray-900 mb-3">Detail Appointment:</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Order ID:</span>
+                <span className="font-medium text-gray-900">{appointmentDetails.orderId}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Total:</span>
+                <span className="font-medium text-gray-900">Rp {appointmentDetails.total_harga?.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Status:</span>
+                <span className="font-medium text-gray-900">{appointmentDetails.status}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Pembayaran:</span>
+                <span className="font-medium text-gray-900">{appointmentDetails.payment_status}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Layanan:</span>
+                <span className="font-medium text-gray-900">{appointmentDetails.service}</span>
+              </div>
+              {transactionStatus && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status Midtrans:</span>
+                  <span className="font-medium text-gray-900">{transactionStatus}</span>
+                </div>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 mb-2"
+          >
+            Refresh Status Pembayaran
+          </button>
+          {/* Tombol Bayar Sekarang di Midtrans */}
+          {appointmentDetails.payment_status === 'pending' && appointmentDetails.snap_redirect_url && (
+            <div className="mb-2">
+              <button
+                onClick={() => window.location.href = appointmentDetails.snap_redirect_url ?? ''}
+                className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200"
+              >
+                Dapatkan Kode Pembayaran Kembali
+              </button>
+            </div>
+          )}
+          <button onClick={() => router.push('/riwayatBelanja')} className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition duration-200 mb-2">Lihat Riwayat Pesanan</button>
+          <button onClick={() => router.push('/konsultasi')} className="w-full bg-gray-300 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-400 transition duration-200">Kembali ke Konsultasi</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-32 pb-16 bg-7">
@@ -620,4 +855,14 @@ export default function BookingPage() {
       </div>
     </div>
   );
-}
+};
+
+const BookingPage = () => {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <BookingPageContent />
+    </Suspense>
+  );
+};
+
+export default BookingPage;
