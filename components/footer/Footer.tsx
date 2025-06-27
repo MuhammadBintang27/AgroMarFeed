@@ -14,7 +14,7 @@ const Footer: React.FC = () => {
         {/* Kolom 1: Logo */}
         <div className="flex justify-center sm:justify-start">
           <img
-            src="/images/agromarfeed-logo.png"
+            src="/logo.png"
             alt="Logo"
             className="w-12 h-12 mt-1"
           />

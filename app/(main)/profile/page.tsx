@@ -88,19 +88,29 @@ export default function ProfilePage() {
 
           {/* Tombol Buka/Lihat Toko */}
           <div className="mb-6">
-            {user.role === 'penjual' ? (
+            {user.role === "penjual" ? (
               <button
-                className="w-full bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition mb-2"
+                className="flex items-center justify-between bg-white border border-orange-200 text-black text-xs py-2 px-3 rounded-[25] font-semibold hover:scale-105 duration-300 transition mb-2 text-left"
                 onClick={() => router.push(`/tokoSaya`)}
               >
-                Lihat Toko
+                <span className="text-left">Toko Saya</span>
+                <img
+                  src="/images/icons/toko.png"
+                  alt="Toko"
+                  className="w-5 h-5 ml-2"
+                />
               </button>
             ) : (
               <button
-                className="w-full bg-yellow-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-yellow-600 transition mb-2"
+                className="flex items-center justify-between bg-white border border-orange-200 text-black text-xs py-2 px-3 rounded-[25] font-semibold hover:scale-105 duration-300 transition mb-2 text-left"
                 onClick={() => router.push("/buatToko")}
               >
-                Buka Toko
+                <span className="text-left">Buka Toko</span>
+                <img
+                  src="/images/icons/toko.png"
+                  alt="Toko"
+                  className="w-5 h-5 ml-2"
+                />
               </button>
             )}
           </div>
@@ -139,7 +149,7 @@ export default function ProfilePage() {
             </button>
             <button
               onClick={handleLogout}
-              className="font-semibold text-left text-red-500 hover:underline"
+              className="font-semibold text-left text-red-500 hover:underline pt-2"
             >
               Keluar
             </button>

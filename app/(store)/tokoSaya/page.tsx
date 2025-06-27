@@ -317,7 +317,7 @@ export default function TokoSayaPage() {
     );
 
   return (
-    <div className="min-h-screen bg-[#F7F7F7] py-8 px-2 md:px-0">
+    <div className="min-h-screen bg-white py-8 px-2 md:px-0">
       <div className="max-w-5xl mx-auto">
         {store ? (
           <>
