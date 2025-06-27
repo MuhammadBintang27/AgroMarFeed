@@ -59,6 +59,11 @@ export default function Header() {
                   <FaShoppingBasket />
                 </button>
               </Link>
+              <Link href="/wishlist">
+                <button className="bg-1 text-white p-2 rounded-full transition-transform duration-150 hover:scale-105">
+                  <FaHeart />
+                </button>
+              </Link>
               <Link href="/profile">
                 <button className="bg-4 text-white p-2 rounded-full transition-transform duration-150 hover:scale-105">
                   <FaUserCircle />
@@ -69,15 +74,15 @@ export default function Header() {
             <>
               <Link
                 href="/auth/login"
-                className="bg-1 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-opacity-90 transition-transform duration-150 hover:scale-105"
+                className="bg-2 text-white px-4 py-2 rounded-full text-sm font-medium transition-transform duration-150 hover:scale-105"
               >
-                Sign In
+                Masuk
               </Link>
               <Link
                 href="/auth/register"
-                className="bg-4 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-opacity-90 transition-transform duration-150 hover:scale-105"
+                className="bg-1 text-white px-4 py-2 rounded-full text-sm font-medium transition-transform duration-150 hover:scale-105"
               >
-                Sign Up
+                Daftar
               </Link>
             </>
           )}

@@ -6,12 +6,15 @@ import Button from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { MessageCircle, X } from "lucide-react";
 
+
+
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [chatHistory, setChatHistory] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [userName, setUserName] = useState("User");
+  const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
 
   useEffect(() => {
     setChatHistory([
@@ -28,7 +31,7 @@ export default function ChatbotWidget() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("http://localhost:4000/api/chat", {
+      const res = await fetch(`${API_BASE}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userMessage: userMsg }),
