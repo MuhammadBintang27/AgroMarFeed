@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Clock } from "lucide-react";
+import { Clock, Search } from "lucide-react";
 import ChatbotWidget from "@/components/ChatbotWidget";
 import Button from "../../../components/ui/Button";
 import SearchBar from "../../../components/ui/SearchBar";
@@ -27,6 +27,8 @@ export default function ConsultationPage() {
   const [konsultanList, setKonsultanList] = useState<Konsultan[]>([]);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(9);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     setIsMounted(true);
@@ -66,12 +68,14 @@ export default function ConsultationPage() {
     setSelectedType((prev) => (prev === type ? null : type));
   };
 
-  // Filter hanya konsultan yang aktif
+  // Filter hanya konsultan yang aktif dan cocok dengan searchTerm
   const filteredKonsultanList = (
     selectedType
       ? konsultanList.filter((k) => k.profesi === selectedType)
       : konsultanList
-  ).filter((k) => k.aktif === true);
+  )
+    .filter((k) => k.aktif === true)
+    .filter((k) => k.nama.toLowerCase().includes(searchTerm.toLowerCase()));
   const displayedKonsultan = filteredKonsultanList.slice(0, visibleCount);
 
   return (
@@ -112,7 +116,23 @@ export default function ConsultationPage() {
         </div>
 
         {/* Search */}
-        <SearchBar placeholder="Cari Konsultasi..." className="mb-12" />
+        <div className="flex justify-center w-full mb-12">
+          <div className="flex items-center gap-2 sm:gap-3 bg-6 rounded-full px-3 py-2 sm:px-5 sm:py-3 w-full md:w-1/2 border border-gray-300">
+            <Search className="w-4 h-4 sm:w-5 sm:h-5 text-black/50" />
+            <input
+              type="text"
+              placeholder="Cari Konsultan..."
+              className="bg-transparent outline-none text-black/80 placeholder:text-black/50 w-full text-xs sm:text-sm"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setSearchTerm(searchInput);
+                }
+              }}
+            />
+          </div>
+        </div>
 
         {/* List Konsultan */}
         <div className="space-y-8">
