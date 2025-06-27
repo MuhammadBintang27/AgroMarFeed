@@ -9,6 +9,7 @@ import CourierAutocomplete from '@/components/ui/CourierAutocomplete';
 import ServiceAutocomplete from '@/components/ui/ServiceAutocomplete';
 import { useUser } from '@/contexts/UserContext';
 import { fetchStoreById } from '@/lib/api/fetchProducts';
+import { fetchOrderDetails, createOrder, createPayment } from '@/lib/api/paymentApi';
 
 interface CartItem {
   _id: string;
@@ -64,20 +65,32 @@ const PaymentPageContent = () => {
   const [orderLoading, setOrderLoading] = useState(false);
   const orderId = searchParams.get('order_id');
 
+  // Check for Midtrans redirect parameters
+  const transactionStatus = searchParams.get('transaction_status');
+  const orderIdFromMidtrans = searchParams.get('order_id');
+  const finalOrderId = orderId || orderIdFromMidtrans;
+
   // Jika ada order_id, fetch detail order
   useEffect(() => {
-    if (orderId) {
+    if (finalOrderId) {
       setOrderLoading(true);
-      fetch(`/api/orders/${orderId}`)
-        .then(res => res.json())
+      fetchOrderDetails(finalOrderId)
         .then(data => {
-          if (data.order) setOrderDetails(data.order);
-          else if (data.success && data.data) setOrderDetails(data.data);
+          console.log('Order data received:', data);
+          if (data) {
+            setOrderDetails(data);
+          } else {
+            console.error('No order data received');
+            setOrderDetails(null);
+          }
         })
-        .catch(() => setOrderDetails(null))
+        .catch((error) => {
+          console.error('Error fetching order:', error);
+          setOrderDetails(null);
+        })
         .finally(() => setOrderLoading(false));
     }
-  }, [orderId]);
+  }, [finalOrderId]);
 
   // Get selected items from URL params
   useEffect(() => {
@@ -254,17 +267,9 @@ const PaymentPageContent = () => {
 
       console.log('Creating order with data:', orderData);
 
-      const orderResponse = await fetch('/api/orders/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderData),
-      });
+      const orderResult = await createOrder(orderData);
 
-      const orderResult = await orderResponse.json();
-
-      if (!orderResponse.ok) {
+      if (!orderResult.success) {
         throw new Error(orderResult.message || 'Gagal membuat order');
       }
 
@@ -274,7 +279,7 @@ const PaymentPageContent = () => {
       const paymentItems = [
         ...cartItems.map(item => ({
           productId: item.product_id._id,
-          name: item.product_id.nama || item.product_id.name,
+          name: item.product_id.nama || item.product_id.name || 'Product',
           price: item.harga_satuan || item.product_id.price,
           quantity: item.jumlah
         })),
@@ -325,17 +330,9 @@ const PaymentPageContent = () => {
       console.log('Creating payment with data:', paymentData);
 
       // Create payment token
-      const paymentResponse = await fetch('/api/payment/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(paymentData),
-      });
+      const paymentResult = await createPayment(paymentData);
 
-      const paymentResult = await paymentResponse.json();
-
-      if (paymentResponse.ok && paymentResult.redirect_url) {
+      if (paymentResult.redirect_url) {
         // Redirect to Midtrans payment page
         window.location.href = paymentResult.redirect_url;
       } else {
@@ -358,7 +355,7 @@ const PaymentPageContent = () => {
   }, [selectedOrigin, selectedDestination, cartItems]);
 
   // Render jika ada order_id (mode instruksi pembayaran)
-  if (orderId) {
+  if (finalOrderId) {
     if (orderLoading) {
       return (
         <div className="min-h-screen flex items-center justify-center">
@@ -379,6 +376,44 @@ const PaymentPageContent = () => {
         </div>
       );
     }
+    
+    // Handle Midtrans redirect status
+    let statusMessage = '';
+    let statusColor = '';
+    let statusIcon = null;
+    
+    if (transactionStatus === 'capture' || transactionStatus === 'settlement') {
+      statusMessage = 'Pembayaran Berhasil!';
+      statusColor = 'text-green-600';
+      statusIcon = (
+        <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+          <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+      );
+    } else if (transactionStatus === 'pending') {
+      statusMessage = 'Menunggu Pembayaran';
+      statusColor = 'text-yellow-600';
+      statusIcon = (
+        <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 mb-6">
+          <svg className="h-8 w-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+      );
+    } else if (transactionStatus === 'cancel' || transactionStatus === 'deny' || transactionStatus === 'expire') {
+      statusMessage = 'Pembayaran Gagal';
+      statusColor = 'text-red-600';
+      statusIcon = (
+        <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
+          <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </div>
+      );
+    }
+    
     // Jika sudah dibayar
     if (orderDetails.payment_status === 'paid') {
       return (
@@ -391,6 +426,30 @@ const PaymentPageContent = () => {
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Pembayaran Sudah Diterima</h1>
             <p className="text-gray-600 mb-6">Terima kasih, pesanan Anda sudah dibayar dan sedang diproses.</p>
+            
+            {/* Detail Pesanan */}
+            <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+              <h3 className="font-semibold text-gray-900 mb-3">Detail Pesanan:</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Order ID:</span>
+                  <span className="font-medium text-gray-900">{orderDetails.orderId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total:</span>
+                  <span className="font-medium text-gray-900">Rp {orderDetails.total_bayar?.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status:</span>
+                  <span className="font-medium text-gray-900">{orderDetails.status}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Pembayaran:</span>
+                  <span className="font-medium text-gray-900">{orderDetails.payment_status}</span>
+                </div>
+              </div>
+            </div>
+            
             <button onClick={() => router.push('/riwayatBelanja')} className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200">Lihat Riwayat Pesanan</button>
           </div>
         </div>
@@ -400,19 +459,46 @@ const PaymentPageContent = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 mb-6">
-            <svg className="h-8 w-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
+          {statusIcon}
+          <h1 className={`text-2xl font-bold mb-4 ${statusColor || 'text-gray-900'}`}>
+            {statusMessage || 'Menunggu Pembayaran'}
+          </h1>
+          <p className="text-gray-600 mb-6">
+            {transactionStatus === 'pending' 
+              ? 'Silakan selesaikan pembayaran Anda sesuai instruksi berikut:'
+              : 'Status pembayaran Anda saat ini:'
+            }
+          </p>
+          
+          {/* Detail Pesanan */}
+          <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+            <h3 className="font-semibold text-gray-900 mb-3">Detail Pesanan:</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Order ID:</span>
+                <span className="font-medium text-gray-900">{orderDetails.orderId}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Total:</span>
+                <span className="font-medium text-gray-900">Rp {orderDetails.total_bayar?.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Status:</span>
+                <span className="font-medium text-gray-900">{orderDetails.status}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Pembayaran:</span>
+                <span className="font-medium text-gray-900">{orderDetails.payment_status}</span>
+              </div>
+              {transactionStatus && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status Midtrans:</span>
+                  <span className="font-medium text-gray-900">{transactionStatus}</span>
+                </div>
+              )}
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Menunggu Pembayaran</h1>
-          <p className="text-gray-600 mb-6">Silakan selesaikan pembayaran Anda sesuai instruksi berikut:</p>
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <p className="text-sm text-gray-600">Order ID: {orderDetails.orderId}</p>
-            <p className="text-sm text-gray-600">Total: Rp {orderDetails.total_bayar?.toLocaleString()}</p>
-            {/* Tambahkan instruksi pembayaran/kode pembayaran di sini jika ada */}
-            <p className="text-sm text-blue-700 mt-2">Silakan cek email Anda atau klik tombol di bawah untuk melihat instruksi pembayaran di Midtrans.</p>
           </div>
+          
           <button
             onClick={() => window.location.reload()}
             className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 mb-2"

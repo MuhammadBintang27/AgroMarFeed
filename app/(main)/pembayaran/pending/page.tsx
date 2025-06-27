@@ -2,48 +2,31 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
-
-interface Order {
-  orderId: string;
-  total: number;
-  status: string;
-  payment_status: string;
-  items: unknown[];
-  customerDetails: unknown;
-  shippingDetails: unknown;
-  snap_redirect_url?: string;
-  redirect_url?: string;
-}
+import { fetchOrderDetails, refreshPaymentStatus, OrderDetails } from '@/lib/api/paymentApi';
 
 function PaymentPendingContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [order, setOrder] = useState<Order | null>(null);
+  const [order, setOrder] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const orderId = searchParams.get('order_id');
 
   // Fetch order details
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetailsLocal = async () => {
     if (!orderId) return;
     
     setLoading(true);
     setError(null);
     
     try {
-      const response = await fetch(`/api/orders/${orderId}`, {
-        headers: {
-          "ngrok-skip-browser-warning": "true"
-        }
-      });
-      
-      if (!response.ok) {
+      const orderData = await fetchOrderDetails(orderId);
+      if (orderData) {
+        setOrder(orderData);
+      } else {
         throw new Error('Order tidak ditemukan');
       }
-      
-      const data = await response.json();
-      setOrder(data);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan';
       setError(errorMessage);
@@ -62,22 +45,16 @@ function PaymentPendingContent() {
     
     try {
       // Fetch latest order status
-      const response = await fetch(`/api/orders/${orderId}`, {
-        headers: {
-          "ngrok-skip-browser-warning": "true"
+      const orderData = await refreshPaymentStatus(orderId);
+      if (orderData) {
+        setOrder(orderData);
+        
+        // If payment is completed, redirect to success page
+        if (orderData.payment_status === 'paid' || orderData.status === 'processing') {
+          router.push(`/pembayaran/success?order_id=${orderId}`);
         }
-      });
-      
-      if (!response.ok) {
+      } else {
         throw new Error('Order tidak ditemukan');
-      }
-      
-      const data = await response.json();
-      setOrder(data);
-      
-      // If payment is completed, redirect to success page
-      if (data.payment_status === 'paid' || data.status === 'processing') {
-        router.push(`/pembayaran/success?order_id=${orderId}`);
       }
       
     } catch (err: unknown) {
@@ -100,7 +77,7 @@ function PaymentPendingContent() {
   // Fetch order details on component mount
   useEffect(() => {
     if (orderId) {
-      fetchOrderDetails();
+      fetchOrderDetailsLocal();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
@@ -138,16 +115,25 @@ function PaymentPendingContent() {
 
           {order && (
             <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-              <p className="text-sm text-gray-600 mb-2">Order ID: {order.orderId}</p>
-              <p className="text-sm text-gray-600 mb-2">
-                Total: Rp {order.total?.toLocaleString() || '0'}
-              </p>
-              <p className="text-sm text-gray-600 mb-2">
-                Status: <span className="font-medium text-yellow-600">{order.status}</span>
-              </p>
-              <p className="text-sm text-gray-600">
-                Pembayaran: <span className="font-medium text-yellow-600">{order.payment_status}</span>
-              </p>
+              <h3 className="font-semibold text-gray-900 mb-3">Detail Pesanan:</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Order ID:</span>
+                  <span className="font-medium text-gray-900">{order.orderId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total:</span>
+                  <span className="font-medium text-gray-900">Rp {order.total_bayar?.toLocaleString() || '0'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status:</span>
+                  <span className="font-medium text-yellow-600">{order.status}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Pembayaran:</span>
+                  <span className="font-medium text-yellow-600">{order.payment_status}</span>
+                </div>
+              </div>
             </div>
           )}
 
@@ -185,10 +171,10 @@ function PaymentPendingContent() {
           </div>
 
           {/* Tombol Bayar Sekarang di bawah tombol lain */}
-          {order && order.status === 'pending' && order.snap_redirect_url && (
+          {order && order.status === 'pending' && (order.snap_redirect_url || order.payment_url) && (
             <div className="mt-6">
               <button
-                onClick={() => window.location.href = order.snap_redirect_url ?? ''}
+                onClick={() => window.location.href = order.snap_redirect_url || order.payment_url || ''}
                 className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200"
               >
                 Bayar Sekarang di Midtrans

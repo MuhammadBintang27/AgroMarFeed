@@ -3,29 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
-
-// Define order type
-interface OrderDetails {
-  _id: string;
-  orderId: string;
-  total_bayar: number;
-  status: string;
-  payment_status: string;
-  shipping_address: {
-    nama: string;
-    alamat: string;
-    kota: string;
-  };
-  order_item: Array<{
-    product_id: {
-      name: string;
-      price: number;
-    };
-    jumlah: number;
-    subtotal: number;
-  }>;
-  createdAt: string;
-}
+import { fetchOrderDetails, OrderDetails } from '@/lib/api/paymentApi';
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
@@ -37,34 +15,36 @@ function PaymentSuccessContent() {
 
   const orderId = searchParams.get('order_id');
 
-  useEffect(() => {
-    if (orderId) {
-      fetchOrderDetails();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderId]);
-
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetailsLocal = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`/api/orders/${orderId}`, {
-        headers: {
-          "ngrok-skip-browser-warning": "true"
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
+      
+      if (!orderId) {
+        setError('Order ID tidak ditemukan');
+        return;
+      }
+
+      const data = await fetchOrderDetails(orderId);
+      if (data) {
         setOrderDetails(data);
       } else {
         setError('Pesanan tidak ditemukan.');
       }
     } catch (err: unknown) {
       console.error('Error fetching order details:', err);
+      setError('Terjadi kesalahan saat memuat detail pesanan.');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (orderId) {
+      fetchOrderDetailsLocal();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId]);
 
   const handleContinueShopping = () => {
     router.push('/katalog');

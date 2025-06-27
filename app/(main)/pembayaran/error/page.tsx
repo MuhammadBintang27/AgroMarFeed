@@ -2,13 +2,14 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useRef, Suspense } from 'react';
+import { fetchOrderDetails, OrderDetails } from '@/lib/api/paymentApi';
 
 function PaymentErrorContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const orderId = searchParams.get('order_id');
-  const [order, setOrder] = useState<unknown | null>(null);
+  const [order, setOrder] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -20,15 +21,15 @@ function PaymentErrorContent() {
     setLoading(true);
     setFetchError(null);
     try {
-      const res = await fetch(`/api/orders/${orderId}`, {
-        headers: { 'ngrok-skip-browser-warning': 'true' }
-      });
-      if (!res.ok) throw new Error('Order tidak ditemukan');
-      const data = await res.json();
-      setOrder(data);
-      // Jika data belum ada, retry
-      if (!data.status && !data.payment_status && retryCount < maxRetry) {
-        retryTimeout.current = setTimeout(() => setRetryCount(c => c + 1), 2000);
+      const orderData = await fetchOrderDetails(orderId);
+      if (orderData) {
+        setOrder(orderData);
+        // Jika data belum ada, retry
+        if (!orderData.status && !orderData.payment_status && retryCount < maxRetry) {
+          retryTimeout.current = setTimeout(() => setRetryCount(c => c + 1), 2000);
+        }
+      } else {
+        throw new Error('Order tidak ditemukan');
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan';
@@ -86,26 +87,78 @@ function PaymentErrorContent() {
               <>
                 <h1 className="text-2xl font-bold text-yellow-700 mb-4">Pesanan Berhasil Dibuat</h1>
                 <p className="text-gray-600 mb-6">Pesanan Anda berhasil dibuat dan menunggu pembayaran. Silakan selesaikan pembayaran sesuai instruksi.</p>
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                  <p className="text-sm text-gray-600">Order ID: {orderId}</p>
-                  <p className="text-sm text-gray-600">Status pesanan: {(order as any)?.status || (order as any)?.statusPesanan || (order as any)?.order_status || 'Belum dibayar'}, pembayaran: {(order as any)?.payment_status || (order as any)?.paymentStatus || 'Belum dibayar'}</p>
+                <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+                  <h3 className="font-semibold text-gray-900 mb-3">Detail Pesanan:</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Order ID:</span>
+                      <span className="font-medium text-gray-900">{(order as any)?.orderId}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Total:</span>
+                      <span className="font-medium text-gray-900">Rp {(order as any)?.total_bayar?.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Status:</span>
+                      <span className="font-medium text-gray-900">{(order as any)?.status || 'pending'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Pembayaran:</span>
+                      <span className="font-medium text-gray-900">{(order as any)?.payment_status || 'pending'}</span>
+                    </div>
+                  </div>
                 </div>
               </>
             ) : (order as any)?.payment_status === 'failed' || (order as any)?.status === 'cancelled' ? (
               <>
                 <h1 className="text-2xl font-bold text-red-600 mb-4">Pembayaran Gagal / Dibatalkan</h1>
                 <p className="text-gray-600 mb-6">Pembayaran Anda gagal atau dibatalkan. Silakan lakukan pemesanan ulang.</p>
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                  <p className="text-sm text-gray-600">Order ID: {orderId}</p>
-                  <p className="text-sm text-gray-600">Status pesanan: {(order as any)?.status || (order as any)?.statusPesanan || (order as any)?.order_status || 'Tidak ditemukan'}, pembayaran: {(order as any)?.payment_status || (order as any)?.paymentStatus || 'Tidak ditemukan'}</p>
+                <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+                  <h3 className="font-semibold text-gray-900 mb-3">Detail Pesanan:</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Order ID:</span>
+                      <span className="font-medium text-gray-900">{(order as any)?.orderId}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Total:</span>
+                      <span className="font-medium text-gray-900">Rp {(order as any)?.total_bayar?.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Status:</span>
+                      <span className="font-medium text-gray-900">{(order as any)?.status || 'cancelled'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Pembayaran:</span>
+                      <span className="font-medium text-gray-900">{(order as any)?.payment_status || 'failed'}</span>
+                    </div>
+                  </div>
                 </div>
               </>
             ) : (
               <>
                 <h1 className="text-2xl font-bold text-green-700 mb-4">Status Pesanan</h1>
-                <p className="text-gray-600 mb-6">Status pesanan: {(order as any)?.status || (order as any)?.statusPesanan || (order as any)?.order_status || 'Belum dibayar'}, pembayaran: {(order as any)?.payment_status || (order as any)?.paymentStatus || 'Belum dibayar'}</p>
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                  <p className="text-sm text-gray-600">Order ID: {orderId}</p>
+                <p className="text-gray-600 mb-6">Status pesanan: {(order as any)?.status || 'pending'}, pembayaran: {(order as any)?.payment_status || 'pending'}</p>
+                <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+                  <h3 className="font-semibold text-gray-900 mb-3">Detail Pesanan:</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Order ID:</span>
+                      <span className="font-medium text-gray-900">{(order as any)?.orderId}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Total:</span>
+                      <span className="font-medium text-gray-900">Rp {(order as any)?.total_bayar?.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Status:</span>
+                      <span className="font-medium text-gray-900">{(order as any)?.status || 'pending'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Pembayaran:</span>
+                      <span className="font-medium text-gray-900">{(order as any)?.payment_status || 'pending'}</span>
+                    </div>
+                  </div>
                 </div>
               </>
             )
