@@ -46,7 +46,7 @@ export default function ArticlePage() {
   const hasMore = visibleArticles.length < filteredArticles.length;
 
   return (
-    <div className="min-h-screen pt-32 pb-16 bg-white">
+    <div className="min-h-screen pt-20 md:pt-32 pb-16 bg-white">
       <ChatbotWidget />
       <div className="container mx-auto px-4 max-w-5xl">
         <motion.div

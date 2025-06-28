@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
         "ngrok-skip-browser-warning": "true"
       },
       body: JSON.stringify(body),
+      credentials: 'include',
     });
 
     const data = await response.json();
@@ -23,6 +24,11 @@ export async function POST(request: NextRequest) {
     if (setCookieHeader) {
       responseHeaders.set('set-cookie', setCookieHeader);
     }
+    
+    // Add cache control headers to prevent caching
+    responseHeaders.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    responseHeaders.set('Pragma', 'no-cache');
+    responseHeaders.set('Expires', '0');
     
     return NextResponse.json(data, { 
       status: response.status,

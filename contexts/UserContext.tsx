@@ -15,6 +15,7 @@ interface UserContextType {
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  clearUser: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -50,12 +51,27 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
       }
     } catch (err) {
+      console.error("Failed to fetch user:", err);
       setError("Failed to fetch user");
       setUser(null);
     } finally {
       setLoading(false);
       isFetching.current = false;
     }
+  };
+
+  const refetch = async () => {
+    // Reset fetching flag to allow immediate refetch
+    isFetching.current = false;
+    // Add a small delay before refetching to avoid rate limiting
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await fetchUser();
+  };
+
+  const clearUser = () => {
+    setUser(null);
+    setError(null);
+    setLoading(false);
   };
 
   // Initial authentication check - only runs once
@@ -85,11 +101,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Listen for storage events (when login/logout happens in another tab)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      fetchUser();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
   const value = {
     user,
     loading,
     error,
-    refetch: fetchUser,
+    refetch,
+    clearUser,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

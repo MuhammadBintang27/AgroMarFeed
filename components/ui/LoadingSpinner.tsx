@@ -1,61 +1,38 @@
-import React from 'react';
+import React from "react";
 
 interface LoadingSpinnerProps {
-  size?: 'sm' | 'md' | 'lg' | 'xl';
-  color?: 'primary' | 'secondary' | 'white' | 'gray';
+  size?: "sm" | "md" | "lg";
+  color?: "white" | "blue" | "gray";
   text?: string;
-  fullScreen?: boolean;
   className?: string;
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
-  size = 'md',
-  color = 'primary',
+  size = "md",
+  color = "blue",
   text,
-  fullScreen = false,
-  className = ''
+  className = "",
 }) => {
   const sizeClasses = {
-    sm: 'h-4 w-4',
-    md: 'h-8 w-8',
-    lg: 'h-12 w-12',
-    xl: 'h-16 w-16'
+    sm: "w-4 h-4",
+    md: "w-8 h-8",
+    lg: "w-12 h-12",
   };
 
   const colorClasses = {
-    primary: 'border-blue-600',
-    secondary: 'border-green-600',
-    white: 'border-white',
-    gray: 'border-gray-600'
+    white: "border-white border-t-transparent",
+    blue: "border-blue-600 border-t-transparent",
+    gray: "border-gray-600 border-t-transparent",
   };
 
-  const spinner = (
-    <div className={`animate-spin rounded-full border-2 border-t-transparent ${sizeClasses[size]} ${colorClasses[color]}`} />
-  );
-
-  if (fullScreen) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          {spinner}
-          {text && (
-            <p className="mt-4 text-gray-600 text-sm">{text}</p>
-          )}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className={`flex items-center justify-center ${className}`}>
-      <div className="text-center">
-        {spinner}
-        {text && (
-          <p className="mt-2 text-gray-600 text-sm">{text}</p>
-        )}
-      </div>
+    <div className={`flex flex-col items-center justify-center ${className}`}>
+      <div
+        className={`${sizeClasses[size]} ${colorClasses[color]} border-2 rounded-full animate-spin`}
+      />
+      {text && <p className="text-gray-600 mt-2 text-sm">{text}</p>}
     </div>
   );
 };
 
-export default LoadingSpinner; 
+export default LoadingSpinner;

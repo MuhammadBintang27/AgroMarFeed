@@ -4,13 +4,18 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import CityAutocomplete from '@/components/ui/CityAutocomplete';
-import CourierAutocomplete from '@/components/ui/CourierAutocomplete';
-import ServiceAutocomplete from '@/components/ui/ServiceAutocomplete';
-import { useUser } from '@/contexts/UserContext';
-import { fetchStoreById } from '@/lib/api/fetchProducts';
-import { fetchOrderDetails, createOrder, createPayment } from '@/lib/api/paymentApi';
-import { PageLoading, ButtonLoading } from '@/components/ui/loading';
+import { ArrowLeft } from "lucide-react";
+import CityAutocomplete from "@/components/ui/CityAutocomplete";
+import CourierAutocomplete from "@/components/ui/CourierAutocomplete";
+import ServiceAutocomplete from "@/components/ui/ServiceAutocomplete";
+import { useUser } from "@/contexts/UserContext";
+import { fetchStoreById } from "@/lib/api/fetchProducts";
+import {
+  fetchOrderDetails,
+  createOrder,
+  createPayment,
+} from "@/lib/api/paymentApi";
+import { PageLoading, ButtonLoading } from "@/components/ui/loading";
 
 interface CartItem {
   _id: string;
@@ -50,25 +55,26 @@ const PaymentPageContent = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
-  const [selectedShipping, setSelectedShipping] = useState<ShippingOption | null>(null);
+  const [selectedShipping, setSelectedShipping] =
+    useState<ShippingOption | null>(null);
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [selectedOrigin, setSelectedOrigin] = useState<any>(null);
   const [selectedDestination, setSelectedDestination] = useState<any>(null);
-  const [recipientName, setRecipientName] = useState('');
-  const [postalCode, setPostalCode] = useState('');
+  const [recipientName, setRecipientName] = useState("");
+  const [postalCode, setPostalCode] = useState("");
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState("");
   const [store, setStore] = useState<any>(null);
 
   // Tambahan untuk order detail jika ada order_id
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [orderLoading, setOrderLoading] = useState(false);
-  const orderId = searchParams.get('order_id');
+  const orderId = searchParams.get("order_id");
 
   // Check for Midtrans redirect parameters
-  const transactionStatus = searchParams.get('transaction_status');
-  const orderIdFromMidtrans = searchParams.get('order_id');
+  const transactionStatus = searchParams.get("transaction_status");
+  const orderIdFromMidtrans = searchParams.get("order_id");
   const finalOrderId = orderId || orderIdFromMidtrans;
 
   // Jika ada order_id, fetch detail order
@@ -76,17 +82,17 @@ const PaymentPageContent = () => {
     if (finalOrderId) {
       setOrderLoading(true);
       fetchOrderDetails(finalOrderId)
-        .then(data => {
-          console.log('Order data received:', data);
+        .then((data) => {
+          console.log("Order data received:", data);
           if (data) {
             setOrderDetails(data);
           } else {
-            console.error('No order data received');
+            console.error("No order data received");
             setOrderDetails(null);
           }
         })
         .catch((error) => {
-          console.error('Error fetching order:', error);
+          console.error("Error fetching order:", error);
           setOrderDetails(null);
         })
         .finally(() => setOrderLoading(false));
@@ -95,14 +101,18 @@ const PaymentPageContent = () => {
 
   // Get selected items from URL params
   useEffect(() => {
-    const selectedItemsParam = searchParams.get('selectedItems');
+    const selectedItemsParam = searchParams.get("selectedItems");
     if (selectedItemsParam) {
-      setSelectedItemIds(selectedItemsParam.split(','));
+      setSelectedItemIds(selectedItemsParam.split(","));
     }
   }, [searchParams]);
 
   // Calculate totals
-  const subtotal = cartItems.reduce((sum, item) => sum + ((item.harga_satuan || item.product_id.price) * item.jumlah), 0);
+  const subtotal = cartItems.reduce(
+    (sum, item) =>
+      sum + (item.harga_satuan || item.product_id.price) * item.jumlah,
+    0
+  );
   const shippingCost = selectedShipping?.shipping_cost || 0;
   const tax = subtotal * 0.1; // 10% tax
   const discount = subtotal * 0.05; // 5% discount
@@ -121,10 +131,10 @@ const PaymentPageContent = () => {
       if (response.ok) {
         const data = await response.json();
         const allCartItems = data.cart_item || [];
-        
+
         // Filter cart items based on selected items
         if (selectedItemIds.length > 0) {
-          const filteredItems = allCartItems.filter((item: CartItem) => 
+          const filteredItems = allCartItems.filter((item: CartItem) =>
             selectedItemIds.includes(item.product_id._id)
           );
           setCartItems(filteredItems);
@@ -136,13 +146,19 @@ const PaymentPageContent = () => {
         // Fetch store data from first product in cart
         if (allCartItems.length > 0 && allCartItems[0].product_id.store_id) {
           try {
-            const storeData = await fetchStoreById(allCartItems[0].product_id.store_id);
+            const storeData = await fetchStoreById(
+              allCartItems[0].product_id.store_id
+            );
             setStore(storeData);
-            
+
             // Search for store location in RajaOngkir API
             if (storeData.alamat?.kabupaten) {
               try {
-                const searchResponse = await fetch(`/api/shipping/search-destination?keyword=${encodeURIComponent(storeData.alamat.kabupaten)}`);
+                const searchResponse = await fetch(
+                  `/api/shipping/search-destination?keyword=${encodeURIComponent(
+                    storeData.alamat.kabupaten
+                  )}`
+                );
                 if (searchResponse.ok) {
                   const searchData = await searchResponse.json();
                   if (searchData.data && searchData.data.length > 0) {
@@ -151,38 +167,41 @@ const PaymentPageContent = () => {
                     setSelectedOrigin({
                       id: storeDestination.id,
                       city_name: storeDestination.city_name,
-                      province: storeDestination.province
+                      province: storeDestination.province,
                     });
                   }
                 }
               } catch (searchError) {
-                console.error('Error searching store location:', searchError);
+                console.error("Error searching store location:", searchError);
               }
             }
           } catch (storeError) {
-            console.error('Error fetching store:', storeError);
+            console.error("Error fetching store:", storeError);
           }
         }
       }
     } catch (error) {
-      console.error('Error fetching cart:', error);
+      console.error("Error fetching cart:", error);
     }
   };
 
   const getTotalWeightKg = () => {
     if (!cartItems || cartItems.length === 0) return 1.0;
-    const totalGram = cartItems.reduce((sum, item) => sum + ((item.product_id.berat || 1000) * item.jumlah), 0);
+    const totalGram = cartItems.reduce(
+      (sum, item) => sum + (item.product_id.berat || 1000) * item.jumlah,
+      0
+    );
     return Math.max(totalGram / 1000, 0.1);
   };
 
   const calculateShipping = async () => {
     if (!selectedDestination?.id) {
-      alert('Pilih lokasi penerima terlebih dahulu');
+      alert("Pilih lokasi penerima terlebih dahulu");
       return;
     }
 
     if (!selectedOrigin?.id) {
-      alert('Lokasi pengirim belum tersedia');
+      alert("Lokasi pengirim belum tersedia");
       return;
     }
 
@@ -195,11 +214,13 @@ const PaymentPageContent = () => {
         receiver_destination_id: selectedDestination.id.toString(),
         weight: weight.toString(),
         item_value: itemValue.toString(),
-        cod: 'false'
+        cod: "false",
       });
 
-      const response = await fetch(`/api/shipping/calculate?${params.toString()}`);
-      
+      const response = await fetch(
+        `/api/shipping/calculate?${params.toString()}`
+      );
+
       if (response.ok) {
         const data = await response.json();
         if (data.data?.calculate_reguler) {
@@ -209,12 +230,12 @@ const PaymentPageContent = () => {
         }
       } else {
         const errorData = await response.json();
-        alert(errorData.message || 'Gagal menghitung ongkir');
+        alert(errorData.message || "Gagal menghitung ongkir");
         setShippingOptions([]);
       }
     } catch (error) {
-      console.error('Error calculating shipping:', error);
-      alert('Terjadi kesalahan saat menghitung ongkir');
+      console.error("Error calculating shipping:", error);
+      alert("Terjadi kesalahan saat menghitung ongkir");
       setShippingOptions([]);
     }
   };
@@ -233,17 +254,24 @@ const PaymentPageContent = () => {
 
   const handleCheckout = async () => {
     if (!user) {
-      alert('Silakan login terlebih dahulu');
+      alert("Silakan login terlebih dahulu");
       return;
     }
 
-    if (!recipientName || !phone || !address || !postalCode || !selectedOrigin || !selectedDestination) {
-      alert('Lengkapi semua data pengiriman');
+    if (
+      !recipientName ||
+      !phone ||
+      !address ||
+      !postalCode ||
+      !selectedOrigin ||
+      !selectedDestination
+    ) {
+      alert("Lengkapi semua data pengiriman");
       return;
     }
 
     if (!selectedShipping) {
-      alert('Pilih layanan pengiriman');
+      alert("Pilih layanan pengiriman");
       return;
     }
 
@@ -257,56 +285,56 @@ const PaymentPageContent = () => {
           nama: recipientName,
           telepon: phone,
           alamat: address,
-          kota: selectedDestination?.city_name || '',
+          kota: selectedDestination?.city_name || "",
           kode_pos: postalCode,
-          provinsi: selectedDestination?.province || '',
+          provinsi: selectedDestination?.province || "",
         },
         ongkir: selectedShipping.shipping_cost,
         catatan: notes,
         total_bayar: total,
       };
 
-      console.log('Creating order with data:', orderData);
+      console.log("Creating order with data:", orderData);
 
       const orderResult = await createOrder(orderData);
 
       if (!orderResult.success) {
-        throw new Error(orderResult.message || 'Gagal membuat order');
+        throw new Error(orderResult.message || "Gagal membuat order");
       }
 
-      console.log('Order created:', orderResult);
+      console.log("Order created:", orderResult);
 
       // Step 2: Create payment with order data
       const paymentItems = [
-        ...cartItems.map(item => ({
+        ...cartItems.map((item) => ({
           productId: item.product_id._id,
-          name: item.product_id.nama || item.product_id.name || 'Product',
+          name: item.product_id.nama || item.product_id.name || "Product",
           price: item.harga_satuan || item.product_id.price,
-          quantity: item.jumlah
+          quantity: item.jumlah,
         })),
       ];
       if (selectedShipping && selectedShipping.shipping_cost > 0) {
         paymentItems.push({
-          productId: 'ONGKIR',
-          name: 'Ongkos Kirim',
+          productId: "ONGKIR",
+          name: "Ongkos Kirim",
           price: selectedShipping.shipping_cost,
-          quantity: 1
+          quantity: 1,
         });
       }
       if (tax > 0) {
         paymentItems.push({
-          productId: 'PAJAK',
-          name: 'Pajak (10%)',
+          productId: "PAJAK",
+          name: "Pajak (10%)",
           price: tax,
-          quantity: 1
+          quantity: 1,
         });
       }
       if (discount > 0) {
         paymentItems.push({
-          productId: 'DISKON',
-          name: 'Diskon (5%)',
+          productId: "DISKON",
+          name: "Diskon (5%)",
           price: -discount,
-          quantity: 1
+          quantity: 1,
         });
       }
       const paymentData = {
@@ -317,18 +345,18 @@ const PaymentPageContent = () => {
           email: user.email,
           phone: phone,
           address: address,
-          city: selectedDestination?.city_name || '',
+          city: selectedDestination?.city_name || "",
           postalCode: postalCode,
           userId: user._id,
         },
         shippingDetails: {
           address: address,
-          city: selectedDestination?.city_name || '',
+          city: selectedDestination?.city_name || "",
           postalCode: postalCode,
         },
       };
 
-      console.log('Creating payment with data:', paymentData);
+      console.log("Creating payment with data:", paymentData);
 
       // Create payment token
       const paymentResult = await createPayment(paymentData);
@@ -337,11 +365,14 @@ const PaymentPageContent = () => {
         // Redirect to Midtrans payment page
         window.location.href = paymentResult.redirect_url;
       } else {
-        alert(paymentResult.message || 'Gagal membuat pembayaran');
+        alert(paymentResult.message || "Gagal membuat pembayaran");
       }
     } catch (error) {
-      console.error('Error creating payment:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan saat membuat pembayaran';
+      console.error("Error creating payment:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Terjadi kesalahan saat membuat pembayaran";
       alert(errorMessage);
     } finally {
       setIsLoading(false);
@@ -365,86 +396,154 @@ const PaymentPageContent = () => {
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <p className="text-red-500">Pesanan tidak ditemukan.</p>
-            <button onClick={() => router.push('/riwayatBelanja')} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded">Kembali ke Riwayat</button>
+            <button
+              onClick={() => router.push("/riwayatBelanja")}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+            >
+              Kembali ke Riwayat
+            </button>
           </div>
         </div>
       );
     }
-    
+
     // Handle Midtrans redirect status
-    let statusMessage = '';
-    let statusColor = '';
+    let statusMessage = "";
+    let statusColor = "";
     let statusIcon = null;
-    
-    if (transactionStatus === 'capture' || transactionStatus === 'settlement') {
-      statusMessage = 'Pembayaran Berhasil!';
-      statusColor = 'text-green-600';
+
+    if (transactionStatus === "capture" || transactionStatus === "settlement") {
+      statusMessage = "Pembayaran Berhasil!";
+      statusColor = "text-green-600";
       statusIcon = (
         <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
-          <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+          <svg
+            className="h-8 w-8 text-green-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M5 13l4 4L19 7"
+            ></path>
           </svg>
         </div>
       );
-    } else if (transactionStatus === 'pending') {
-      statusMessage = 'Menunggu Pembayaran';
-      statusColor = 'text-yellow-600';
+    } else if (transactionStatus === "pending") {
+      statusMessage = "Menunggu Pembayaran";
+      statusColor = "text-yellow-600";
       statusIcon = (
         <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 mb-6">
-          <svg className="h-8 w-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          <svg
+            className="h-8 w-8 text-yellow-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
           </svg>
         </div>
       );
-    } else if (transactionStatus === 'cancel' || transactionStatus === 'deny' || transactionStatus === 'expire') {
-      statusMessage = 'Pembayaran Gagal';
-      statusColor = 'text-red-600';
+    } else if (
+      transactionStatus === "cancel" ||
+      transactionStatus === "deny" ||
+      transactionStatus === "expire"
+    ) {
+      statusMessage = "Pembayaran Gagal";
+      statusColor = "text-red-600";
       statusIcon = (
         <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
-          <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+          <svg
+            className="h-8 w-8 text-red-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
           </svg>
         </div>
       );
     }
-    
+
     // Jika sudah dibayar
-    if (orderDetails.payment_status === 'paid') {
+    if (orderDetails.payment_status === "paid") {
       return (
         <div className="min-h-screen flex items-center justify-center">
           <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
             <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
-              <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+              <svg
+                className="h-8 w-8 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Pembayaran Sudah Diterima</h1>
-            <p className="text-gray-600 mb-6">Terima kasih, pesanan Anda sudah dibayar dan sedang diproses.</p>
-            
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Pembayaran Sudah Diterima
+            </h1>
+            <p className="text-gray-600 mb-6">
+              Terima kasih, pesanan Anda sudah dibayar dan sedang diproses.
+            </p>
+
             {/* Detail Pesanan */}
             <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-              <h3 className="font-semibold text-gray-900 mb-3">Detail Pesanan:</h3>
+              <h3 className="font-semibold text-gray-900 mb-3">
+                Detail Pesanan:
+              </h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Order ID:</span>
-                  <span className="font-medium text-gray-900">{orderDetails.orderId}</span>
+                  <span className="font-medium text-gray-900">
+                    {orderDetails.orderId}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total:</span>
-                  <span className="font-medium text-gray-900">Rp {orderDetails.total_bayar?.toLocaleString()}</span>
+                  <span className="font-medium text-gray-900">
+                    Rp {orderDetails.total_bayar?.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Status:</span>
-                  <span className="font-medium text-gray-900">{orderDetails.status}</span>
+                  <span className="font-medium text-gray-900">
+                    {orderDetails.status}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Pembayaran:</span>
-                  <span className="font-medium text-gray-900">{orderDetails.payment_status}</span>
+                  <span className="font-medium text-gray-900">
+                    {orderDetails.payment_status}
+                  </span>
                 </div>
               </div>
             </div>
-            
-            <button onClick={() => router.push('/riwayatBelanja')} className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200">Lihat Riwayat Pesanan</button>
+
+            <button
+              onClick={() => router.push("/riwayatBelanja")}
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
+            >
+              Lihat Riwayat Pesanan
+            </button>
           </div>
         </div>
       );
@@ -454,45 +553,60 @@ const PaymentPageContent = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
           {statusIcon}
-          <h1 className={`text-2xl font-bold mb-4 ${statusColor || 'text-gray-900'}`}>
-            {statusMessage || 'Menunggu Pembayaran'}
+          <h1
+            className={`text-2xl font-bold mb-4 ${
+              statusColor || "text-gray-900"
+            }`}
+          >
+            {statusMessage || "Menunggu Pembayaran"}
           </h1>
           <p className="text-gray-600 mb-6">
-            {transactionStatus === 'pending' 
-              ? 'Silakan selesaikan pembayaran Anda sesuai instruksi berikut:'
-              : 'Status pembayaran Anda saat ini:'
-            }
+            {transactionStatus === "pending"
+              ? "Silakan selesaikan pembayaran Anda sesuai instruksi berikut:"
+              : "Status pembayaran Anda saat ini:"}
           </p>
-          
+
           {/* Detail Pesanan */}
           <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-            <h3 className="font-semibold text-gray-900 mb-3">Detail Pesanan:</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">
+              Detail Pesanan:
+            </h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">Order ID:</span>
-                <span className="font-medium text-gray-900">{orderDetails.orderId}</span>
+                <span className="font-medium text-gray-900">
+                  {orderDetails.orderId}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Total:</span>
-                <span className="font-medium text-gray-900">Rp {orderDetails.total_bayar?.toLocaleString()}</span>
+                <span className="font-medium text-gray-900">
+                  Rp {orderDetails.total_bayar?.toLocaleString()}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Status:</span>
-                <span className="font-medium text-gray-900">{orderDetails.status}</span>
+                <span className="font-medium text-gray-900">
+                  {orderDetails.status}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Pembayaran:</span>
-                <span className="font-medium text-gray-900">{orderDetails.payment_status}</span>
+                <span className="font-medium text-gray-900">
+                  {orderDetails.payment_status}
+                </span>
               </div>
               {transactionStatus && (
                 <div className="flex justify-between">
                   <span className="text-gray-600">Status Midtrans:</span>
-                  <span className="font-medium text-gray-900">{transactionStatus}</span>
+                  <span className="font-medium text-gray-900">
+                    {transactionStatus}
+                  </span>
                 </div>
               )}
+            </div>
           </div>
-          </div>
-          
+
           <button
             onClick={() => window.location.reload()}
             className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 mb-2"
@@ -500,20 +614,36 @@ const PaymentPageContent = () => {
             Refresh Status Pembayaran
           </button>
           {/* Tombol Bayar Sekarang di Midtrans */}
-          {orderDetails.status === 'pending' && orderDetails.snap_redirect_url && (
-            <div className="mb-2">
-              <button
-                onClick={() => window.location.href = orderDetails.snap_redirect_url ?? ''}
-                className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200"
-              >
-                Dapatkan Kode Pembayaran Kembali
-              </button>
-            </div>
-          )}
+          {orderDetails.status === "pending" &&
+            orderDetails.snap_redirect_url && (
+              <div className="mb-2">
+                <button
+                  onClick={() =>
+                    (window.location.href =
+                      orderDetails.snap_redirect_url ?? "")
+                  }
+                  className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200"
+                >
+                  Dapatkan Kode Pembayaran Kembali
+                </button>
+              </div>
+            )}
           {orderDetails.payment_url && (
-            <a href={orderDetails.payment_url} target="_blank" rel="noopener noreferrer" className="w-full block bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200 mb-2">Lihat Instruksi Pembayaran</a>
+            <a
+              href={orderDetails.payment_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full block bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200 mb-2"
+            >
+              Lihat Instruksi Pembayaran
+            </a>
           )}
-          <button onClick={() => router.push('/riwayatBelanja')} className="w-full bg-gray-200 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-300 transition duration-200">Kembali ke Riwayat Pesanan</button>
+          <button
+            onClick={() => router.push("/riwayatBelanja")}
+            className="w-full bg-gray-200 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-300 transition duration-200"
+          >
+            Kembali ke Riwayat Pesanan
+          </button>
         </div>
       </div>
     );
@@ -529,6 +659,19 @@ const PaymentPageContent = () => {
         >
           {/* Header */}
           <div className="text-center mb-12">
+            {/* Back Button */}
+            <div className="flex justify-start mb-6">
+              <button
+                onClick={() => router.push("/keranjang")}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                <span className="text-sm font-medium">
+                  Kembali ke Keranjang
+                </span>
+              </button>
+            </div>
+
             <h1 className="text-3xl font-bold mb-3 text-black">
               Checkout & Pembayaran
             </h1>
@@ -552,79 +695,96 @@ const PaymentPageContent = () => {
                   <h2 className="text-xl font-semibold mb-6 text-black">
                     Alamat Pengiriman
                   </h2>
-                  
+
                   {/* Info Toko Pengirim */}
                   {store && (
                     <div className="bg-blue-50 rounded-xl p-4 mb-6">
-                      <h4 className="text-sm font-medium text-black mb-2">Dikirim dari:</h4>
+                      <h4 className="text-sm font-medium text-black mb-2">
+                        Dikirim dari:
+                      </h4>
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-2 flex items-center justify-center">
                           <span className="text-white font-semibold text-sm">
-                            {store.nama_toko?.charAt(0)?.toUpperCase() || 'T'}
+                            {store.nama_toko?.charAt(0)?.toUpperCase() || "T"}
                           </span>
                         </div>
                         <div>
-                          <h5 className="font-semibold text-black text-sm">{store.nama_toko}</h5>
+                          <h5 className="font-semibold text-black text-sm">
+                            {store.nama_toko}
+                          </h5>
                           <p className="text-xs text-gray-600">
-                            {store.alamat?.alamat_lengkap || `${store.alamat?.kabupaten}, ${store.alamat?.provinsi}`}
+                            {store.alamat?.alamat_lengkap ||
+                              `${store.alamat?.kabupaten}, ${store.alamat?.provinsi}`}
                           </p>
                         </div>
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Nama Penerima</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nama Penerima
+                    </label>
                     <input
                       type="text"
                       value={recipientName}
-                      onChange={e => setRecipientName(e.target.value)}
+                      onChange={(e) => setRecipientName(e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Nama Penerima"
                     />
                   </div>
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Nomor Telepon</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nomor Telepon
+                    </label>
                     <input
                       type="tel"
                       value={phone}
-                      onChange={e => setPhone(e.target.value)}
+                      onChange={(e) => setPhone(e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="08xxxxxxxxxx"
                     />
                   </div>
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Alamat Lengkap</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Alamat Lengkap
+                    </label>
                     <textarea
                       value={address}
-                      onChange={e => setAddress(e.target.value)}
+                      onChange={(e) => setAddress(e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       rows={3}
                       placeholder="Masukkan alamat lengkap"
                     />
                   </div>
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Kode Pos</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Kode Pos
+                    </label>
                     <input
                       type="text"
                       value={postalCode}
-                      onChange={e => setPostalCode(e.target.value)}
+                      onChange={(e) => setPostalCode(e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Kode Pos"
                     />
                   </div>
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Catatan (Opsional)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Catatan (Opsional)
+                    </label>
                     <textarea
                       value={notes}
-                      onChange={e => setNotes(e.target.value)}
+                      onChange={(e) => setNotes(e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       rows={2}
                       placeholder="Catatan tambahan untuk kurir atau pesanan"
                     />
                   </div>
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Lokasi Penerima (Destination)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Lokasi Penerima (Destination)
+                    </label>
                     <CityAutocomplete
                       value={selectedDestination}
                       onChange={handleDestinationChange}
@@ -639,15 +799,15 @@ const PaymentPageContent = () => {
                     <h2 className="text-xl font-semibold mb-6 text-black">
                       Pilihan Pengiriman
                     </h2>
-                    
+
                     <div className="space-y-3">
                       {shippingOptions.map((option, index) => (
                         <div
                           key={index}
                           className={`border rounded-xl p-4 cursor-pointer transition-all ${
                             selectedShipping === option
-                              ? 'border-blue-500 bg-blue-50'
-                              : 'border-gray-200 hover:border-gray-300'
+                              ? "border-blue-500 bg-blue-50"
+                              : "border-gray-200 hover:border-gray-300"
                           }`}
                           onClick={() => setSelectedShipping(option)}
                         >
@@ -657,7 +817,7 @@ const PaymentPageContent = () => {
                                 {option.shipping_name} - {option.service_name}
                               </h3>
                               <p className="text-sm text-gray-600">
-                                Estimasi: {option.etd || '-'} hari
+                                Estimasi: {option.etd || "-"} hari
                               </p>
                             </div>
                             <div className="text-right">
@@ -691,22 +851,32 @@ const PaymentPageContent = () => {
                   {cartItems.map((item) => (
                     <div key={item._id} className="flex items-center gap-3">
                       <Image
-                        src={item.product_id.gambar || '/images/home/logo.png'}
-                        alt={item.product_id.nama || item.product_id.name || 'Product Image'}
+                        src={item.product_id.gambar || "/images/home/logo.png"}
+                        alt={
+                          item.product_id.nama ||
+                          item.product_id.name ||
+                          "Product Image"
+                        }
                         width={50}
                         height={50}
                         className="rounded-lg object-cover"
                       />
                       <div className="flex-1">
                         <h3 className="text-sm font-medium text-black">
-                          {item.product_id.nama || item.product_id.name || 'Product Name'}
+                          {item.product_id.nama ||
+                            item.product_id.name ||
+                            "Product Name"}
                         </h3>
                         <p className="text-xs text-gray-600">
                           Qty: {item.jumlah}
                         </p>
                       </div>
                       <p className="text-sm font-medium text-black">
-                        Rp{(item.harga_satuan || item.product_id.price * item.jumlah).toLocaleString()}
+                        Rp
+                        {(
+                          item.harga_satuan ||
+                          item.product_id.price * item.jumlah
+                        ).toLocaleString()}
                       </p>
                     </div>
                   ))}
@@ -716,26 +886,36 @@ const PaymentPageContent = () => {
                 <div className="space-y-3 mb-6 text-black">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Sub Total</span>
-                    <span className="font-medium">Rp{subtotal.toLocaleString()}</span>
+                    <span className="font-medium">
+                      Rp{subtotal.toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Ongkos Kirim</span>
                     <span className="font-medium">
-                      {selectedShipping ? `Rp${shippingCost.toLocaleString()}` : '-'}
+                      {selectedShipping
+                        ? `Rp${shippingCost.toLocaleString()}`
+                        : "-"}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Pajak (10%)</span>
-                    <span className="font-medium">Rp{tax.toLocaleString()}</span>
+                    <span className="font-medium">
+                      Rp{tax.toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Diskon (5%)</span>
-                    <span className="font-medium text-red-500">-Rp{discount.toLocaleString()}</span>
+                    <span className="font-medium text-red-500">
+                      -Rp{discount.toLocaleString()}
+                    </span>
                   </div>
                   <div className="border-t pt-3">
                     <div className="flex justify-between">
                       <span className="font-medium">Total</span>
-                      <span className="font-bold">Rp{total.toLocaleString()}</span>
+                      <span className="font-bold">
+                        Rp{total.toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -748,7 +928,13 @@ const PaymentPageContent = () => {
                         ? "bg-blue-500 text-white hover:bg-blue-600"
                         : "bg-gray-100 text-gray-400 cursor-not-allowed"
                     }`}
-                  disabled={!selectedShipping || !address || !phone || !recipientName || isLoading}
+                  disabled={
+                    !selectedShipping ||
+                    !address ||
+                    !phone ||
+                    !recipientName ||
+                    isLoading
+                  }
                   onClick={handleCheckout}
                 >
                   {isLoading ? (

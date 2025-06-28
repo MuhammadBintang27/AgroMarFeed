@@ -27,6 +27,11 @@ export async function GET(request: NextRequest) {
       responseHeaders.set('set-cookie', setCookieHeader);
     }
     
+    // Add cache control headers to prevent caching
+    responseHeaders.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    responseHeaders.set('Pragma', 'no-cache');
+    responseHeaders.set('Expires', '0');
+    
     return NextResponse.json(data, { 
       status: response.status,
       headers: responseHeaders

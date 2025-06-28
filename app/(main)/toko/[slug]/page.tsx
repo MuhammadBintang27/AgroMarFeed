@@ -11,6 +11,92 @@ import PageLoading from "@/components/ui/PageLoading";
 import WishlistButton from "@/components/ui/WishlistButton";
 import { useUser } from "@/contexts/UserContext";
 
+// Category Icon Component
+const CategoryIcon = ({ category }: { category: string }) => {
+  const getCategoryImage = (categoryName: string) => {
+    switch (categoryName.toLowerCase()) {
+      case "ruminansia":
+        return "/images/kategori/Ruminansia.png";
+      case "non-ruminansia":
+        return "/images/kategori/Non-ruminansia.png";
+      case "akuakultur":
+        return "/images/kategori/Akuakultur.png";
+      default:
+        return "/images/kategori/Ruminansia.png"; // default fallback
+    }
+  };
+
+  return (
+    <Image
+      src={getCategoryImage(category)}
+      alt={category}
+      width={16}
+      height={16}
+      className="w-4 h-4 sm:w-5 sm:h-5 object-contain"
+    />
+  );
+};
+
+// Limbah Icon Component
+const LimbahIcon = ({ limbah }: { limbah: string }) => {
+  const getLimbahImage = (limbahName: string) => {
+    switch (limbahName.toLowerCase()) {
+      case "limbah pertanian":
+        return "/images/kategori/LimbahPertanian.png";
+      case "limbah kelautan":
+        return "/images/kategori/LimbahKelautan.png";
+      default:
+        return "/images/kategori/LimbahPertanian.png"; // default fallback
+    }
+  };
+
+  return (
+    <Image
+      src={getLimbahImage(limbah)}
+      alt={limbah}
+      width={16}
+      height={16}
+      className="w-4 h-4 sm:w-5 sm:h-5 object-contain"
+    />
+  );
+};
+
+// Fisik Icon Component
+const FisikIcon = ({ fisik }: { fisik: string }) => {
+  const getFisikImage = (fisikName: string) => {
+    // Remove spaces and convert to proper format
+    const formattedName = fisikName.replace(/\s+/g, "");
+    return `/images/kategori/${formattedName}.png`;
+  };
+
+  return (
+    <Image
+      src={getFisikImage(fisik)}
+      alt={fisik}
+      width={16}
+      height={16}
+      className="w-4 h-4 sm:w-5 sm:h-5 object-contain"
+    />
+  );
+};
+
+// Mobile Single Star Rating Component
+const MobileRatingStar = ({ rating }: { rating: number }) => {
+  const hasRating = rating > 0;
+
+  return (
+    <svg
+      className="w-3 h-3 text-yellow-500"
+      fill={hasRating ? "currentColor" : "none"}
+      stroke={hasRating ? "currentColor" : "currentColor"}
+      strokeWidth={hasRating ? "0" : "1.5"}
+      viewBox="0 0 20 20"
+    >
+      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+    </svg>
+  );
+};
+
 // Rating Stars Component
 const RatingStars = ({ rating }: { rating: number }) => {
   const fullStars = Math.floor(rating);
@@ -183,43 +269,65 @@ const StorePage = () => {
               <p className="text-gray-500">Belum ada produk dari toko ini</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {products.map((product) => (
                 <Link
                   key={product._id}
                   href={`/detail/${product._id}`}
-                  className="bg-7 rounded-2xl p-4 flex flex-col hover:shadow-lg transition cursor-pointer h-full"
+                  className="flex-shrink-0 w-full"
                 >
-                  <div className="w-full h-48 flex justify-center items-center mb-4">
-                    <Image
-                      src={product.imageUrl || "/images/placeholder.png"}
-                      alt={product.name}
-                      width={200}
-                      height={200}
-                      className="object-contain w-full h-full"
-                    />
-                  </div>
-                  <h3 className="text-lg font-semibold text-left mb-2 text-black">
-                    {product.name}
-                  </h3>
-                  <div className="flex justify-between text-sm text-black/30 mb-2 px-1">
-                    <span>{product.categoryOptions}</span>
-                    <div className="flex items-center gap-1">
-                      <RatingStars rating={product.rating || 0} />
-                      <span className="text-black/60">
-                        ({product.rating?.toFixed(1) || "0.0"})
-                      </span>
+                  <div className="bg-7 rounded-2xl p-2 sm:p-3 md:p-4 flex flex-col justify-between hover:shadow-lg transition cursor-pointer h-full">
+                    <div className="w-full flex justify-center items-center mb-1 sm:mb-2 md:mb-3 pt-1 sm:pt-2 h-32 sm:h-40 md:h-52">
+                      <Image
+                        src={product.imageUrl || "/images/placeholder.png"}
+                        alt={product.name}
+                        width={200}
+                        height={200}
+                        className="object-contain w-full h-full max-w-none"
+                      />
                     </div>
-                  </div>
-                  <div className="flex justify-between items-center px-1 mt-auto">
-                    <span className="text-base font-semibold text-black">
-                      Rp{product.price.toLocaleString()}
-                    </span>
-                    <div className="flex gap-2">
-                      <button className="w-6 h-6 rounded-full bg-black text-xl text-white border border-black/10 flex items-center justify-center">
-                        +
-                      </button>
-                      <WishlistButton productId={product._id} />
+                    <h3 className="text-xs sm:text-sm md:text-base font-semibold text-left text-black leading-tight mb-0.5 sm:mb-1 line-clamp-2">
+                      {product.name}
+                    </h3>
+                    <div className="flex justify-between text-[10px] sm:text-xs md:text-sm text-black/40 mb-0.5 sm:mb-1 px-0.5 sm:px-1">
+                      <span className="flex items-center gap-1">
+                        <CategoryIcon category={product.categoryOptions} />
+                        {product.limbahOptions && (
+                          <LimbahIcon limbah={product.limbahOptions} />
+                        )}
+                        {product.fisikOptions && (
+                          <FisikIcon fisik={product.fisikOptions} />
+                        )}
+                      </span>
+                      <div className="flex items-center gap-0.5 sm:gap-1">
+                        <span className="scale-75 sm:scale-100">
+                          {/* Mobile & Tablet: Single star, Desktop: Full stars */}
+                          <div className="lg:hidden">
+                            <MobileRatingStar rating={product.rating || 0} />
+                          </div>
+                          <div className="hidden lg:block">
+                            <RatingStars rating={product.rating || 0} />
+                          </div>
+                        </span>
+                        <span className="text-black/60 text-[8px] sm:text-xs -ml-0.5 sm:ml-0">
+                          ({product.rating?.toFixed(1) || "0.0"})
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center px-0.5 sm:px-1">
+                      <span className="text-xs sm:text-sm md:text-base font-semibold text-black">
+                        Rp{product.price.toLocaleString()}
+                      </span>
+                      <div className="flex items-center">
+                        <span
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                        >
+                          <WishlistButton productId={product._id} size="sm" />
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </Link>

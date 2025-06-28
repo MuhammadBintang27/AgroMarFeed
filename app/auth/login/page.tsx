@@ -1,5 +1,5 @@
 "use client";
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { login, initiateGoogleLogin, initiateGitHubLogin } from "@/lib/auth";
 import { AuthCredentials } from "@/types";
@@ -13,21 +13,74 @@ export default function LoginPage() {
     password: "",
   });
   const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
+
     try {
+      // Login
       await login(credentials);
-      router.push("/");
+
+      // Simple redirect after successful login
+      // Let UserContext handle the user state update
+      if (isClient) {
+        router.push("/");
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleGoogleLogin = () => {
+    setLoading(true);
+    setError("");
+    initiateGoogleLogin();
+  };
+
+  const handleGitHubLogin = () => {
+    setLoading(true);
+    setError("");
+    initiateGitHubLogin();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCredentials((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
+
+  // Loading Spinner Component
+  const LoadingSpinner = () => (
+    <svg
+      className="w-5 h-5 animate-spin"
+      fill="none"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
+    </svg>
+  );
 
   return (
     <div className="min-h-screen bg-white flex flex-col justify-between">
@@ -85,7 +138,8 @@ export default function LoginPage() {
                   name="email"
                   value={credentials.email}
                   onChange={handleInputChange}
-                  className="w-full p-3 bg-gray-100 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-bg-2 outline-none"
+                  disabled={loading}
+                  className="w-full p-3 bg-gray-100 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-bg-2 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Enter your email"
                   required
                 />
@@ -99,23 +153,39 @@ export default function LoginPage() {
                   name="password"
                   value={credentials.password}
                   onChange={handleInputChange}
-                  className="w-full p-3 bg-gray-100 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-bg-2 outline-none"
+                  disabled={loading}
+                  className="w-full p-3 bg-gray-100 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-bg-2 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Enter your password"
                   required
                 />
               </div>
               <button
                 type="submit"
-                className="w-full bg-1 text-white font-medium py-3 rounded-[25] hover:opacity-90 transition"
+                disabled={loading}
+                className={`w-full font-medium py-3 rounded-[25px] transition flex items-center justify-center gap-2 ${
+                  loading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-1 text-white hover:opacity-90"
+                }`}
               >
-                Masuk
+                {loading ? (
+                  <>
+                    <LoadingSpinner />
+                    <span>Memproses Login...</span>
+                  </>
+                ) : (
+                  "Masuk"
+                )}
               </button>
             </form>
 
             <div className="mt-6 space-y-3">
               <button
-                onClick={initiateGoogleLogin}
-                className="w-full bg-white text-black border border-gray-300 font-medium py-3 rounded-[25px] flex items-center justify-center gap-2 hover:bg-gray-50 transition"
+                onClick={handleGoogleLogin}
+                disabled={loading}
+                className={`w-full bg-white text-black border border-gray-300 font-medium py-3 rounded-[25px] flex items-center justify-center gap-2 transition ${
+                  loading ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"
+                }`}
               >
                 <Image
                   src="/images/icons/google.png"
@@ -123,11 +193,14 @@ export default function LoginPage() {
                   width={24}
                   height={24}
                 />
-                Masuk dengan Google
+                {loading ? "Memproses..." : "Masuk dengan Google"}
               </button>
               <button
-                onClick={initiateGitHubLogin}
-                className="w-full bg-white text-black border border-gray-300 font-medium py-3 rounded-[25px] flex items-center justify-center gap-2 hover:bg-gray-50 transition"
+                onClick={handleGitHubLogin}
+                disabled={loading}
+                className={`w-full bg-white text-black border border-gray-300 font-medium py-3 rounded-[25px] flex items-center justify-center gap-2 transition ${
+                  loading ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"
+                }`}
               >
                 <Image
                   src="/images/icons/github.png"
@@ -135,7 +208,7 @@ export default function LoginPage() {
                   width={20}
                   height={20}
                 />
-                Masuk dengan GitHub
+                {loading ? "Memproses..." : "Masuk dengan GitHub"}
               </button>
             </div>
 
@@ -157,5 +230,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-
