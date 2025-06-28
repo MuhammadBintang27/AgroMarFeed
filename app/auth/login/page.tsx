@@ -1,24 +1,27 @@
-'use client';
-import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { login, initiateGoogleLogin, initiateGitHubLogin } from '@/lib/auth';
-import { AuthCredentials } from '@/types';
-import Image from 'next/image';
-import Link from 'next/link';
-import Footer from '@/components/footer/Footer';
+"use client";
+import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { login, initiateGoogleLogin, initiateGitHubLogin } from "@/lib/auth";
+import { AuthCredentials } from "@/types";
+import Image from "next/image";
+import Link from "next/link";
+import Footer from "@/components/footer/Footer";
 
 export default function LoginPage() {
-  const [credentials, setCredentials] = useState<AuthCredentials>({ email: '', password: '' });
-  const [error, setError] = useState<string>('');
+  const [credentials, setCredentials] = useState<AuthCredentials>({
+    email: "",
+    password: "",
+  });
+  const [error, setError] = useState<string>("");
   const router = useRouter();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       await login(credentials);
-      router.push('/');
+      router.push("/");
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(err.response?.data?.message || "Login failed");
     }
   };
 
@@ -28,11 +31,19 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col justify-between">
-
       {/* Back Button (tidak mengganggu gambar) */}
       <div className="absolute top-6 left-6 z-20">
         <Link href="/" className=" p-2 rounded-full transition">
-          <svg xmlns="http://www.w3.org/2000/svg" className="text-black" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="text-black"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+            fill="none"
+          >
             <path d="M15 18L9 12L15 6" />
           </svg>
         </Link>
@@ -55,17 +66,20 @@ export default function LoginPage() {
           </div>
         </div>
 
-
         {/* Right Form */}
         <div className="w-full md:w-1/2 flex items-center justify-center px-4 py-8">
           <div className="w-full max-w-md">
             <h1 className="text-3xl font-semibold text-black mb-6">Masuk</h1>
 
-            {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
+            {error && (
+              <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
                 <input
                   type="email"
                   name="email"
@@ -77,7 +91,9 @@ export default function LoginPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
                 <input
                   type="password"
                   name="password"
@@ -101,22 +117,34 @@ export default function LoginPage() {
                 onClick={initiateGoogleLogin}
                 className="w-full bg-white text-black border border-gray-300 font-medium py-3 rounded-[25px] flex items-center justify-center gap-2 hover:bg-gray-50 transition"
               >
-                <Image src="/images/icons/google.png" alt="Google Logo" width={24} height={24} />
+                <Image
+                  src="/images/icons/google.png"
+                  alt="Google Logo"
+                  width={24}
+                  height={24}
+                />
                 Masuk dengan Google
               </button>
               <button
                 onClick={initiateGitHubLogin}
                 className="w-full bg-white text-black border border-gray-300 font-medium py-3 rounded-[25px] flex items-center justify-center gap-2 hover:bg-gray-50 transition"
               >
-                <Image src="/images/icons/github.png" alt="GitHub Logo" width={20} height={20} />
+                <Image
+                  src="/images/icons/github.png"
+                  alt="GitHub Logo"
+                  width={20}
+                  height={20}
+                />
                 Masuk dengan GitHub
               </button>
             </div>
 
-
             <p className="mt-6 text-center text-sm text-gray-600">
-              Belum punya akun?{' '}
-              <Link href="/auth/register" className="text-bg-3 hover:underline font-medium">
+              Belum punya akun?{" "}
+              <Link
+                href="/auth/register"
+                className="text-bg-3 hover:underline font-medium"
+              >
                 Daftar
               </Link>
             </p>
@@ -129,3 +157,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
