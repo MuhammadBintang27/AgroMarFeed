@@ -36,22 +36,29 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       setError(null);
 
+      console.log("🔄 Fetching user data...");
       const response = await getCurrentUser();
+      console.log("📡 User data response:", response);
 
       // Check different possible response structures
       if (response.success && response.user) {
+        console.log("✅ User data found:", response.user);
         setUser(response.user);
       } else if (response.success && response.data) {
+        console.log("✅ User data found (data field):", response.data);
         setUser(response.data);
       } else if (response.user) {
+        console.log("✅ User data found (direct user):", response.user);
         setUser(response.user);
       } else if (response.data) {
+        console.log("✅ User data found (direct data):", response.data);
         setUser(response.data);
       } else {
+        console.log("❌ No user data found in response");
         setUser(null);
       }
     } catch (err) {
-      console.error("Failed to fetch user:", err);
+      console.error("❌ Failed to fetch user:", err);
       setError("Failed to fetch user");
       setUser(null);
     } finally {
@@ -88,15 +95,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const isOAuthRedirect = window.location.search.includes("oauth=success");
 
       if (isOAuthRedirect) {
+        console.log("🔄 OAuth redirect detected, fetching user data...");
         // Remove the oauth parameter from URL
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.delete("oauth");
         window.history.replaceState({}, "", newUrl.toString());
 
-        // Fetch user data after a short delay
+        // Fetch user data after a longer delay for mobile browsers
         setTimeout(() => {
+          console.log("🔄 Fetching user data after OAuth redirect...");
           fetchUser();
-        }, 1000);
+        }, 2000); // Increased delay for mobile browsers
       }
     }
   }, []);

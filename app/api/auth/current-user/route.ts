@@ -4,7 +4,10 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:400
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('Frontend: Current user request received');
+    console.log('🔍 Frontend: Current user request received');
+    console.log('User Agent:', request.headers.get('user-agent'));
+    console.log('Origin:', request.headers.get('origin'));
+    console.log('Referer:', request.headers.get('referer'));
     console.log('Cookies from request:', request.headers.get('cookie'));
     
     const response = await fetch(`${BACKEND_URL}/api/auth/current-user`, {
@@ -12,18 +15,22 @@ export async function GET(request: NextRequest) {
       credentials: 'include',
       headers: {
         'Cookie': request.headers.get('cookie') || '',
+        'User-Agent': request.headers.get('user-agent') || '',
+        'Origin': request.headers.get('origin') || '',
+        'Referer': request.headers.get('referer') || '',
         "ngrok-skip-browser-warning": "true"
       },
     });
 
     const data = await response.json();
-    console.log('Backend response:', data);
+    console.log('📡 Backend response status:', response.status);
+    console.log('📡 Backend response data:', data);
     
     // Forward any cookies from backend
     const responseHeaders = new Headers();
     const setCookieHeader = response.headers.get('set-cookie');
     if (setCookieHeader) {
-      console.log('Setting cookie from backend:', setCookieHeader);
+      console.log('🍪 Setting cookie from backend:', setCookieHeader);
       responseHeaders.set('set-cookie', setCookieHeader);
     }
     
@@ -37,7 +44,7 @@ export async function GET(request: NextRequest) {
       headers: responseHeaders
     });
   } catch (error) {
-    console.error('Error in current-user API:', error);
+    console.error('❌ Error in current-user API:', error);
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
