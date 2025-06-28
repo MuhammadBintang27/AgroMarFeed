@@ -6,8 +6,6 @@ import Button from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { MessageCircle, X } from "lucide-react";
 
-
-
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
@@ -49,7 +47,7 @@ export default function ChatbotWidget() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-20 right-6 z-50 lg:bottom-6">
       {isOpen ? (
         <Card className="w-80 rounded-2xl shadow-xl border bg-[#6d8044] text-black">
           <button
@@ -61,7 +59,9 @@ export default function ChatbotWidget() {
           </button>
 
           <CardContent className="pt-6 pb-4 px-4 flex flex-col gap-3">
-            <div className="text-base font-semibold text-white">AgroMarFeed AI</div>
+            <div className="text-base font-semibold text-white">
+              AgroMarFeed AI
+            </div>
 
             <div className="h-48 overflow-y-auto rounded border px-2 py-1 text-sm bg-gray-100 text-black">
               {chatHistory.length === 0 ? (
@@ -75,15 +75,18 @@ export default function ChatbotWidget() {
                     return (
                       <div
                         key={i}
-                        className={`mb-2 whitespace-pre-wrap ${isUser ? "text-black" : "text-[#6d8044]"
-                          }`}
+                        className={`mb-2 whitespace-pre-wrap ${
+                          isUser ? "text-black" : "text-[#6d8044]"
+                        }`}
                       >
                         {msg}
                       </div>
                     );
                   })}
                   {isLoading && (
-                    <div className="italic text-xs text-black/40">AI is typing...</div>
+                    <div className="italic text-xs text-black/40">
+                      AI is typing...
+                    </div>
                   )}
                 </>
               )}
@@ -100,12 +103,14 @@ export default function ChatbotWidget() {
             <button
               onClick={handleSend}
               disabled={!message.trim() || isLoading}
-              className={`px-6 py-3 rounded-full text-black bg-[#f7ab31] hover:bg-[#f7ab31]/80 transition ${(!message.trim() || isLoading) ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+              className={`px-6 py-3 rounded-full text-black bg-[#f7ab31] hover:bg-[#f7ab31]/80 transition ${
+                !message.trim() || isLoading
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
             >
               {isLoading ? "Loading..." : "Kirim"}
             </button>
-
           </CardContent>
         </Card>
       ) : (
@@ -116,7 +121,6 @@ export default function ChatbotWidget() {
         >
           <MessageCircle size={20} className="text-black" />
         </button>
-
       )}
     </div>
   );

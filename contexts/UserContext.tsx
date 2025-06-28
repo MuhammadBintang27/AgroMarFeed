@@ -15,6 +15,7 @@ interface UserContextType {
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  clearUser: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -58,6 +59,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const clearUser = () => {
+    setUser(null);
+    setError(null);
+    setLoading(false);
+  };
+
   // Initial authentication check - only runs once
   useEffect(() => {
     if (!hasInitialized.current) {
@@ -90,6 +97,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     loading,
     error,
     refetch: fetchUser,
+    clearUser,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

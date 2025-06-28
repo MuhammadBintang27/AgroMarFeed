@@ -8,6 +8,149 @@ import { motion } from "framer-motion";
 import { fetchProducts, Product } from "@/lib/api/fetchProducts";
 import WishlistButton from "@/components/ui/WishlistButton";
 
+// Rating Stars Component
+const RatingStars = ({ rating }: { rating: number }) => {
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 !== 0;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+  return (
+    <div className="flex items-center gap-0.5 sm:gap-1">
+      {/* Full Stars */}
+      {[...Array(fullStars)].map((_, i) => (
+        <svg
+          key={`full-${i}`}
+          className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
+      ))}
+
+      {/* Half Star */}
+      {hasHalfStar && (
+        <div className="relative w-3 h-3 sm:w-4 sm:h-4">
+          <svg
+            className="w-3 h-3 sm:w-4 sm:h-4 text-gray-300 absolute"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          </svg>
+          <div className="absolute overflow-hidden w-1.5 h-3 sm:w-2 sm:h-4">
+            <svg
+              className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          </div>
+        </div>
+      )}
+
+      {/* Empty Stars */}
+      {[...Array(emptyStars)].map((_, i) => (
+        <svg
+          key={`empty-${i}`}
+          className="w-3 h-3 sm:w-4 sm:h-4 text-gray-300"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
+      ))}
+    </div>
+  );
+};
+
+// Mobile Single Star Rating Component
+const MobileRatingStar = ({ rating }: { rating: number }) => {
+  const hasRating = rating > 0;
+
+  return (
+    <svg
+      className="w-3 h-3 text-yellow-500"
+      fill={hasRating ? "currentColor" : "none"}
+      stroke={hasRating ? "currentColor" : "currentColor"}
+      strokeWidth={hasRating ? "0" : "1.5"}
+      viewBox="0 0 20 20"
+    >
+      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+    </svg>
+  );
+};
+
+// Category Icon Component
+const CategoryIcon = ({ category }: { category: string }) => {
+  const getCategoryImage = (categoryName: string) => {
+    switch (categoryName.toLowerCase()) {
+      case "ruminansia":
+        return "/images/kategori/Ruminansia.png";
+      case "non-ruminansia":
+        return "/images/kategori/Non-ruminansia.png";
+      case "akuakultur":
+        return "/images/kategori/Akuakultur.png";
+      default:
+        return "/images/kategori/Ruminansia.png"; // default fallback
+    }
+  };
+
+  return (
+    <Image
+      src={getCategoryImage(category)}
+      alt={category}
+      width={16}
+      height={16}
+      className="w-4 h-4 sm:w-5 sm:h-5 object-contain"
+    />
+  );
+};
+
+// Limbah Icon Component
+const LimbahIcon = ({ limbah }: { limbah: string }) => {
+  const getLimbahImage = (limbahName: string) => {
+    switch (limbahName.toLowerCase()) {
+      case "limbah pertanian":
+        return "/images/kategori/LimbahPertanian.png";
+      case "limbah kelautan":
+        return "/images/kategori/LimbahKelautan.png";
+      default:
+        return "/images/kategori/LimbahPertanian.png"; // default fallback
+    }
+  };
+
+  return (
+    <Image
+      src={getLimbahImage(limbah)}
+      alt={limbah}
+      width={16}
+      height={16}
+      className="w-4 h-4 sm:w-5 sm:h-5 object-contain"
+    />
+  );
+};
+
+// Fisik Icon Component
+const FisikIcon = ({ fisik }: { fisik: string }) => {
+  const getFisikImage = (fisikName: string) => {
+    // Remove spaces and convert to proper format
+    const formattedName = fisikName.replace(/\s+/g, "");
+    return `/images/kategori/${formattedName}.png`;
+  };
+
+  return (
+    <Image
+      src={getFisikImage(fisik)}
+      alt={fisik}
+      width={16}
+      height={16}
+      className="w-4 h-4 sm:w-5 sm:h-5 object-contain"
+    />
+  );
+};
+
 const ProdukPakan = () => {
   const [activeCategory, setActiveCategory] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
@@ -64,10 +207,26 @@ const ProdukPakan = () => {
           </h3>
 
           <div className="flex justify-between text-xs md:text-sm text-black/40 mb-1 px-1">
-            <span>{product.categoryOptions}</span>
+            <span className="flex items-center gap-1">
+              <CategoryIcon category={product.categoryOptions} />
+              {product.limbahOptions && (
+                <LimbahIcon limbah={product.limbahOptions} />
+              )}
+              {product.fisikOptions && (
+                <FisikIcon fisik={product.fisikOptions} />
+              )}
+            </span>
             <span className="flex items-center gap-1 text-yellow-500 text-[12px] md:text-[14px]">
-              ★{" "}
-              <span className="text-black/60">({product.rating ?? "0.0"})</span>
+              {/* Mobile: Single star, Desktop: Full stars */}
+              <div className="sm:hidden">
+                <MobileRatingStar rating={product.rating || 0} />
+              </div>
+              <div className="hidden sm:block">
+                <RatingStars rating={product.rating || 0} />
+              </div>
+              <span className="text-black/60">
+                ({product.rating?.toFixed(1) || "0.0"})
+              </span>
             </span>
           </div>
 
@@ -191,11 +350,25 @@ const ProdukPakan = () => {
                 </h3>
 
                 <div className="flex justify-between text-xs md:text-sm text-black/40 mb-1 px-1">
-                  <span>{product.categoryOptions}</span>
+                  <span className="flex items-center gap-1">
+                    <CategoryIcon category={product.categoryOptions} />
+                    {product.limbahOptions && (
+                      <LimbahIcon limbah={product.limbahOptions} />
+                    )}
+                    {product.fisikOptions && (
+                      <FisikIcon fisik={product.fisikOptions} />
+                    )}
+                  </span>
                   <span className="flex items-center gap-1 text-yellow-500 text-[12px] md:text-[14px]">
-                    ★{" "}
+                    {/* Mobile: Single star, Desktop: Full stars */}
+                    <div className="sm:hidden">
+                      <MobileRatingStar rating={product.rating || 0} />
+                    </div>
+                    <div className="hidden sm:block">
+                      <RatingStars rating={product.rating || 0} />
+                    </div>
                     <span className="text-black/60">
-                      ({product.rating ?? "0.0"})
+                      ({product.rating?.toFixed(1) || "0.0"})
                     </span>
                   </span>
                 </div>

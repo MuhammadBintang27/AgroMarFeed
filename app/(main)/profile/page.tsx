@@ -18,10 +18,11 @@ interface Store {
 }
 
 export default function ProfilePage() {
-  const { user, loading, error: userError } = useUser();
+  const { user, loading, error: userError, clearUser } = useUser();
   const [error, setError] = useState<string>("");
   const [store, setStore] = useState<Store | null>(null);
   const [loadingStore, setLoadingStore] = useState(true);
+  const [logoutLoading, setLogoutLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -48,11 +49,25 @@ export default function ProfilePage() {
 
   const handleLogout = async () => {
     try {
+      setLogoutLoading(true);
+      setError("");
+
+      // Call logout API
       await logout();
-      router.push("/");
+
+      // Clear user context immediately
+      clearUser();
+
+      // Add a small delay to ensure context is updated
+      setTimeout(() => {
+        // Force redirect to root with full page reload to clear any cached state
+        window.location.href = "/";
+      }, 300);
     } catch (err: any) {
       console.error("Logout failed:", err);
-      setError("Logout failed");
+      setError("Gagal keluar dari akun. Silakan coba lagi.");
+    } finally {
+      setLogoutLoading(false);
     }
   };
 
@@ -143,11 +158,26 @@ export default function ProfilePage() {
             </button>
             <button
               onClick={handleLogout}
-              className="font-semibold text-left text-red-500 hover:underline pt-2"
+              disabled={logoutLoading}
+              className="font-semibold text-left text-red-500 hover:underline pt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              Keluar
+              {logoutLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                  Memproses...
+                </>
+              ) : (
+                "Keluar"
+              )}
             </button>
           </nav>
+
+          {/* Error message */}
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
         </div>
 
         {/* Konten kanan */}
