@@ -8,7 +8,7 @@ import React, {
   useRef,
 } from "react";
 import { User } from "@/types";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, validateOAuthToken } from "@/lib/auth";
 
 interface UserContextType {
   user: User | null;
@@ -26,6 +26,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const hasInitialized = useRef(false);
   const isFetching = useRef(false);
+  const isOAuthProcessing = useRef(false);
 
   const fetchUser = async () => {
     // Prevent multiple simultaneous calls
@@ -44,18 +45,23 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       if (response.success && response.user) {
         console.log("✅ User data found:", response.user);
         setUser(response.user);
+        setError(null);
       } else if (response.success && response.data) {
         console.log("✅ User data found (data field):", response.data);
         setUser(response.data);
+        setError(null);
       } else if (response.user) {
         console.log("✅ User data found (direct user):", response.user);
         setUser(response.user);
+        setError(null);
       } else if (response.data) {
         console.log("✅ User data found (direct data):", response.data);
         setUser(response.data);
+        setError(null);
       } else {
         console.log("❌ No user data found in response");
         setUser(null);
+        setError("No user data found");
       }
     } catch (err) {
       console.error("❌ Failed to fetch user:", err);
@@ -81,9 +87,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   };
 
-  // Initial authentication check - only runs once
+  // Initial authentication check - only runs once and only if not processing OAuth
   useEffect(() => {
-    if (!hasInitialized.current) {
+    if (!hasInitialized.current && !isOAuthProcessing.current) {
       hasInitialized.current = true;
       fetchUser();
     }
@@ -92,20 +98,67 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // Handle OAuth redirect - only runs if there's an OAuth parameter
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const isOAuthRedirect = window.location.search.includes("oauth=success");
+      const urlParams = new URLSearchParams(window.location.search);
+      const isOAuthSuccess = urlParams.get("oauth") === "success";
+      const oauthToken = urlParams.get("token");
 
-      if (isOAuthRedirect) {
-        console.log("🔄 OAuth redirect detected, fetching user data...");
-        // Remove the oauth parameter from URL
+      if (isOAuthSuccess && oauthToken) {
+        console.log("🔄 OAuth redirect detected with token, validating...");
+        isOAuthProcessing.current = true;
+
+        // Remove the oauth parameters from URL
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete("oauth");
+        newUrl.searchParams.delete("token");
+        window.history.replaceState({}, "", newUrl.toString());
+
+        // Validate OAuth token - single attempt
+        const handleOAuthSuccess = async () => {
+          try {
+            console.log("🔄 Validating OAuth token...");
+            const validationData = await validateOAuthToken(oauthToken);
+
+            if (validationData.success && validationData.user) {
+              console.log(
+                "✅ OAuth token validation successful:",
+                validationData.user
+              );
+              setUser(validationData.user);
+              setError(null);
+              setLoading(false);
+              isOAuthProcessing.current = false;
+              return;
+            }
+
+            // If token validation fails, try regular fetch once
+            console.log("🔄 Token validation failed, trying regular fetch...");
+            await fetchUser();
+            isOAuthProcessing.current = false;
+          } catch (error) {
+            console.error("❌ OAuth handling error:", error);
+            // Single fallback to regular fetch
+            await fetchUser();
+            isOAuthProcessing.current = false;
+          }
+        };
+
+        // Start OAuth handling process
+        handleOAuthSuccess();
+      } else if (isOAuthSuccess) {
+        // OAuth success but no token, try regular fetch once
+        console.log(
+          "🔄 OAuth redirect detected without token, trying regular fetch..."
+        );
+        isOAuthProcessing.current = true;
+
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.delete("oauth");
         window.history.replaceState({}, "", newUrl.toString());
 
-        // Fetch user data after a longer delay for mobile browsers
-        setTimeout(() => {
-          console.log("🔄 Fetching user data after OAuth redirect...");
-          fetchUser();
-        }, 2000); // Increased delay for mobile browsers
+        // Single attempt to fetch user data
+        fetchUser().finally(() => {
+          isOAuthProcessing.current = false;
+        });
       }
     }
   }, []);
