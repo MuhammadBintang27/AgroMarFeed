@@ -2,6 +2,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { User, ApiResponse, AuthCredentials, SignupCredentials } from '@/types';
 
+// Create API instance with empty baseURL for regular auth requests (mobile compatible)
 const api: AxiosInstance = axios.create({
   baseURL: '', // Use relative URLs to hit Next.js API routes (for mobile compatibility)
   withCredentials: true, 
@@ -31,13 +32,27 @@ export const getCurrentUser = async (): Promise<ApiResponse<User>> => {
   return response.data;
 };
 
-// OAuth initiators
+// OAuth initiators - use direct backend URLs (required for OAuth to work)
 export const initiateGoogleLogin = (): void => {
-  window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/google`;
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+  if (!backendUrl) {
+    console.error('❌ NEXT_PUBLIC_BACKEND_URL not set');
+    alert('Backend URL not configured. Please contact administrator.');
+    return;
+  }
+  console.log('🔗 Initiating Google OAuth to:', `${backendUrl}/api/auth/google`);
+  window.location.href = `${backendUrl}/api/auth/google`;
 };
 
 export const initiateGitHubLogin = (): void => {
-  window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/github`;
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+  if (!backendUrl) {
+    console.error('❌ NEXT_PUBLIC_BACKEND_URL not set');
+    alert('Backend URL not configured. Please contact administrator.');
+    return;
+  }
+  console.log('🔗 Initiating GitHub OAuth to:', `${backendUrl}/api/auth/github`);
+  window.location.href = `${backendUrl}/api/auth/github`;
 };
 
 export default api;

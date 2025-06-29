@@ -105,7 +105,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setTimeout(() => {
           console.log("🔄 Fetching user data after OAuth redirect...");
           fetchUser();
-        }, 2000); // Increased delay for mobile browsers
+        }, 3000); // Increased delay for mobile browsers and OAuth processing
       }
     }
   }, []);

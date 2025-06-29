@@ -10,11 +10,16 @@ export async function GET(request: NextRequest) {
     console.log('Referer:', request.headers.get('referer'));
     console.log('Cookies from request:', request.headers.get('cookie'));
     
+    // Extract session cookie specifically
+    const cookies = request.headers.get('cookie') || '';
+    const sessionCookie = cookies.split(';').find(c => c.trim().startsWith('agromarfeed.sid='));
+    console.log('Session cookie found:', sessionCookie ? 'Yes' : 'No');
+    
     const response = await fetch(`${BACKEND_URL}/api/auth/current-user`, {
       method: 'GET',
       credentials: 'include',
       headers: {
-        'Cookie': request.headers.get('cookie') || '',
+        'Cookie': cookies,
         'User-Agent': request.headers.get('user-agent') || '',
         'Origin': request.headers.get('origin') || '',
         'Referer': request.headers.get('referer') || '',
