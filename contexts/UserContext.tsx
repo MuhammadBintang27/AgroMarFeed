@@ -8,7 +8,7 @@ import React, {
   useRef,
 } from "react";
 import { User } from "@/types";
-import { getCurrentUser, transferOAuthSession, validateOAuthToken } from "@/lib/auth";
+import { getCurrentUser, validateOAuthToken } from "@/lib/auth";
 
 interface UserContextType {
   user: User | null;
@@ -109,61 +109,46 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         newUrl.searchParams.delete("token");
         window.history.replaceState({}, "", newUrl.toString());
 
-        // Validate OAuth token
+        // Validate OAuth token - single attempt
         const handleOAuthSuccess = async () => {
           try {
             console.log("🔄 Validating OAuth token...");
             const validationData = await validateOAuthToken(oauthToken);
-            
+
             if (validationData.success && validationData.user) {
-              console.log("✅ OAuth token validation successful:", validationData.user);
+              console.log(
+                "✅ OAuth token validation successful:",
+                validationData.user
+              );
               setUser(validationData.user);
               setError(null);
               setLoading(false);
               return;
             }
-            
-            // Fallback to session transfer
-            console.log("🔄 Token validation failed, trying session transfer...");
-            const transferData = await transferOAuthSession();
-            
-            if (transferData.success && transferData.user) {
-              console.log("✅ OAuth session transfer successful:", transferData.user);
-              setUser(transferData.user);
-              setError(null);
-              setLoading(false);
-              return;
-            }
-            
-            // Final fallback to regular fetch
-            console.log("🔄 Session transfer failed, falling back to regular fetch...");
-            setTimeout(() => {
-              console.log("🔄 Fetching user data after OAuth redirect...");
-              fetchUser();
-            }, 2000);
+
+            // If token validation fails, try regular fetch once
+            console.log("🔄 Token validation failed, trying regular fetch...");
+            await fetchUser();
           } catch (error) {
             console.error("❌ OAuth handling error:", error);
-            // Final fallback to regular fetch
-            setTimeout(() => {
-              console.log("🔄 Fetching user data after OAuth redirect (fallback)...");
-              fetchUser();
-            }, 2000);
+            // Single fallback to regular fetch
+            await fetchUser();
           }
         };
 
         // Start OAuth handling process
         handleOAuthSuccess();
       } else if (isOAuthSuccess) {
-        // OAuth success but no token, try session transfer
-        console.log("🔄 OAuth redirect detected without token, trying session transfer...");
+        // OAuth success but no token, try regular fetch once
+        console.log(
+          "🔄 OAuth redirect detected without token, trying regular fetch..."
+        );
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.delete("oauth");
         window.history.replaceState({}, "", newUrl.toString());
 
-        setTimeout(() => {
-          console.log("🔄 Fetching user data after OAuth redirect...");
-          fetchUser();
-        }, 2000);
+        // Single attempt to fetch user data
+        fetchUser();
       }
     }
   }, []);

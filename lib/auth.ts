@@ -32,12 +32,6 @@ export const getCurrentUser = async (): Promise<ApiResponse<User>> => {
   return response.data;
 };
 
-// OAuth session transfer
-export const transferOAuthSession = async (): Promise<ApiResponse<User>> => {
-  const response = await api.get('/api/auth/oauth-session-transfer');
-  return response.data;
-};
-
 // Validate OAuth token
 export const validateOAuthToken = async (token: string): Promise<ApiResponse<User>> => {
   const response = await api.post('/api/auth/validate-oauth-token', { token });
