@@ -1,7 +1,7 @@
 "use client";
 import { useState, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { login, initiateGoogleLogin, initiateGitHubLogin } from "@/lib/auth";
+import { login, initiateGoogleLogin} from "@/lib/auth";
 import { AuthCredentials } from "@/types";
 import Image from "next/image";
 import Link from "next/link";
@@ -65,12 +65,6 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     initiateGoogleLogin();
-  };
-
-  const handleGitHubLogin = () => {
-    setLoading(true);
-    setError("");
-    initiateGitHubLogin();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -213,21 +207,6 @@ export default function LoginPage() {
                   height={24}
                 />
                 {loading ? "Memproses..." : "Masuk dengan Google"}
-              </button>
-              <button
-                onClick={handleGitHubLogin}
-                disabled={loading}
-                className={`w-full bg-white text-black border border-gray-300 font-medium py-3 rounded-[25px] flex items-center justify-center gap-2 transition ${
-                  loading ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"
-                }`}
-              >
-                <Image
-                  src="/images/icons/github.png"
-                  alt="GitHub Logo"
-                  width={20}
-                  height={20}
-                />
-                {loading ? "Memproses..." : "Masuk dengan GitHub"}
               </button>
             </div>
 

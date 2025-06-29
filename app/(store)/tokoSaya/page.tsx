@@ -85,7 +85,7 @@ export default function TokoSayaPage() {
   const [orders, setOrders] = useState<StoreOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [ordersLoading, setOrdersLoading] = useState(false);
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
   const userId = user?._id || null;
   const [activeTab, setActiveTab] = useState("produk");
   const [activeSubTab, setActiveSubTab] = useState("produkSaya");
@@ -102,6 +102,15 @@ export default function TokoSayaPage() {
     pendingOrders: 0,
     cancelledOrders: 0,
   });
+
+  // Check authentication on component mount
+  useEffect(() => {
+    if (!userLoading && !user) {
+      console.log("❌ User not authenticated, redirecting to login");
+      router.push("/auth/login");
+      return;
+    }
+  }, [user, userLoading, router]);
 
   useEffect(() => {
     console.log("[TOKO SAYA] userId:", userId);
@@ -323,12 +332,54 @@ export default function TokoSayaPage() {
     return "delivered";
   };
 
-  if (loading)
+  // Show loading while checking authentication
+  if (userLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        Loading...
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Memeriksa autentikasi...</p>
+        </div>
       </div>
     );
+  }
+
+  // Show loading while fetching data
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Memuat data toko...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if user is not authenticated (this should not happen due to redirect)
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <XCircle className="w-12 h-12 text-red-500" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Akses Ditolak
+          </h2>
+          <p className="text-gray-600 mb-4">
+            Anda harus login terlebih dahulu untuk mengakses halaman ini.
+          </p>
+          <button
+            onClick={() => router.push("/auth/login")}
+            className="bg-yellow-400 hover:bg-yellow-500 text-[#39381F] px-6 py-2 rounded-lg font-bold transition"
+          >
+            Login Sekarang
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white py-8 px-2 md:px-0">

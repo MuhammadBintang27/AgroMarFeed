@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
 import ChatbotWidget from "@/components/ChatbotWidget";
+import PageLoading from "@/components/ui/PageLoading";
 
 interface WishlistItem {
   _id: string;
@@ -107,7 +108,7 @@ const Wishlist = () => {
     }
   };
 
-  if (loading) return <div className="text-center py-40">Loading...</div>;
+  if (loading) return <PageLoading text="AgroMarFeed Sedang Memuat Wishlist Anda..."/>; 
   if (error) return <div className="text-center py-40 text-red-500">Error: {error}</div>;
 
   return (

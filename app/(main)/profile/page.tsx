@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { logout } from "@/lib/auth";
 import { useUser } from "@/contexts/UserContext";
 import Image from "next/image";
+import PageLoading from "@/components/ui/PageLoading";
 
 interface Store {
   _id: string;
@@ -71,7 +72,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <PageLoading text="AgroMarFeed Sedang Memuat Profil Anda..."/>;
   if (!user) return <div>Not authenticated</div>;
 
   return (

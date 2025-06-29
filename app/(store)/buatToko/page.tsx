@@ -39,10 +39,19 @@ export default function BuatTokoPage() {
   const [setuju, setSetuju] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
   const userId = user?._id || null;
   const [checkingStore, setCheckingStore] = useState(true);
   const headerRef = useRef<HTMLDivElement>(null);
+
+  // Check authentication on component mount
+  useEffect(() => {
+    if (!userLoading && !user) {
+      console.log("❌ User not authenticated, redirecting to login");
+      router.push("/auth/login");
+      return;
+    }
+  }, [user, userLoading, router]);
 
   // Cek jika user sudah punya store
   useEffect(() => {
@@ -179,6 +188,55 @@ export default function BuatTokoPage() {
   const scrollToForm = () => {
     headerRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   };
+
+  // Show loading while checking authentication
+  if (userLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Memeriksa autentikasi...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if user is not authenticated
+  if (!userLoading && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg
+              className="w-12 h-12 text-red-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Akses Ditolak
+          </h2>
+          <p className="text-gray-600 mb-4">
+            Anda harus login terlebih dahulu untuk mengakses halaman ini.
+          </p>
+          <button
+            onClick={() => router.push("/auth/login")}
+            className="bg-yellow-400 hover:bg-yellow-500 text-[#39381F] px-6 py-2 rounded-lg font-bold transition"
+          >
+            Login Sekarang
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (checkingStore) {
     return (

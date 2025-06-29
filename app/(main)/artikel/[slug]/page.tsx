@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Clock, Eye } from "lucide-react";
+import PageLoading from "@/components/ui/PageLoading";
 import {
   fetchArticleById,
   Article,
@@ -31,16 +32,13 @@ export default function ArticleDetail() {
     loadArticle();
   }, [slug]);
 
-  if (loading) {
-    return <div className="text-center text-black">Loading article...</div>;
-  }
+  if (loading) return <PageLoading text="AgroMarFeed Sedang Memuat Artikel..."/>;
 
   if (!article) {
     return <div className="text-center text-black">Article not found</div>;
   }
 
   const primaryAuthor = article.penulis[0] || { nama: "Unknown" };
-
   return (
     <div className="min-h-screen pt-32 pb-16 bg-white">
       <div className="container mx-auto px-4 max-w-4xl">

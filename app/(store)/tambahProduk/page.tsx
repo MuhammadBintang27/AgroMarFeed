@@ -14,6 +14,7 @@ import {
   RotateCw,
   ZoomIn,
   ZoomOut,
+  XCircle,
 } from "lucide-react";
 
 const defaultWeight = { id: "", value: "", price: 0 };
@@ -259,7 +260,7 @@ const ImageCropper = ({
 
 export default function TambahProdukPage() {
   const router = useRouter();
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
   const [storeId, setStoreId] = useState<string>("");
   const [form, setForm] = useState({
     name: "",
@@ -286,6 +287,15 @@ export default function TambahProdukPage() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [showCropModal, setShowCropModal] = useState(false);
   const [originalImageFile, setOriginalImageFile] = useState<File | null>(null);
+
+  // Check authentication on component mount
+  useEffect(() => {
+    if (!userLoading && !user) {
+      console.log("❌ User not authenticated, redirecting to login");
+      router.push("/auth/login");
+      return;
+    }
+  }, [user, userLoading, router]);
 
   useEffect(() => {
     // Ambil store user (endpoint /api/stores?user_id=xxx)
@@ -557,305 +567,337 @@ export default function TambahProdukPage() {
 
   return (
     <section className="min-h-screen py-10 px-2 md:px-0 flex items-center justify-center">
-      <div className="w-full max-w-2xl mx-auto bg-white rounded-2xl p-8">
-        <h1 className="text-3xl font-extrabold text-[#39381F] mb-8 text-center">
-          Tambah Produk
-        </h1>
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-y-6">
-          <div>
-            <label className="font-semibold block mb-2 text-[#39381F]">
-              Nama Produk <span className="text-red-500">*</span>
-            </label>
-            <input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg"
-              placeholder="Masukkan nama produk"
-            />
+      {/* Show loading while checking authentication */}
+      {userLoading && (
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Memeriksa autentikasi...</p>
+        </div>
+      )}
+
+      {/* Show message if user is not authenticated */}
+      {!userLoading && !user && (
+        <div className="text-center">
+          <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <XCircle className="w-12 h-12 text-red-500" />
           </div>
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="font-semibold text-[#39381F]">
-                Deskripsi <span className="text-red-500">*</span>
-              </label>
-              <button
-                type="button"
-                onClick={handleReviewDescription}
-                disabled={!form.description.trim() || reviewLoading}
-                className="font-bold flex items-center gap-2 px-3 py-1 bg-3 text-white rounded-lg text-sm hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Sparkles size={16} />
-                {reviewLoading ? "Reviewing..." : "Review - AgroMarFeed AI"}
-              </button>
-            </div>
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg"
-              placeholder="Deskripsi produk"
-              rows={3}
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="font-semibold block mb-2 text-[#39381F]">
-                Kategori <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="categoryOptions"
-                value={form.categoryOptions}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg bg-white"
-              >
-                <option value="">Pilih Kategori</option>
-                {kategoriOptions.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="font-semibold block mb-2 text-[#39381F]">
-                Jenis Limbah <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="limbahOptions"
-                value={form.limbahOptions}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg bg-white"
-              >
-                <option value="">Pilih Jenis Limbah</option>
-                {limbahOptions.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="font-semibold block mb-2 text-[#39381F]">
-                Bentuk Fisik <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="fisikOptions"
-                value={form.fisikOptions}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg bg-white"
-              >
-                <option value="">Pilih Bentuk Fisik</option>
-                {fisikOptions.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="font-semibold block mb-2 text-[#39381F]">
-                Harga Satuan <span className="text-red-500">*</span>
-              </label>
-              <input
-                name="price"
-                type="number"
-                value={form.price}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg"
-                placeholder="Harga produk"
-              />
-            </div>
-            <div>
-              <label className="font-semibold block mb-2 text-[#39381F]">
-                Stok <span className="text-red-500">*</span>
-              </label>
-              <input
-                name="stock"
-                type="number"
-                value={form.stock}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg"
-                placeholder="Stok produk"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="font-semibold block mb-2 text-[#39381F]">
-              Upload Gambar Produk <span className="text-red-500">*</span>
-            </label>
-            <div className="space-y-4">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="w-full px-4 py-2 rounded-lg border border-gray-200 bg-white"
-              />
-              {imageFile && (
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <img
-                      src={URL.createObjectURL(imageFile)}
-                      alt="Preview"
-                      className="w-24 h-24 object-cover rounded-lg border"
-                    />
-                    {originalImageFile && (
-                      <button
-                        type="button"
-                        onClick={handleEditImage}
-                        className="absolute -top-2 -right-2 bg-blue-500 text-white p-1 rounded-full hover:bg-blue-600 transition"
-                        title="Edit Gambar"
-                      >
-                        <Crop size={12} />
-                      </button>
-                    )}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    <p>Ukuran: 1:1 (Persegi)</p>
-                    <p>Format: JPG, PNG</p>
-                    {originalImageFile && (
-                      <button
-                        type="button"
-                        onClick={handleEditImage}
-                        className="text-blue-500 hover:text-blue-600 underline"
-                      >
-                        Klik untuk edit posisi & ukuran
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          <div>
-            <label className="font-semibold block mb-2 text-[#39381F]">
-              Varian Berat & Harga <span className="text-red-500">*</span>
-            </label>
-            <div className="flex flex-col gap-2">
-              {form.weights.map((w, idx) => (
-                <div key={idx} className="flex gap-2 items-center">
-                  <input
-                    placeholder="Berat (misal: 1kg)"
-                    value={w.value}
-                    onChange={(e) =>
-                      handleWeightChange(idx, "value", e.target.value)
-                    }
-                    className="input input-bordered rounded"
-                  />
-                  <input
-                    placeholder="Harga"
-                    type="number"
-                    value={w.price}
-                    onChange={(e) =>
-                      handleWeightChange(idx, "price", Number(e.target.value))
-                    }
-                    className="input input-bordered rounded"
-                  />
-                  {form.weights.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeWeight(idx)}
-                      className="bg-red-500 text-white px-2 rounded-[25]"
-                    >
-                      Hapus
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={addWeight}
-                className="bg-2 text-white px-3 py-1 rounded-[25] mt-1 w-fit"
-              >
-                + Tambah Varian
-              </button>
-            </div>
-          </div>
-          {error && <div className="text-red-500 text-sm">{error}</div>}
-          {success && <div className="text-green-600 text-sm">{success}</div>}
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Akses Ditolak
+          </h2>
+          <p className="text-gray-600 mb-4">
+            Anda harus login terlebih dahulu untuk mengakses halaman ini.
+          </p>
           <button
-            type="submit"
-            className="bg-3 hover:bg-yellow-500 text-white hover:scale-105 transition w-full py-3 rounded-[25] font-bold text-lg shadow-lg transition mt-2"
-            disabled={loading}
+            onClick={() => router.push("/auth/login")}
+            className="bg-yellow-400 hover:bg-yellow-500 text-[#39381F] px-6 py-2 rounded-lg font-bold transition"
           >
-            {loading ? "Menyimpan..." : "Simpan Produk"}
+            Login Sekarang
           </button>
-        </form>
+        </div>
+      )}
 
-        {/* Review Popup Window */}
-        {showReviewPopup && (
-          <div
-            className="fixed inset-0 z-50 pointer-events-none"
-            style={{
-              left: `${popupPosition.x}px`,
-              top: `${popupPosition.y}px`,
-              width: `${popupSize.width}px`,
-              height: `${popupSize.height}px`,
-            }}
-          >
-            <div className="bg-white rounded-lg shadow-2xl border-2 border-gray-200 w-full h-full flex flex-col pointer-events-auto">
-              {/* Header */}
-              <div
-                className="bg-gray-100 px-4 py-2 rounded-t-lg flex items-center justify-between cursor-move"
-                onMouseDown={(e) => handleMouseDown(e, "drag")}
-              >
-                <div className="flex items-center gap-2">
-                  <Move size={16} className="text-gray-500" />
-                  <h3 className="text-sm font-semibold text-gray-700">
-                    Review - AgroMarFeed AI
-                  </h3>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setShowReviewPopup(false)}
-                    className="p-1 hover:bg-gray-200 rounded transition"
-                  >
-                    <X size={16} className="text-gray-500" />
-                  </button>
-                </div>
+      {/* Show main content if user is authenticated */}
+      {!userLoading && user && (
+        <div className="w-full max-w-2xl mx-auto bg-white rounded-2xl p-8">
+          <h1 className="text-3xl font-extrabold text-[#39381F] mb-8 text-center">
+            Tambah Produk
+          </h1>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-y-6">
+            <div>
+              <label className="font-semibold block mb-2 text-[#39381F]">
+                Nama Produk <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg"
+                placeholder="Masukkan nama produk"
+              />
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="font-semibold text-[#39381F]">
+                  Deskripsi <span className="text-red-500">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleReviewDescription}
+                  disabled={!form.description.trim() || reviewLoading}
+                  className="font-bold flex items-center gap-2 px-3 py-1 bg-3 text-white rounded-lg text-sm hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Sparkles size={16} />
+                  {reviewLoading ? "Reviewing..." : "Review - AgroMarFeed AI"}
+                </button>
               </div>
-
-              {/* Content */}
-              <div className="flex-1 p-4 overflow-auto">
-                {reviewLoading ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-                    <p className="mt-2 text-gray-600">
-                      AI sedang menganalisis deskripsi...
-                    </p>
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg"
+                placeholder="Deskripsi produk"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="font-semibold block mb-2 text-[#39381F]">
+                  Kategori <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="categoryOptions"
+                  value={form.categoryOptions}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg bg-white"
+                >
+                  <option value="">Pilih Kategori</option>
+                  {kategoriOptions.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="font-semibold block mb-2 text-[#39381F]">
+                  Jenis Limbah <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="limbahOptions"
+                  value={form.limbahOptions}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg bg-white"
+                >
+                  <option value="">Pilih Jenis Limbah</option>
+                  {limbahOptions.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="font-semibold block mb-2 text-[#39381F]">
+                  Bentuk Fisik <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="fisikOptions"
+                  value={form.fisikOptions}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg bg-white"
+                >
+                  <option value="">Pilih Bentuk Fisik</option>
+                  {fisikOptions.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="font-semibold block mb-2 text-[#39381F]">
+                  Harga Satuan <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="price"
+                  type="number"
+                  value={form.price}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg"
+                  placeholder="Harga produk"
+                />
+              </div>
+              <div>
+                <label className="font-semibold block mb-2 text-[#39381F]">
+                  Stok <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="stock"
+                  type="number"
+                  value={form.stock}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg"
+                  placeholder="Stok produk"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="font-semibold block mb-2 text-[#39381F]">
+                Upload Gambar Produk <span className="text-red-500">*</span>
+              </label>
+              <div className="space-y-4">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-200 bg-white"
+                />
+                {imageFile && (
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <img
+                        src={URL.createObjectURL(imageFile)}
+                        alt="Preview"
+                        className="w-24 h-24 object-cover rounded-lg border"
+                      />
+                      {originalImageFile && (
+                        <button
+                          type="button"
+                          onClick={handleEditImage}
+                          className="absolute -top-2 -right-2 bg-blue-500 text-white p-1 rounded-full hover:bg-blue-600 transition"
+                          title="Edit Gambar"
+                        >
+                          <Crop size={12} />
+                        </button>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <p>Ukuran: 1:1 (Persegi)</p>
+                      <p>Format: JPG, PNG</p>
+                      {originalImageFile && (
+                        <button
+                          type="button"
+                          onClick={handleEditImage}
+                          className="text-blue-500 hover:text-blue-600 underline"
+                        >
+                          Klik untuk edit posisi & ukuran
+                        </button>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <div
-                    className="prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{
-                      __html: markdownToHtml(reviewResult),
-                    }}
-                  />
                 )}
               </div>
-
-              {/* Resize Handle */}
-              <div
-                className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
-                onMouseDown={(e) => handleMouseDown(e, "resize")}
-              >
-                <div className="w-0 h-0 border-l-8 border-l-transparent border-b-8 border-b-gray-400"></div>
+            </div>
+            <div>
+              <label className="font-semibold block mb-2 text-[#39381F]">
+                Varian Berat & Harga <span className="text-red-500">*</span>
+              </label>
+              <div className="flex flex-col gap-2">
+                {form.weights.map((w, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <input
+                      placeholder="Berat (misal: 1kg)"
+                      value={w.value}
+                      onChange={(e) =>
+                        handleWeightChange(idx, "value", e.target.value)
+                      }
+                      className="input input-bordered rounded"
+                    />
+                    <input
+                      placeholder="Harga"
+                      type="number"
+                      value={w.price}
+                      onChange={(e) =>
+                        handleWeightChange(idx, "price", Number(e.target.value))
+                      }
+                      className="input input-bordered rounded"
+                    />
+                    {form.weights.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeWeight(idx)}
+                        className="bg-red-500 text-white px-2 rounded-[25]"
+                      >
+                        Hapus
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={addWeight}
+                  className="bg-2 text-white px-3 py-1 rounded-[25] mt-1 w-fit"
+                >
+                  + Tambah Varian
+                </button>
               </div>
             </div>
-          </div>
-        )}
+            {error && <div className="text-red-500 text-sm">{error}</div>}
+            {success && <div className="text-green-600 text-sm">{success}</div>}
+            <button
+              type="submit"
+              className="bg-3 hover:bg-yellow-500 text-white hover:scale-105 transition w-full py-3 rounded-[25] font-bold text-lg shadow-lg transition mt-2"
+              disabled={loading}
+            >
+              {loading ? "Menyimpan..." : "Simpan Produk"}
+            </button>
+          </form>
 
-        {/* Image Cropper Modal */}
-        {showCropModal && originalImageFile && (
-          <ImageCropper
-            imageFile={originalImageFile}
-            onCropComplete={handleCropComplete}
-            onCancel={() => setShowCropModal(false)}
-          />
-        )}
-      </div>
+          {/* Review Popup Window */}
+          {showReviewPopup && (
+            <div
+              className="fixed inset-0 z-50 pointer-events-none"
+              style={{
+                left: `${popupPosition.x}px`,
+                top: `${popupPosition.y}px`,
+                width: `${popupSize.width}px`,
+                height: `${popupSize.height}px`,
+              }}
+            >
+              <div className="bg-white rounded-lg shadow-2xl border-2 border-gray-200 w-full h-full flex flex-col pointer-events-auto">
+                {/* Header */}
+                <div
+                  className="bg-gray-100 px-4 py-2 rounded-t-lg flex items-center justify-between cursor-move"
+                  onMouseDown={(e) => handleMouseDown(e, "drag")}
+                >
+                  <div className="flex items-center gap-2">
+                    <Move size={16} className="text-gray-500" />
+                    <h3 className="text-sm font-semibold text-gray-700">
+                      Review - AgroMarFeed AI
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setShowReviewPopup(false)}
+                      className="p-1 hover:bg-gray-200 rounded transition"
+                    >
+                      <X size={16} className="text-gray-500" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 p-4 overflow-auto">
+                  {reviewLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                      <p className="mt-2 text-gray-600">
+                        AI sedang menganalisis deskripsi...
+                      </p>
+                    </div>
+                  ) : (
+                    <div
+                      className="prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{
+                        __html: markdownToHtml(reviewResult),
+                      }}
+                    />
+                  )}
+                </div>
+
+                {/* Resize Handle */}
+                <div
+                  className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
+                  onMouseDown={(e) => handleMouseDown(e, "resize")}
+                >
+                  <div className="w-0 h-0 border-l-8 border-l-transparent border-b-8 border-b-gray-400"></div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Image Cropper Modal */}
+          {showCropModal && originalImageFile && (
+            <ImageCropper
+              imageFile={originalImageFile}
+              onCropComplete={handleCropComplete}
+              onCancel={() => setShowCropModal(false)}
+            />
+          )}
+        </div>
+      )}
     </section>
   );
 }
