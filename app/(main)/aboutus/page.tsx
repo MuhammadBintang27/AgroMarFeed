@@ -95,7 +95,7 @@ export default function AboutUsPage() {
               {
                 name: "Muhammad Bintang Indra Hidayat",
                 role: "Full Stack Developer",
-                description: '"commit, I push, I build. Just like I do in life."',
+                description: '"I commit, I push, I build. Just like I do in life."',
                 image: "/images/team/bintang.png",
               },
               {
