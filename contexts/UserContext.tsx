@@ -26,6 +26,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const hasInitialized = useRef(false);
   const isFetching = useRef(false);
+  const isOAuthProcessing = useRef(false);
 
   const fetchUser = async () => {
     // Prevent multiple simultaneous calls
@@ -86,9 +87,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   };
 
-  // Initial authentication check - only runs once
+  // Initial authentication check - only runs once and only if not processing OAuth
   useEffect(() => {
-    if (!hasInitialized.current) {
+    if (!hasInitialized.current && !isOAuthProcessing.current) {
       hasInitialized.current = true;
       fetchUser();
     }
@@ -103,6 +104,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       if (isOAuthSuccess && oauthToken) {
         console.log("🔄 OAuth redirect detected with token, validating...");
+        isOAuthProcessing.current = true;
+
         // Remove the oauth parameters from URL
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.delete("oauth");
@@ -123,16 +126,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               setUser(validationData.user);
               setError(null);
               setLoading(false);
+              isOAuthProcessing.current = false;
               return;
             }
 
             // If token validation fails, try regular fetch once
             console.log("🔄 Token validation failed, trying regular fetch...");
             await fetchUser();
+            isOAuthProcessing.current = false;
           } catch (error) {
             console.error("❌ OAuth handling error:", error);
             // Single fallback to regular fetch
             await fetchUser();
+            isOAuthProcessing.current = false;
           }
         };
 
@@ -143,12 +149,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         console.log(
           "🔄 OAuth redirect detected without token, trying regular fetch..."
         );
+        isOAuthProcessing.current = true;
+
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.delete("oauth");
         window.history.replaceState({}, "", newUrl.toString());
 
         // Single attempt to fetch user data
-        fetchUser();
+        fetchUser().finally(() => {
+          isOAuthProcessing.current = false;
+        });
       }
     }
   }, []);
