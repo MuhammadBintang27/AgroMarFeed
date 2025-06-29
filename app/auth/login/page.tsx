@@ -39,14 +39,22 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await login(credentials);
+      console.log('🔍 Login form submitted with:', { email: credentials.email, password: credentials.password ? '[HIDDEN]' : 'missing' });
+      
+      const response = await login(credentials);
+      console.log('✅ Login response:', response);
       
       // Immediately refetch user data to update the UI
+      console.log('🔄 Refetching user data...');
       await refetch();
       
-      // Redirect to home page
-      router.push("/");
+      // Add a small delay to ensure UserContext is updated
+      setTimeout(() => {
+        console.log('✅ Redirecting to home page...');
+        router.push("/");
+      }, 500);
     } catch (err: any) {
+      console.error('❌ Login error:', err);
       setError(err.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
