@@ -32,6 +32,12 @@ export const getCurrentUser = async (): Promise<ApiResponse<User>> => {
   return response.data;
 };
 
+// OAuth session transfer
+export const transferOAuthSession = async (): Promise<ApiResponse<User>> => {
+  const response = await api.get('/api/auth/oauth-session-transfer');
+  return response.data;
+};
+
 // OAuth initiators - use direct backend URLs (required for OAuth to work)
 export const initiateGoogleLogin = (): void => {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;

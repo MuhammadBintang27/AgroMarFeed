@@ -8,7 +8,7 @@ import React, {
   useRef,
 } from "react";
 import { User } from "@/types";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, transferOAuthSession } from "@/lib/auth";
 
 interface UserContextType {
   user: User | null;
@@ -99,13 +99,40 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         // Remove the oauth parameter from URL
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.delete("oauth");
+        newUrl.searchParams.delete("session");
         window.history.replaceState({}, "", newUrl.toString());
 
-        // Fetch user data after a longer delay for mobile browsers
-        setTimeout(() => {
-          console.log("🔄 Fetching user data after OAuth redirect...");
-          fetchUser();
-        }, 3000); // Increased delay for mobile browsers and OAuth processing
+        // First try session transfer, then fallback to regular fetch
+        const handleOAuthSuccess = async () => {
+          try {
+            console.log("🔄 Attempting OAuth session transfer...");
+            const transferData = await transferOAuthSession();
+            
+            if (transferData.success && transferData.user) {
+              console.log("✅ OAuth session transfer successful:", transferData.user);
+              setUser(transferData.user);
+              setLoading(false);
+              return;
+            }
+            
+            // Fallback to regular fetch after delay
+            console.log("🔄 Session transfer failed, falling back to regular fetch...");
+            setTimeout(() => {
+              console.log("🔄 Fetching user data after OAuth redirect...");
+              fetchUser();
+            }, 2000);
+          } catch (error) {
+            console.error("❌ OAuth session transfer error:", error);
+            // Fallback to regular fetch
+            setTimeout(() => {
+              console.log("🔄 Fetching user data after OAuth redirect (fallback)...");
+              fetchUser();
+            }, 2000);
+          }
+        };
+
+        // Start session transfer process
+        handleOAuthSuccess();
       }
     }
   }, []);
