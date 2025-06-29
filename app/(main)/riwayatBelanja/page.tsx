@@ -34,9 +34,10 @@ interface Order {
   };
   order_item: Array<{
     product_id: {
+      _id: string;
       name: string;
       price: number;
-      image?: string;
+      imageUrl?: string;
     };
     jumlah: number;
     subtotal: number;
@@ -80,7 +81,6 @@ export default function OrderHistoryPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<HistoryItemType | null>(null);
-  const [reviewedProductIds, setReviewedProductIds] = useState<string[]>([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewProduct, setReviewProduct] = useState<any>(null);
   const [reviewRating, setReviewRating] = useState(5);
@@ -89,13 +89,14 @@ export default function OrderHistoryPage() {
   const [reviewLoading, setReviewLoading] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPaymentItem, setSelectedPaymentItem] = useState<HistoryItemType | null>(null);
+  const [reviewedOrders, setReviewedOrders] = useState<string[]>([]);
 
   // Helper function to get product ID and name
   const getProductIdAndName = (product: any) => {
-    if (typeof product === 'object' && product !== null) {
-      return { _id: product._id || product.id, name: product.name };
-    }
-    return { _id: product, name: '' };
+    return {
+      _id: product._id || product.id,
+      name: product.name,
+    };
   };
 
   // Helper function to check if item is an appointment
@@ -103,65 +104,68 @@ export default function OrderHistoryPage() {
     return 'konsultan_id' in item;
   };
 
-  useEffect(() => {
-    if (user) {
-      fetchOrders();
-      fetchAppointments();
-      fetchReviewedProducts();
-    }
-  }, [user]);
-
   const fetchOrders = async () => {
+    if (!user) return;
     try {
-      const response = await fetch(`/api/orders/user/${user?._id}`, {
-        headers: {
-          "ngrok-skip-browser-warning": "true"
-        }
-      });
+      const response = await fetch(`/api/orders/user/${user._id}`);
       if (response.ok) {
         const data = await response.json();
         setOrders(data);
       }
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      console.error("Error fetching orders:", error);
     }
   };
 
   const fetchAppointments = async () => {
+    if (!user) return;
     try {
-      const response = await fetch(`/api/appointment?user_id=${user?._id}`, {
-        headers: {
-          "ngrok-skip-browser-warning": "true"
-        }
-      });
+      const response = await fetch(`/api/appointment`);
       if (response.ok) {
         const data = await response.json();
         setAppointments(data);
       }
     } catch (error) {
-      console.error('Error fetching appointments:', error);
-    } finally {
-      setLoading(false);
+      console.error("Error fetching appointments:", error);
     }
   };
 
-  const fetchReviewedProducts = async () => {
+  const fetchReviewedOrders = async () => {
     if (!user) return;
     try {
       const res = await fetch(`/api/reviews/user/${user._id}`);
       if (res.ok) {
         const data = await res.json();
-        setReviewedProductIds(data.map((r: any) => r.product_id));
+        // Extract order_ids from reviews
+        const orderIds = data.map((r: any) => r.order_id?.toString() || r.order_id).filter(Boolean);
+        setReviewedOrders(orderIds);
       }
     } catch (error) {
-      console.error('Error fetching reviewed products:', error);
+      console.error('Error fetching reviewed orders:', error);
     }
   };
 
-  const handleRefreshOrders = async () => {
-    setLoading(true);
-    await Promise.all([fetchOrders(), fetchAppointments()]);
-  };
+  // Load all data when component mounts
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user) return;
+      
+      setLoading(true);
+      try {
+        await Promise.all([
+          fetchOrders(),
+          fetchAppointments(),
+          fetchReviewedOrders()
+        ]);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -227,6 +231,17 @@ export default function OrderHistoryPage() {
     ...orders.map(order => ({ ...order, type: 'order' as const })),
     ...appointments.map(appointment => ({ ...appointment, type: 'appointment' as const }))
   ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const handleRefreshOrders = async () => {
+    setLoading(true);
+    try {
+      await Promise.all([fetchOrders(), fetchAppointments(), fetchReviewedOrders()]);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -362,9 +377,9 @@ export default function OrderHistoryPage() {
                       {item.order_item.map((orderItem, index) => (
                         <div key={index} className="flex items-center space-x-4">
                           <div className="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                            {orderItem.product_id.image ? (
+                            {orderItem.product_id.imageUrl ? (
                               <img
-                                src={orderItem.product_id.image}
+                                src={orderItem.product_id.imageUrl}
                                 alt={orderItem.product_id.name}
                                 className="w-full h-full object-cover rounded-lg"
                               />
@@ -381,21 +396,45 @@ export default function OrderHistoryPage() {
                             <p className="text-sm text-gray-600">
                               {orderItem.jumlah} x Rp {orderItem.product_id.price.toLocaleString()}
                             </p>
-                            {/* Review Button Logic */}
-                            {item.status === 'delivered' && user && !reviewedProductIds.includes(getProductIdAndName(orderItem.product_id)._id) && (
-                              <button
-                                className="text-xs bg-yellow-400 text-[#39381F] px-3 py-1 rounded font-bold mt-2"
-                                onClick={() => {
-                                  setReviewProduct(getProductIdAndName(orderItem.product_id));
-                                  setShowReviewModal(true);
-                                }}
-                              >
-                                Beri Review
-                              </button>
-                            )}
-                            {item.status === 'delivered' && user && reviewedProductIds.includes(getProductIdAndName(orderItem.product_id)._id) && (
-                              <span className="text-xs text-green-600 ml-2">Sudah direview</span>
-                            )}
+                            {/* Review Button Logic - Show only once per order */}
+                            {(() => {
+                              const isDelivered = item.status === 'delivered';
+                              const isReviewed = reviewedOrders.includes(item.orderId);
+                              
+                              // Show review button only for the first product in the order
+                              const isFirstProduct = orderItem === item.order_item[0];
+                              
+                              if (isDelivered && user && !isReviewed && isFirstProduct) {
+                                return (
+                                  <button
+                                    className="text-xs bg-yellow-400 text-[#39381F] px-3 py-1 rounded font-bold mt-2"
+                                    onClick={() => {
+                                      const productInfo = getProductIdAndName(item.order_item[0].product_id);
+                                      setReviewProduct({ 
+                                        ...productInfo,
+                                        order_id: item.orderId 
+                                      });
+                                      setShowReviewModal(true);
+                                    }}
+                                  >
+                                    Beri Review Order Ini
+                                  </button>
+                                );
+                              } else if (isDelivered && user && isReviewed && isFirstProduct) {
+                                return (
+                                  <span className="text-xs text-green-600 font-medium mt-2 inline-block">✓ Order sudah direview</span>
+                                );
+                              } else {
+                                return (
+                                  <span className="text-xs text-gray-500 mt-2 inline-block">
+                                    {item.status === 'pending' ? 'Menunggu pembayaran' : 
+                                     item.status === 'processing' ? 'Sedang diproses' :
+                                     item.status === 'shipped' ? 'Dalam pengiriman' :
+                                     'Belum selesai'}
+                                  </span>
+                                );
+                              }
+                            })()}
                           </div>
                           <div className="text-right">
                             <p className="text-sm font-medium text-gray-900">
@@ -605,6 +644,7 @@ export default function OrderHistoryPage() {
                       rating: reviewRating,
                       ulasan: reviewText,
                       user_id: user?._id || '',
+                      order_id: reviewProduct.order_id,
                     };
 
                     if (gambarBase64) {
@@ -620,10 +660,11 @@ export default function OrderHistoryPage() {
                     if (res.ok) {
                       alert('Review berhasil dikirim!');
                       setShowReviewModal(false);
-                      setReviewedProductIds(ids => [...ids, reviewProduct._id]);
                       setReviewText('');
                       setReviewRating(5);
                       setReviewImage(null);
+                      // Refresh reviewed orders to update UI
+                      await fetchReviewedOrders();
                     } else {
                       const data = await res.json();
                       alert(data.message || 'Gagal mengirim review');

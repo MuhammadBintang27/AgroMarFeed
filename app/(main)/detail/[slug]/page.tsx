@@ -184,6 +184,7 @@ const Detail = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [displayedReviews, setDisplayedReviews] = useState(3); // Show 3 reviews initially
   const params = useParams();
   const slug = params.slug as string;
   const { user } = useUser();
@@ -191,6 +192,16 @@ const Detail = () => {
 
   const increment = () => setQuantity((q) => q + 1);
   const decrement = () => setQuantity((q) => (q > 0 ? q - 1 : 0));
+
+  // Function to load more reviews
+  const loadMoreReviews = () => {
+    setDisplayedReviews(prev => prev + 3);
+  };
+
+  // Function to show all reviews
+  const showAllReviews = () => {
+    setDisplayedReviews(reviews.length);
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -426,9 +437,16 @@ const Detail = () => {
 
         {/* Reviews Section */}
         <section className="w-full pt-8 border-t border-gray-200">
-          <h2 className="text-left text-xl md:text-2xl font-semibold text-black mb-6">
-            Ulasan Produk
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-left text-xl md:text-2xl font-semibold text-black">
+              Ulasan Produk
+            </h2>
+            {reviews.length > 0 && (
+              <span className="text-sm text-gray-600">
+                {displayedReviews} dari {reviews.length} ulasan
+              </span>
+            )}
+          </div>
 
           {reviews.length === 0 ? (
             <div className="text-center py-8">
@@ -438,67 +456,89 @@ const Detail = () => {
               <p className="text-gray-500">Belum ada ulasan untuk produk ini</p>
             </div>
           ) : (
-            <div className="space-y-6">
-              {reviews.map((review) => (
-                <div key={review._id} className="bg-gray-50 rounded-xl p-6">
-                  {/* Review Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      {/* Profile Picture */}
-                      <div className="w-12 h-12 rounded-full bg-2 flex items-center justify-center">
-                        <span className="text-white font-semibold text-lg">
-                          {review.user_id.name.charAt(0).toUpperCase()}
+            <>
+              <div className="space-y-6">
+                {reviews.slice(0, displayedReviews).map((review) => (
+                  <div key={review._id} className="bg-gray-50 rounded-xl p-6">
+                    {/* Review Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        {/* Profile Picture */}
+                        <div className="w-12 h-12 rounded-full bg-2 flex items-center justify-center">
+                          <span className="text-white font-semibold text-lg">
+                            {review.user_id.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+
+                        {/* User Info */}
+                        <div>
+                          <h4 className="font-semibold text-black">
+                            {review.user_id.name}
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {new Date(review.createdAt).toLocaleDateString(
+                              "id-ID",
+                              {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              }
+                            )}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Rating */}
+                      <div className="flex items-center gap-1">
+                        <RatingStars rating={review.rating} />
+                        <span className="text-sm text-gray-600 ml-2">
+                          {review.rating}/5
                         </span>
                       </div>
+                    </div>
 
-                      {/* User Info */}
-                      <div>
-                        <h4 className="font-semibold text-black">
-                          {review.user_id.name}
-                        </h4>
-                        <p className="text-sm text-gray-600">
-                          {new Date(review.createdAt).toLocaleDateString(
-                            "id-ID",
-                            {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            }
-                          )}
-                        </p>
+                    {/* Review Content */}
+                    <div className="mb-4">
+                      <p className="text-black leading-relaxed">
+                        {review.ulasan}
+                      </p>
+                    </div>
+
+                    {/* Review Image */}
+                    {review.gambar && (
+                      <div className="mt-4">
+                        <img
+                          src={review.gambar}
+                          alt="Review image"
+                          className="w-full max-w-xs rounded-lg object-cover"
+                          style={{ maxHeight: "200px" }}
+                        />
                       </div>
-                    </div>
-
-                    {/* Rating */}
-                    <div className="flex items-center gap-1">
-                      <RatingStars rating={review.rating} />
-                      <span className="text-sm text-gray-600 ml-2">
-                        {review.rating}/5
-                      </span>
-                    </div>
+                    )}
                   </div>
+                ))}
+              </div>
 
-                  {/* Review Content */}
-                  <div className="mb-4">
-                    <p className="text-black leading-relaxed">
-                      {review.ulasan}
-                    </p>
-                  </div>
-
-                  {/* Review Image */}
-                  {review.gambar && (
-                    <div className="mt-4">
-                      <img
-                        src={review.gambar}
-                        alt="Review image"
-                        className="w-full max-w-xs rounded-lg object-cover"
-                        style={{ maxHeight: "200px" }}
-                      />
-                    </div>
+              {/* Pagination Controls */}
+              {displayedReviews < reviews.length && (
+                <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    className="bg-3 px-6 py-2 rounded-full text-black font-medium hover:bg-3/90 transition"
+                    onClick={loadMoreReviews}
+                  >
+                    Lihat {Math.min(3, reviews.length - displayedReviews)} Ulasan Lainnya
+                  </button>
+                  {reviews.length > 6 && (
+                    <button
+                      className="bg-gray-200 px-6 py-2 rounded-full text-black font-medium hover:bg-gray-300 transition"
+                      onClick={showAllReviews}
+                    >
+                      Lihat Semua Ulasan
+                    </button>
                   )}
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </section>
         {/* Produk Lain */}
