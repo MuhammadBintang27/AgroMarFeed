@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://agromarfeed-backend.vercel.app';
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,6 +38,10 @@ export async function GET(request: NextRequest) {
     responseHeaders.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     responseHeaders.set('Pragma', 'no-cache');
     responseHeaders.set('Expires', '0');
+    
+    // Add CORS headers for OAuth
+    responseHeaders.set('Access-Control-Allow-Credentials', 'true');
+    responseHeaders.set('Access-Control-Allow-Origin', request.headers.get('origin') || '*');
     
     return NextResponse.json(data, { 
       status: response.status,

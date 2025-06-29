@@ -6,6 +6,7 @@ import { AuthCredentials } from "@/types";
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "@/components/footer/Footer";
+import { useUser } from "@/contexts/UserContext";
 
 export default function LoginPage() {
   const [credentials, setCredentials] = useState<AuthCredentials>({
@@ -14,11 +15,22 @@ export default function LoginPage() {
   });
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [isClient, setIsClient] = useState(false);
   const router = useRouter();
+  const { refetch } = useUser();
 
+  // Check for OAuth errors on page load using window.location instead of useSearchParams
   useEffect(() => {
-    setIsClient(true);
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const oauthError = urlParams.get("error");
+      if (oauthError === "oauth_failed") {
+        setError("OAuth login failed. Please try again or use email/password login.");
+        // Clean up the URL
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete("error");
+        window.history.replaceState({}, "", newUrl.toString());
+      }
+    }
   }, []);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -27,14 +39,13 @@ export default function LoginPage() {
     setError("");
 
     try {
-      // Login
       await login(credentials);
-
-      // Simple redirect after successful login
-      // Let UserContext handle the user state update
-      if (isClient) {
-        router.push("/");
-      }
+      
+      // Immediately refetch user data to update the UI
+      await refetch();
+      
+      // Redirect to home page
+      router.push("/");
     } catch (err: any) {
       setError(err.response?.data?.message || "Login failed");
     } finally {
