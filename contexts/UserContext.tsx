@@ -8,7 +8,7 @@ import React, {
   useRef,
 } from "react";
 import { User } from "@/types";
-import { getCurrentUser, transferOAuthSession } from "@/lib/auth";
+import { getCurrentUser, transferOAuthSession, validateOAuthToken } from "@/lib/auth";
 
 interface UserContextType {
   user: User | null;
@@ -92,20 +92,33 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // Handle OAuth redirect - only runs if there's an OAuth parameter
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const isOAuthRedirect = window.location.search.includes("oauth=success");
+      const urlParams = new URLSearchParams(window.location.search);
+      const isOAuthSuccess = urlParams.get("oauth") === "success";
+      const oauthToken = urlParams.get("token");
 
-      if (isOAuthRedirect) {
-        console.log("🔄 OAuth redirect detected, fetching user data...");
-        // Remove the oauth parameter from URL
+      if (isOAuthSuccess && oauthToken) {
+        console.log("🔄 OAuth redirect detected with token, validating...");
+        // Remove the oauth parameters from URL
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.delete("oauth");
-        newUrl.searchParams.delete("session");
+        newUrl.searchParams.delete("token");
         window.history.replaceState({}, "", newUrl.toString());
 
-        // First try session transfer, then fallback to regular fetch
+        // Validate OAuth token
         const handleOAuthSuccess = async () => {
           try {
-            console.log("🔄 Attempting OAuth session transfer...");
+            console.log("🔄 Validating OAuth token...");
+            const validationData = await validateOAuthToken(oauthToken);
+            
+            if (validationData.success && validationData.user) {
+              console.log("✅ OAuth token validation successful:", validationData.user);
+              setUser(validationData.user);
+              setLoading(false);
+              return;
+            }
+            
+            // Fallback to session transfer
+            console.log("🔄 Token validation failed, trying session transfer...");
             const transferData = await transferOAuthSession();
             
             if (transferData.success && transferData.user) {
@@ -115,15 +128,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               return;
             }
             
-            // Fallback to regular fetch after delay
+            // Final fallback to regular fetch
             console.log("🔄 Session transfer failed, falling back to regular fetch...");
             setTimeout(() => {
               console.log("🔄 Fetching user data after OAuth redirect...");
               fetchUser();
             }, 2000);
           } catch (error) {
-            console.error("❌ OAuth session transfer error:", error);
-            // Fallback to regular fetch
+            console.error("❌ OAuth handling error:", error);
+            // Final fallback to regular fetch
             setTimeout(() => {
               console.log("🔄 Fetching user data after OAuth redirect (fallback)...");
               fetchUser();
@@ -131,8 +144,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           }
         };
 
-        // Start session transfer process
+        // Start OAuth handling process
         handleOAuthSuccess();
+      } else if (isOAuthSuccess) {
+        // OAuth success but no token, try session transfer
+        console.log("🔄 OAuth redirect detected without token, trying session transfer...");
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete("oauth");
+        window.history.replaceState({}, "", newUrl.toString());
+
+        setTimeout(() => {
+          console.log("🔄 Fetching user data after OAuth redirect...");
+          fetchUser();
+        }, 2000);
       }
     }
   }, []);

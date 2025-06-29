@@ -38,6 +38,12 @@ export const transferOAuthSession = async (): Promise<ApiResponse<User>> => {
   return response.data;
 };
 
+// Validate OAuth token
+export const validateOAuthToken = async (token: string): Promise<ApiResponse<User>> => {
+  const response = await api.post('/api/auth/validate-oauth-token', { token });
+  return response.data;
+};
+
 // OAuth initiators - use direct backend URLs (required for OAuth to work)
 export const initiateGoogleLogin = (): void => {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
