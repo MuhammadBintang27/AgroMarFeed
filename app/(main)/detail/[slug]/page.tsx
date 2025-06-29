@@ -515,49 +515,51 @@ const Detail = () => {
                   href={`/detail/${product._id}`}
                   className="flex-shrink-0 w-48"
                 >
-                  <div className="bg-7 rounded-2xl p-3 flex flex-col justify-between hover:shadow-lg transition cursor-pointer h-full">
-                    <div className="w-full flex justify-center items-center mb-2 pt-1 h-32">
+                  <div className="bg-7 rounded-2xl flex flex-col justify-between hover:shadow-lg transition cursor-pointer h-full overflow-hidden">
+                    <div className="w-full aspect-square">
                       <Image
                         src={product.imageUrl || "/images/placeholder.png"}
                         alt={product.name}
                         width={120}
                         height={120}
-                        className="object-contain w-full h-full max-w-none"
+                        className="object-contain w-full h-full"
                       />
                     </div>
-                    <h3 className="text-sm font-semibold text-left text-black leading-tight mb-1 line-clamp-2">
-                      {product.name}
-                    </h3>
-                    <div className="flex justify-between text-xs text-black/40 mb-1 px-1">
-                      <span className="flex items-center gap-1">
-                        <CategoryIcon category={product.categoryOptions} />
-                        {product.limbahOptions && (
-                          <LimbahIcon limbah={product.limbahOptions} />
-                        )}
-                        {product.fisikOptions && (
-                          <FisikIcon fisik={product.fisikOptions} />
-                        )}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <SingleStarRating rating={product.rating || 0} />
-                        <span className="text-black/60 text-xs">
-                          ({product.rating?.toFixed(1) || "0.0"})
+                    <div className="p-3">
+                      <h3 className="text-sm font-semibold text-left text-black leading-tight mb-1 line-clamp-2">
+                        {product.name}
+                      </h3>
+                      <div className="flex justify-between text-xs text-black/40 mb-1 px-1">
+                        <span className="flex items-center gap-1">
+                          <CategoryIcon category={product.categoryOptions} />
+                          {product.limbahOptions && (
+                            <LimbahIcon limbah={product.limbahOptions} />
+                          )}
+                          {product.fisikOptions && (
+                            <FisikIcon fisik={product.fisikOptions} />
+                          )}
                         </span>
+                        <div className="flex items-center gap-1">
+                          <SingleStarRating rating={product.rating || 0} />
+                          <span className="text-black/60 text-xs">
+                            ({product.rating?.toFixed(1) || "0.0"})
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex justify-between items-center px-1">
-                      <span className="text-sm font-semibold text-black">
-                        Rp{product.price.toLocaleString()}
-                      </span>
-                      <div className="flex items-center">
-                        <span
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
-                        >
-                          <WishlistButton productId={product._id} size="sm" />
+                      <div className="flex justify-between items-center px-1">
+                        <span className="text-sm font-semibold text-black">
+                          Rp{product.price.toLocaleString()}
                         </span>
+                        <div className="flex items-center">
+                          <span
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                          >
+                            <WishlistButton productId={product._id} size="sm" />
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -579,49 +581,51 @@ const Detail = () => {
                   href={`/detail/${product._id}`}
                   className="flex-shrink-0 w-full"
                 >
-                  <div className="bg-7 rounded-2xl p-4 flex flex-col justify-between hover:shadow-lg transition cursor-pointer h-full">
-                    <div className="w-full flex justify-center items-center mb-3 pt-2 h-40">
+                  <div className="bg-7 rounded-2xl flex flex-col justify-between hover:shadow-lg transition cursor-pointer h-full overflow-hidden">
+                    <div className="w-full aspect-square">
                       <Image
                         src={product.imageUrl || "/images/placeholder.png"}
                         alt={product.name}
                         width={150}
                         height={150}
-                        className="object-contain w-full h-full max-w-none"
+                        className="object-contain w-full h-full"
                       />
                     </div>
-                    <h3 className="text-base font-semibold text-left text-black leading-tight mb-1 line-clamp-2">
-                      {product.name}
-                    </h3>
-                    <div className="flex justify-between text-sm text-black/40 mb-1 px-1">
-                      <span className="flex items-center gap-1">
-                        <CategoryIcon category={product.categoryOptions} />
-                        {product.limbahOptions && (
-                          <LimbahIcon limbah={product.limbahOptions} />
-                        )}
-                        {product.fisikOptions && (
-                          <FisikIcon fisik={product.fisikOptions} />
-                        )}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <SingleStarRating rating={product.rating || 0} />
-                        <span className="text-black/60 text-xs">
-                          ({product.rating?.toFixed(1) || "0.0"})
+                    <div className="p-4">
+                      <h3 className="text-base font-semibold text-left text-black leading-tight mb-1 line-clamp-2">
+                        {product.name}
+                      </h3>
+                      <div className="flex justify-between text-sm text-black/40 mb-1 px-1">
+                        <span className="flex items-center gap-1">
+                          <CategoryIcon category={product.categoryOptions} />
+                          {product.limbahOptions && (
+                            <LimbahIcon limbah={product.limbahOptions} />
+                          )}
+                          {product.fisikOptions && (
+                            <FisikIcon fisik={product.fisikOptions} />
+                          )}
                         </span>
+                        <div className="flex items-center gap-1">
+                          <SingleStarRating rating={product.rating || 0} />
+                          <span className="text-black/60 text-xs">
+                            ({product.rating?.toFixed(1) || "0.0"})
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex justify-between items-center px-1">
-                      <span className="text-base font-semibold text-black">
-                        Rp{product.price.toLocaleString()}
-                      </span>
-                      <div className="flex items-center">
-                        <span
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
-                        >
-                          <WishlistButton productId={product._id} size="sm" />
+                      <div className="flex justify-between items-center px-1">
+                        <span className="text-base font-semibold text-black">
+                          Rp{product.price.toLocaleString()}
                         </span>
+                        <div className="flex items-center">
+                          <span
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                          >
+                            <WishlistButton productId={product._id} size="sm" />
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -130,41 +130,41 @@ export default function Header() {
           </header>
           {/* Bottom Mobile Navigation */}
           <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-200">
-            <div className="flex items-center justify-around py-2">
+            <div className="flex items-center justify-around py-1">
               <Link
                 href="/"
-                className="flex flex-col items-center py-2 px-3 text-gray-600 hover:text-1 transition-colors"
+                className="flex flex-col items-center py-1 px-2 text-gray-600 hover:text-1 transition-colors"
               >
-                <FaHome size={20} />
-                <span className="text-xs mt-1">Beranda</span>
+                <FaHome size={18} />
+                <span className="text-xs mt-0.5">Beranda</span>
               </Link>
               <Link
                 href="/katalog"
-                className="flex flex-col items-center py-2 px-3 text-gray-600 hover:text-1 transition-colors"
+                className="flex flex-col items-center py-1 px-2 text-gray-600 hover:text-1 transition-colors"
               >
-                <FaSearch size={20} />
-                <span className="text-xs mt-1">Cari Pakan</span>
+                <FaSearch size={18} />
+                <span className="text-xs mt-0.5">Cari Pakan</span>
               </Link>
               <Link
                 href="/konsultasi"
-                className="flex flex-col items-center py-2 px-3 text-gray-600 hover:text-1 transition-colors"
+                className="flex flex-col items-center py-1 px-2 text-gray-600 hover:text-1 transition-colors"
               >
-                <FaComments size={20} />
-                <span className="text-xs mt-1">Konsul</span>
+                <FaComments size={18} />
+                <span className="text-xs mt-0.5">Konsul</span>
               </Link>
               <Link
                 href="/artikel"
-                className="flex flex-col items-center py-2 px-3 text-gray-600 hover:text-1 transition-colors"
+                className="flex flex-col items-center py-1 px-2 text-gray-600 hover:text-1 transition-colors"
               >
-                <FaNewspaper size={20} />
-                <span className="text-xs mt-1">Artikel</span>
+                <FaNewspaper size={18} />
+                <span className="text-xs mt-0.5">Artikel</span>
               </Link>
               <Link
                 href={user ? "/profile" : "/auth/login"}
-                className="flex flex-col items-center py-2 px-3 text-gray-600 hover:text-1 transition-colors"
+                className="flex flex-col items-center py-1 px-2 text-gray-600 hover:text-1 transition-colors"
               >
-                <FaUserCircle size={20} />
-                <span className="text-xs mt-1">Akun</span>
+                <FaUserCircle size={18} />
+                <span className="text-xs mt-0.5">Akun</span>
               </Link>
             </div>
           </nav>
