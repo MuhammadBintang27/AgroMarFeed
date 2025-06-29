@@ -154,16 +154,16 @@ const FisikIcon = ({ fisik }: { fisik: string }) => {
 
 // Loading Skeleton for Product Cards
 const ProductCardSkeleton = () => (
-  <div className="bg-7 rounded-2xl p-4 flex flex-col justify-between h-full animate-pulse">
-    <div className="w-full flex justify-center items-center mb-4 pt-2 h-36 md:h-60">
-      <div className="w-full h-full bg-gray-300 rounded-lg"></div>
+  <div className="bg-7 rounded-2xl flex flex-col justify-between h-full animate-pulse overflow-hidden">
+    <div className="w-full aspect-square bg-gray-300"></div>
+    <div className="p-4">
+      <div className="h-4 bg-gray-300 rounded mb-2"></div>
+      <div className="flex justify-between mb-1">
+        <div className="h-3 bg-gray-300 rounded w-16"></div>
+        <div className="h-3 bg-gray-300 rounded w-12"></div>
+      </div>
+      <div className="h-4 bg-gray-300 rounded w-20"></div>
     </div>
-    <div className="h-4 bg-gray-300 rounded mb-2"></div>
-    <div className="flex justify-between mb-1">
-      <div className="h-3 bg-gray-300 rounded w-16"></div>
-      <div className="h-3 bg-gray-300 rounded w-12"></div>
-    </div>
-    <div className="h-4 bg-gray-300 rounded w-20"></div>
   </div>
 );
 
@@ -207,8 +207,8 @@ const ProdukPakan = () => {
         className="flex-shrink-0"
         onClick={() => console.log("Navigating to:", `/detail/${product._id}`)}
       >
-        <div className="bg-7 rounded-2xl p-4 flex flex-col justify-between hover:shadow-lg transition cursor-pointer h-full">
-          <div className="w-full flex justify-center items-center mb-4 pt-2 h-36 md:h-60">
+        <div className="bg-7 rounded-2xl flex flex-col justify-between hover:shadow-lg transition cursor-pointer h-full overflow-hidden">
+          <div className="w-full aspect-square">
             <Image
               src={product.imageUrl || "/images/placeholder.png"}
               alt={product.name}
@@ -217,39 +217,40 @@ const ProdukPakan = () => {
               className="object-contain w-full h-full"
             />
           </div>
+          <div className="p-4">
+            <h3 className="text-sm md:text-base font-semibold text-left text-black leading-tight">
+              {product.name}
+            </h3>
 
-          <h3 className="text-sm md:text-base font-semibold text-left text-black leading-tight">
-            {product.name}
-          </h3>
-
-          <div className="flex justify-between text-xs md:text-sm text-black/40 mb-1 px-1">
-            <span className="flex items-center gap-1">
-              <CategoryIcon category={product.categoryOptions} />
-              {product.limbahOptions && (
-                <LimbahIcon limbah={product.limbahOptions} />
-              )}
-              {product.fisikOptions && (
-                <FisikIcon fisik={product.fisikOptions} />
-              )}
-            </span>
-            <span className="flex items-center gap-1 text-yellow-500 text-[12px] md:text-[14px]">
-              {/* Mobile: Single star, Desktop: Full stars */}
-              <div className="sm:hidden">
-                <MobileRatingStar rating={product.rating || 0} />
-              </div>
-              <div className="hidden sm:block">
-                <RatingStars rating={product.rating || 0} />
-              </div>
-              <span className="text-black/60">
-                ({product.rating?.toFixed(1) || "0.0"})
+            <div className="flex justify-between text-xs md:text-sm text-black/40 mb-1 px-1">
+              <span className="flex items-center gap-1">
+                <CategoryIcon category={product.categoryOptions} />
+                {product.limbahOptions && (
+                  <LimbahIcon limbah={product.limbahOptions} />
+                )}
+                {product.fisikOptions && (
+                  <FisikIcon fisik={product.fisikOptions} />
+                )}
               </span>
-            </span>
-          </div>
+              <span className="flex items-center gap-1 text-yellow-500 text-[12px] md:text-[14px]">
+                {/* Mobile: Single star, Desktop: Full stars */}
+                <div className="sm:hidden">
+                  <MobileRatingStar rating={product.rating || 0} />
+                </div>
+                <div className="hidden sm:block">
+                  <RatingStars rating={product.rating || 0} />
+                </div>
+                <span className="text-black/60">
+                  ({product.rating?.toFixed(1) || "0.0"})
+                </span>
+              </span>
+            </div>
 
-          <div className="flex justify-between items-center px-1">
-            <span className="text-sm md:text-base font-semibold text-black">
-              Rp{product.price.toLocaleString()}
-            </span>
+            <div className="flex justify-between items-center px-1">
+              <span className="text-sm md:text-base font-semibold text-black">
+                Rp{product.price.toLocaleString()}
+              </span>
+            </div>
           </div>
         </div>
       </Link>
@@ -369,8 +370,8 @@ const ProdukPakan = () => {
               href={`/detail/${product._id}`}
               className="flex-shrink-0"
             >
-              <div className="bg-7 rounded-2xl p-4 flex flex-col justify-between hover:shadow-lg transition cursor-pointer h-full">
-                <div className="w-full flex justify-center items-center mb-4 pt-2 h-36 md:h-60">
+              <div className="bg-7 rounded-2xl flex flex-col justify-between hover:shadow-lg transition cursor-pointer h-full overflow-hidden">
+                <div className="w-full aspect-square">
                   <Image
                     src={product.imageUrl || "/images/placeholder.png"}
                     alt={product.name}
@@ -379,39 +380,40 @@ const ProdukPakan = () => {
                     className="object-contain w-full h-full"
                   />
                 </div>
+                <div className="p-4">
+                  <h3 className="text-sm md:text-base font-semibold text-left text-black leading-tight">
+                    {product.name}
+                  </h3>
 
-                <h3 className="text-sm md:text-base font-semibold text-left text-black leading-tight">
-                  {product.name}
-                </h3>
-
-                <div className="flex justify-between text-xs md:text-sm text-black/40 mb-1 px-1">
-                  <span className="flex items-center gap-1">
-                    <CategoryIcon category={product.categoryOptions} />
-                    {product.limbahOptions && (
-                      <LimbahIcon limbah={product.limbahOptions} />
-                    )}
-                    {product.fisikOptions && (
-                      <FisikIcon fisik={product.fisikOptions} />
-                    )}
-                  </span>
-                  <span className="flex items-center gap-1 text-yellow-500 text-[12px] md:text-[14px]">
-                    {/* Mobile: Single star, Desktop: Full stars */}
-                    <div className="sm:hidden">
-                      <MobileRatingStar rating={product.rating || 0} />
-                    </div>
-                    <div className="hidden sm:block">
-                      <RatingStars rating={product.rating || 0} />
-                    </div>
-                    <span className="text-black/60">
-                      ({product.rating?.toFixed(1) || "0.0"})
+                  <div className="flex justify-between text-xs md:text-sm text-black/40 mb-1 px-1">
+                    <span className="flex items-center gap-1">
+                      <CategoryIcon category={product.categoryOptions} />
+                      {product.limbahOptions && (
+                        <LimbahIcon limbah={product.limbahOptions} />
+                      )}
+                      {product.fisikOptions && (
+                        <FisikIcon fisik={product.fisikOptions} />
+                      )}
                     </span>
-                  </span>
-                </div>
+                    <span className="flex items-center gap-1 text-yellow-500 text-[12px] md:text-[14px]">
+                      {/* Mobile: Single star, Desktop: Full stars */}
+                      <div className="sm:hidden">
+                        <MobileRatingStar rating={product.rating || 0} />
+                      </div>
+                      <div className="hidden sm:block">
+                        <RatingStars rating={product.rating || 0} />
+                      </div>
+                      <span className="text-black/60">
+                        ({product.rating?.toFixed(1) || "0.0"})
+                      </span>
+                    </span>
+                  </div>
 
-                <div className="flex justify-between items-center px-1">
-                  <span className="text-sm md:text-base font-semibold text-black">
-                    Rp{product.price.toLocaleString()}
-                  </span>
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-sm md:text-base font-semibold text-black">
+                      Rp{product.price.toLocaleString()}
+                    </span>
+                  </div>
                 </div>
               </div>
             </Link>

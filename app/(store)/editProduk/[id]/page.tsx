@@ -1,8 +1,18 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import imageCompression from "browser-image-compression";
-import { Sparkles, X, Maximize2, Minimize2, Move } from "lucide-react";
+import {
+  Sparkles,
+  X,
+  Maximize2,
+  Minimize2,
+  Move,
+  Crop,
+  RotateCw,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
 
 const defaultWeight = { id: "", value: "", price: 0 };
 
@@ -26,6 +36,223 @@ const markdownToHtml = (markdown: string) => {
     .replace(/\n/g, "<br>")
     .replace(/^- (.*)/gm, '<li class="ml-4">$1</li>')
     .replace(/(<li.*<\/li>)/g, '<ul class="list-disc ml-4 mb-2">$1</ul>');
+};
+
+// Image Cropper Component
+const ImageCropper = ({
+  imageFile,
+  onCropComplete,
+  onCancel,
+}: {
+  imageFile: File;
+  onCropComplete: (croppedImage: File) => void;
+  onCancel: () => void;
+}) => {
+  const [scale, setScale] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    if (imageFile && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+
+      img.onload = () => {
+        // Set canvas size to 400x400 (1:1 ratio)
+        canvas.width = 400;
+        canvas.height = 400;
+
+        // Calculate initial scale to fit image in canvas
+        const scaleX = canvas.width / img.width;
+        const scaleY = canvas.height / img.height;
+        const initialScale = Math.max(scaleX, scaleY);
+
+        setScale(initialScale);
+        drawImage();
+      };
+
+      img.src = URL.createObjectURL(imageFile);
+      imageRef.current = img;
+    }
+  }, [imageFile]);
+
+  const drawImage = () => {
+    if (!canvasRef.current || !imageRef.current) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    const img = imageRef.current;
+
+    if (!ctx) return;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Save context
+    ctx.save();
+
+    // Move to center
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+
+    // Apply transformations
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.scale(scale, scale);
+
+    // Draw image centered
+    ctx.drawImage(
+      img,
+      -img.width / 2 + position.x / scale,
+      -img.height / 2 + position.y / scale,
+      img.width,
+      img.height
+    );
+
+    // Restore context
+    ctx.restore();
+  };
+
+  useEffect(() => {
+    drawImage();
+  }, [scale, rotation, position]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) {
+      setPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleCrop = () => {
+    if (!canvasRef.current) return;
+
+    canvasRef.current.toBlob(
+      (blob) => {
+        if (blob) {
+          const croppedFile = new File([blob], imageFile.name, {
+            type: "image/jpeg",
+            lastModified: Date.now(),
+          });
+          onCropComplete(croppedFile);
+        }
+      },
+      "image/jpeg",
+      0.9
+    );
+  };
+
+  const resetTransform = () => {
+    setScale(1);
+    setRotation(0);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg p-6 max-w-2xl w-full">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Edit Gambar (1:1)</h3>
+          <button
+            onClick={onCancel}
+            className="p-2 hover:bg-gray-100 rounded-full"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Canvas Container */}
+          <div className="flex-1">
+            <div className="border-2 border-gray-300 rounded-lg overflow-hidden inline-block">
+              <canvas
+                ref={canvasRef}
+                width={400}
+                height={400}
+                className="block cursor-move"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+              />
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="lg:w-64 space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Zoom</label>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setScale(Math.max(0.1, scale - 0.1))}
+                  className="p-2 bg-gray-100 rounded hover:bg-gray-200"
+                >
+                  <ZoomOut size={16} />
+                </button>
+                <span className="text-sm min-w-[60px] text-center">
+                  {Math.round(scale * 100)}%
+                </span>
+                <button
+                  onClick={() => setScale(Math.min(3, scale + 0.1))}
+                  className="p-2 bg-gray-100 rounded hover:bg-gray-200"
+                >
+                  <ZoomIn size={16} />
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Rotasi</label>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setRotation(rotation - 90)}
+                  className="p-2 bg-gray-100 rounded hover:bg-gray-200"
+                >
+                  <RotateCw size={16} />
+                </button>
+                <span className="text-sm min-w-[60px] text-center">
+                  {rotation}°
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <button
+                onClick={resetTransform}
+                className="w-full p-2 bg-gray-100 rounded hover:bg-gray-200 text-sm"
+              >
+                Reset
+              </button>
+              <button
+                onClick={handleCrop}
+                className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+              >
+                <Crop size={16} className="inline mr-2" />
+                Crop & Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default function EditProdukPage() {
@@ -55,6 +282,8 @@ export default function EditProdukPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [originalImageFile, setOriginalImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (!productId) return;
@@ -234,14 +463,28 @@ export default function EditProdukPage() {
             maxWidthOrHeight: 800,
             useWebWorker: true,
           });
+          setOriginalImageFile(compressedFile);
           setImageFile(compressedFile);
         } catch (err) {
           alert("Gagal kompres gambar, gunakan file asli.");
+          setOriginalImageFile(file);
           setImageFile(file);
         }
       } else {
+        setOriginalImageFile(file);
         setImageFile(file);
       }
+    }
+  };
+
+  const handleCropComplete = (croppedImage: File) => {
+    setImageFile(croppedImage);
+    setShowCropModal(false);
+  };
+
+  const handleEditImage = () => {
+    if (originalImageFile) {
+      setShowCropModal(true);
     }
   };
 
@@ -436,7 +679,7 @@ export default function EditProdukPage() {
             <label className="font-semibold block mb-2 text-[#39381F]">
               Upload Gambar Produk <span className="text-red-500">*</span>
             </label>
-            <div className="flex items-center gap-4">
+            <div className="space-y-4">
               <input
                 type="file"
                 accept="image/*"
@@ -444,13 +687,42 @@ export default function EditProdukPage() {
                 className="w-full px-4 py-2 rounded-lg border border-gray-200 bg-white"
               />
               {(imageFile || form.imageUrl) && (
-                <img
-                  src={
-                    imageFile ? URL.createObjectURL(imageFile) : form.imageUrl
-                  }
-                  alt="Preview"
-                  className="w-20 h-20 object-cover rounded-lg border"
-                />
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <img
+                      src={
+                        imageFile
+                          ? URL.createObjectURL(imageFile)
+                          : form.imageUrl
+                      }
+                      alt="Preview"
+                      className="w-24 h-24 object-cover rounded-lg border"
+                    />
+                    {originalImageFile && (
+                      <button
+                        type="button"
+                        onClick={handleEditImage}
+                        className="absolute -top-2 -right-2 bg-blue-500 text-white p-1 rounded-full hover:bg-blue-600 transition"
+                        title="Edit Gambar"
+                      >
+                        <Crop size={12} />
+                      </button>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <p>Ukuran: 1:1 (Persegi)</p>
+                    <p>Format: JPG, PNG</p>
+                    {originalImageFile && (
+                      <button
+                        type="button"
+                        onClick={handleEditImage}
+                        className="text-blue-500 hover:text-blue-600 underline"
+                      >
+                        Klik untuk edit posisi & ukuran
+                      </button>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -567,6 +839,15 @@ export default function EditProdukPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Image Cropper Modal */}
+        {showCropModal && originalImageFile && (
+          <ImageCropper
+            imageFile={originalImageFile}
+            onCropComplete={handleCropComplete}
+            onCancel={() => setShowCropModal(false)}
+          />
         )}
       </div>
     </section>

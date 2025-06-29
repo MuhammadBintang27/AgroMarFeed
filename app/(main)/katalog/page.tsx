@@ -3,7 +3,7 @@ import Button from "@/components/ui/Button";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
-import { Search, Filter, Heart } from "lucide-react";
+import { Search, Filter, Heart, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { fetchProducts, Product } from "@/lib/api/fetchProducts";
 import ChatbotWidget from "@/components/ChatbotWidget";
@@ -157,6 +157,7 @@ const Katalog = () => {
   const [activeCategory, setActiveCategory] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const categories = [
     { label: "Ruminansia", image: "/images/kategori/Ruminansia.png" },
@@ -222,6 +223,17 @@ const Katalog = () => {
 
   const displayedProducts = filteredProducts.slice(0, visibleCount);
 
+  const handleSearch = () => {
+    setSearchLoading(true);
+    setSearchTerm(searchInput);
+
+    // Simulate loading animation
+    setTimeout(() => {
+      setSearchLoading(false);
+      setVisibleCount(8); // Reset visible count when searching
+    }, 800);
+  };
+
   const renderProductCard = (product: Product) => {
     if (!product._id) return null;
 
@@ -230,57 +242,59 @@ const Katalog = () => {
         href={`/detail/${product._id}`}
         className="flex-shrink-0 w-full sm:w-72 h-[400px]"
       >
-        <div className="bg-7 rounded-2xl p-2 sm:p-3 md:p-4 flex flex-col justify-between hover:shadow-lg transition cursor-pointer h-full">
-          <div className="w-full flex justify-center items-center mb-1 sm:mb-2 md:mb-3 pt-1 sm:pt-2 h-32 sm:h-40 md:h-52">
+        <div className="bg-7 rounded-2xl flex flex-col justify-between hover:shadow-lg transition cursor-pointer h-full overflow-hidden">
+          <div className="w-full aspect-square">
             <Image
               src={product.imageUrl || "/images/placeholder.png"}
               alt={product.name}
               width={200}
               height={200}
-              className="object-contain w-full h-full max-w-none"
+              className="object-contain w-full h-full"
             />
           </div>
-          <h3 className="text-xs sm:text-sm md:text-base font-semibold text-left text-black leading-tight mb-0.5 sm:mb-1 line-clamp-2">
-            {product.name}
-          </h3>
-          <div className="flex justify-between text-[10px] sm:text-xs md:text-sm text-black/40 mb-0.5 sm:mb-1 px-0.5 sm:px-1">
-            <span className="flex items-center gap-1">
-              <CategoryIcon category={product.categoryOptions} />
-              {product.limbahOptions && (
-                <LimbahIcon limbah={product.limbahOptions} />
-              )}
-              {product.fisikOptions && (
-                <FisikIcon fisik={product.fisikOptions} />
-              )}
-            </span>
-            <div className="flex items-center gap-0.5 sm:gap-1">
-              <span className="scale-75 sm:scale-100">
-                {/* Mobile & Tablet: Single star, Desktop: Full stars */}
-                <div className="lg:hidden">
-                  <MobileRatingStar rating={product.rating || 0} />
-                </div>
-                <div className="hidden lg:block">
-                  <RatingStars rating={product.rating || 0} />
-                </div>
+          <div className="p-2 sm:p-3 md:p-4">
+            <h3 className="text-xs sm:text-sm md:text-base font-semibold text-left text-black leading-tight mb-0.5 sm:mb-1 line-clamp-2">
+              {product.name}
+            </h3>
+            <div className="flex justify-between text-[10px] sm:text-xs md:text-sm text-black/40 mb-0.5 sm:mb-1 px-0.5 sm:px-1">
+              <span className="flex items-center gap-1">
+                <CategoryIcon category={product.categoryOptions} />
+                {product.limbahOptions && (
+                  <LimbahIcon limbah={product.limbahOptions} />
+                )}
+                {product.fisikOptions && (
+                  <FisikIcon fisik={product.fisikOptions} />
+                )}
               </span>
-              <span className="text-black/60 text-[8px] sm:text-xs -ml-0.5 sm:ml-0">
-                ({product.rating?.toFixed(1) || "0.0"})
-              </span>
+              <div className="flex items-center gap-0.5 sm:gap-1">
+                <span className="scale-75 sm:scale-100">
+                  {/* Mobile & Tablet: Single star, Desktop: Full stars */}
+                  <div className="lg:hidden">
+                    <MobileRatingStar rating={product.rating || 0} />
+                  </div>
+                  <div className="hidden lg:block">
+                    <RatingStars rating={product.rating || 0} />
+                  </div>
+                </span>
+                <span className="text-black/60 text-[8px] sm:text-xs -ml-0.5 sm:ml-0">
+                  ({product.rating?.toFixed(1) || "0.0"})
+                </span>
+              </div>
             </div>
-          </div>
-          <div className="flex justify-between items-center px-0.5 sm:px-1">
-            <span className="text-xs sm:text-sm md:text-base font-semibold text-black">
-              Rp{product.price.toLocaleString()}
-            </span>
-            <div className="flex items-center">
-              <span
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-              >
-                <WishlistButton productId={product._id} size="sm" />
+            <div className="flex justify-between items-center px-0.5 sm:px-1">
+              <span className="text-xs sm:text-sm md:text-base font-semibold text-black">
+                Rp{product.price.toLocaleString()}
               </span>
+              <div className="flex items-center">
+                <span
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                >
+                  <WishlistButton productId={product._id} size="sm" />
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -350,7 +364,11 @@ const Katalog = () => {
         </div>
         <div className="w-full flex flex-col md:flex-row gap-3 md:gap-12 mt-4 mb-10 justify-center">
           <div className="flex items-center gap-2 sm:gap-3 bg-6 rounded-full px-3 py-2 sm:px-5 sm:py-3 w-full md:w-1/2">
-            <Search className="w-4 h-4 sm:w-5 sm:h-5 text-black/50" />
+            <Search
+              className={`w-4 h-4 sm:w-5 sm:h-5 text-black/50 ${
+                searchLoading ? "animate-spin" : ""
+              }`}
+            />
             <input
               type="text"
               placeholder="Cari pakan…"
@@ -359,9 +377,10 @@ const Katalog = () => {
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  setSearchTerm(searchInput);
+                  handleSearch();
                 }
               }}
+              disabled={searchLoading}
             />
           </div>
           <div className="relative w-full md:w-auto">
@@ -456,74 +475,104 @@ const Katalog = () => {
         <section className="w-full px-4 md:px-0">
           <h2 className="text-left text-2xl font-semibold text-black mb-6">
             {activeCategory || "Semua Produk"}
+            {searchTerm && (
+              <span className="text-lg font-normal text-black/60 ml-2">
+                - Hasil pencarian: "{searchTerm}"
+              </span>
+            )}
           </h2>
 
-          {displayedProducts.length > 0 ? (
+          {searchLoading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="w-16 h-16 border-4 border-gray-200 border-t-[#6D8044] rounded-full animate-spin mb-4"></div>
+              <p className="text-black/60 text-lg">Mencari produk...</p>
+            </div>
+          ) : displayedProducts.length > 0 ? (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <motion.div
+                className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, staggerChildren: 0.1 }}
+              >
                 {displayedProducts.map((product: Product) => (
-                  <Link
+                  <motion.div
                     key={product._id}
-                    href={`/detail/${product._id}`}
-                    className="flex-shrink-0 w-full"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
                   >
-                    <div className="bg-7 rounded-2xl p-2 sm:p-3 md:p-4 flex flex-col justify-between hover:shadow-lg transition cursor-pointer h-full">
-                      <div className="w-full flex justify-center items-center mb-1 sm:mb-2 md:mb-3 pt-1 sm:pt-2 h-32 sm:h-40 md:h-52">
-                        <Image
-                          src={product.imageUrl || "/images/placeholder.png"}
-                          alt={product.name}
-                          width={200}
-                          height={200}
-                          className="object-contain w-full h-full max-w-none"
-                        />
-                      </div>
-                      <h3 className="text-xs sm:text-sm md:text-base font-semibold text-left text-black leading-tight mb-0.5 sm:mb-1 line-clamp-2">
-                        {product.name}
-                      </h3>
-                      <div className="flex justify-between text-[10px] sm:text-xs md:text-sm text-black/40 mb-0.5 sm:mb-1 px-0.5 sm:px-1">
-                        <span className="flex items-center gap-1">
-                          <CategoryIcon category={product.categoryOptions} />
-                          {product.limbahOptions && (
-                            <LimbahIcon limbah={product.limbahOptions} />
-                          )}
-                          {product.fisikOptions && (
-                            <FisikIcon fisik={product.fisikOptions} />
-                          )}
-                        </span>
-                        <div className="flex items-center gap-0.5 sm:gap-1">
-                          <span className="scale-75 sm:scale-100">
-                            {/* Mobile & Tablet: Single star, Desktop: Full stars */}
-                            <div className="lg:hidden">
-                              <MobileRatingStar rating={product.rating || 0} />
+                    <Link
+                      href={`/detail/${product._id}`}
+                      className="flex-shrink-0 w-full"
+                    >
+                      <div className="bg-7 rounded-2xl flex flex-col justify-between hover:shadow-lg transition cursor-pointer h-full overflow-hidden">
+                        <div className="w-full aspect-square">
+                          <Image
+                            src={product.imageUrl || "/images/placeholder.png"}
+                            alt={product.name}
+                            width={200}
+                            height={200}
+                            className="object-contain w-full h-full"
+                          />
+                        </div>
+                        <div className="p-2 sm:p-3 md:p-4">
+                          <h3 className="text-xs sm:text-sm md:text-base font-semibold text-left text-black leading-tight mb-0.5 sm:mb-1 line-clamp-2">
+                            {product.name}
+                          </h3>
+                          <div className="flex justify-between text-[10px] sm:text-xs md:text-sm text-black/40 mb-0.5 sm:mb-1 px-0.5 sm:px-1">
+                            <span className="flex items-center gap-1">
+                              <CategoryIcon
+                                category={product.categoryOptions}
+                              />
+                              {product.limbahOptions && (
+                                <LimbahIcon limbah={product.limbahOptions} />
+                              )}
+                              {product.fisikOptions && (
+                                <FisikIcon fisik={product.fisikOptions} />
+                              )}
+                            </span>
+                            <div className="flex items-center gap-0.5 sm:gap-1">
+                              <span className="scale-75 sm:scale-100">
+                                {/* Mobile & Tablet: Single star, Desktop: Full stars */}
+                                <div className="lg:hidden">
+                                  <MobileRatingStar
+                                    rating={product.rating || 0}
+                                  />
+                                </div>
+                                <div className="hidden lg:block">
+                                  <RatingStars rating={product.rating || 0} />
+                                </div>
+                              </span>
+                              <span className="text-black/60 text-[8px] sm:text-xs -ml-0.5 sm:ml-0">
+                                ({product.rating?.toFixed(1) || "0.0"})
+                              </span>
                             </div>
-                            <div className="hidden lg:block">
-                              <RatingStars rating={product.rating || 0} />
+                          </div>
+                          <div className="flex justify-between items-center px-0.5 sm:px-1">
+                            <span className="text-xs sm:text-sm md:text-base font-semibold text-black">
+                              Rp{product.price.toLocaleString()}
+                            </span>
+                            <div className="flex items-center">
+                              <span
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                }}
+                              >
+                                <WishlistButton
+                                  productId={product._id}
+                                  size="sm"
+                                />
+                              </span>
                             </div>
-                          </span>
-                          <span className="text-black/60 text-[8px] sm:text-xs -ml-0.5 sm:ml-0">
-                            ({product.rating?.toFixed(1) || "0.0"})
-                          </span>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex justify-between items-center px-0.5 sm:px-1">
-                        <span className="text-xs sm:text-sm md:text-base font-semibold text-black">
-                          Rp{product.price.toLocaleString()}
-                        </span>
-                        <div className="flex items-center">
-                          <span
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                            }}
-                          >
-                            <WishlistButton productId={product._id} size="sm" />
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
+                    </Link>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
               {visibleCount < filteredProducts.length && (
                 <div className="flex justify-center mt-8">
                   <button

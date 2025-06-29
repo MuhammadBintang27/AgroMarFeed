@@ -10,32 +10,32 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 // Loading Skeleton for Special Offer Cards
 const SpecialOfferCardSkeleton = ({ index }: { index: number }) => (
   <div
-    className={`flex-shrink-0 basis-[90%] sm:basis-[420px] md:basis-[480px] max-w-[480px] w-full h-[320px] md:h-[320px] overflow-hidden ${
+    className={`flex-shrink-0 w-full max-w-[480px] h-[280px] sm:h-[320px] overflow-hidden ${
       index === 0 ? "bg-3" : "bg-2"
     } rounded-2xl flex flex-col justify-between relative p-4 md:p-6 animate-pulse`}
   >
     <div
-      className={`absolute top-6 left-6 ${
+      className={`absolute top-4 left-4 md:top-6 md:left-6 ${
         index === 0 ? "bg-4 text-black" : "bg-3 text-black"
       } text-xs px-3 py-1 rounded-[20px]`}
     >
       Flat 25% Diskon
     </div>
 
-    <div className="flex flex-row h-full pt-6 md:pt-8">
+    <div className="flex flex-row h-full pt-12 md:pt-16">
       {/* Teks */}
-      <div className="flex flex-col justify-between w-1/2 pr-1 md:pr-4 pl-1 md:pl-2 pt-2 md:pt-4 h-full">
+      <div className="flex flex-col justify-between w-1/2 pr-2 md:pr-4 h-full">
         <div className="flex flex-col flex-1 min-h-0">
-          <div className="h-6 bg-gray-300 rounded mb-2"></div>
-          <div className="h-4 bg-gray-300 rounded mb-2"></div>
-          <div className="h-8 bg-gray-300 rounded mb-4"></div>
+          <div className="h-4 sm:h-6 bg-gray-300 rounded mb-2"></div>
+          <div className="h-3 sm:h-4 bg-gray-300 rounded mb-2"></div>
+          <div className="h-6 sm:h-8 bg-gray-300 rounded mb-4"></div>
         </div>
-        <div className="h-10 bg-gray-300 rounded w-full mt-2"></div>
+        <div className="h-8 sm:h-10 bg-gray-300 rounded w-full mt-2"></div>
       </div>
 
       {/* Gambar */}
-      <div className="w-1/2 flex items-center justify-center p-1 md:p-4">
-        <div className="w-full h-24 md:h-40 lg:h-56 bg-gray-300 rounded"></div>
+      <div className="w-1/2 flex items-center justify-center">
+        <div className="w-full aspect-square bg-gray-300 rounded"></div>
       </div>
     </div>
   </div>
@@ -102,7 +102,7 @@ const SpecialOffer = () => {
       </div>
 
       {/* Cards Container */}
-      <div className="w-full max-w-[1100px] mx-auto flex flex-col lg:flex-row justify-center items-center gap-8">
+      <div className="w-full max-w-[1100px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
         {loading ? (
           // Loading skeletons
           Array.from({ length: 2 }).map((_, index) => (
@@ -110,7 +110,7 @@ const SpecialOffer = () => {
           ))
         ) : error ? (
           // Error state
-          <div className="w-full text-center py-10">
+          <div className="w-full text-center py-10 col-span-1 lg:col-span-2">
             <p className="text-red-500 mb-4">{error}</p>
             <button
               onClick={() => window.location.reload()}
@@ -121,7 +121,7 @@ const SpecialOffer = () => {
           </div>
         ) : products.length < 2 ? (
           // Not enough products
-          <div className="w-full text-center py-10">
+          <div className="w-full text-center py-10 col-span-1 lg:col-span-2">
             <p className="text-gray-500">
               Tidak cukup produk untuk special offer
             </p>
@@ -131,7 +131,7 @@ const SpecialOffer = () => {
           products.map((product, idx) => (
             <motion.div
               key={product._id}
-              className={`flex-shrink-0 basis-[90%] sm:basis-[420px] md:basis-[480px] max-w-[480px] w-full h-[320px] md:h-[320px] overflow-hidden ${
+              className={`w-full h-[280px] sm:h-[320px] overflow-hidden ${
                 idx === 0 ? "bg-3" : "bg-2"
               } rounded-2xl flex flex-col justify-between relative p-4 md:p-6`}
               initial={{ opacity: 0, scale: 0.8 }}
@@ -139,23 +139,23 @@ const SpecialOffer = () => {
               transition={{ duration: 0.8, delay: 0.3 }}
             >
               <div
-                className={`absolute top-6 left-6 ${
+                className={`absolute top-4 left-4 md:top-6 md:left-6 ${
                   idx === 0 ? "bg-4 text-black" : "bg-3 text-black"
                 } text-xs px-3 py-1 rounded-[20px]`}
               >
                 Flat 25% Diskon
               </div>
 
-              <div className="flex flex-row h-full pt-6 md:pt-8">
+              <div className="flex flex-row h-full pt-12 md:pt-16">
                 {/* Teks */}
                 <div
-                  className={`flex flex-col justify-between w-1/2 pr-1 md:pr-4 pl-1 md:pl-2 pt-2 md:pt-4 h-full ${
+                  className={`flex flex-col justify-between w-1/2 pr-2 md:pr-4 h-full ${
                     idx === 0 ? "text-black" : "text-white"
                   }`}
                 >
-                  <div className="flex flex-col flex-1 min-h-0 pt-2 md:pt-0">
+                  <div className="flex flex-col flex-1 min-h-0">
                     <h3
-                      className={`text-sm md:text-xl lg:text-3xl font-bold leading-snug mb-1 md:mb-2 line-clamp-2 ${
+                      className={`text-sm md:text-xl lg:text-2xl font-bold leading-snug mb-1 md:mb-2 line-clamp-2 ${
                         idx === 0 ? "text-black" : "text-white"
                       }`}
                     >
@@ -169,7 +169,7 @@ const SpecialOffer = () => {
                       {formatPrice(product.price)}
                     </span>
                     <span
-                      className={`text-lg md:text-2xl lg:text-4xl font-extrabold mb-3 md:mb-4 ${
+                      className={`text-lg md:text-2xl lg:text-3xl font-extrabold mb-3 md:mb-4 ${
                         idx === 0 ? "text-black" : "text-white"
                       }`}
                     >
@@ -189,17 +189,17 @@ const SpecialOffer = () => {
                 </div>
 
                 {/* Gambar */}
-                <div className="hover:scale-105 duration-300 w-1/2 flex items-center justify-center p-1 md:p-4">
-                  <Image
-                    src={product.imageUrl || "/images/placeholder.png"}
-                    alt={product.name}
-                    width={400}
-                    height={400}
-                    className="object-contain h-32 md:h-40 lg:h-56 w-full"
-                    quality={100}
-                    sizes="(max-width: 768px) 100vw, 400px"
-                    style={{ imageRendering: "auto" }}
-                  />
+                <div className="w-1/2 flex items-center justify-center">
+                  <div className="w-full aspect-square relative">
+                    <Image
+                      src={product.imageUrl || "/images/placeholder.png"}
+                      alt={product.name}
+                      fill
+                      className="object-contain hover:scale-105 duration-300"
+                      quality={100}
+                      sizes="(max-width: 768px) 50vw, 200px"
+                    />
+                  </div>
                 </div>
               </div>
             </motion.div>

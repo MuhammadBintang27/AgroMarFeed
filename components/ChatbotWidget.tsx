@@ -30,6 +30,7 @@ interface ChatMessage {
 
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [message, setMessage] = useState("");
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -187,7 +188,7 @@ export default function ChatbotWidget() {
   return (
     <>
       {!isAuthPage && (
-        <div className="fixed bottom-20 right-6 z-40 lg:bottom-6 lg:z-50">
+        <div className="fixed bottom-14 right-6 z-40 lg:bottom-6 lg:z-50">
           {isOpen ? (
             <Card className="w-80 md:w-96 rounded-2xl shadow-2xl border-0 bg-white overflow-hidden">
               {/* Header */}
