@@ -3,7 +3,7 @@ import axios, { AxiosInstance } from 'axios';
 import { User, ApiResponse, AuthCredentials, SignupCredentials } from '@/types';
 
 const api: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL, // Use relative URLs to hit Next.js API routes
+  baseURL: '', // Use relative URLs to hit Next.js API routes (for mobile compatibility)
   withCredentials: true, 
 });
 
