@@ -44,18 +44,23 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       if (response.success && response.user) {
         console.log("✅ User data found:", response.user);
         setUser(response.user);
+        setError(null);
       } else if (response.success && response.data) {
         console.log("✅ User data found (data field):", response.data);
         setUser(response.data);
+        setError(null);
       } else if (response.user) {
         console.log("✅ User data found (direct user):", response.user);
         setUser(response.user);
+        setError(null);
       } else if (response.data) {
         console.log("✅ User data found (direct data):", response.data);
         setUser(response.data);
+        setError(null);
       } else {
         console.log("❌ No user data found in response");
         setUser(null);
+        setError("No user data found");
       }
     } catch (err) {
       console.error("❌ Failed to fetch user:", err);
@@ -113,6 +118,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             if (validationData.success && validationData.user) {
               console.log("✅ OAuth token validation successful:", validationData.user);
               setUser(validationData.user);
+              setError(null);
               setLoading(false);
               return;
             }
@@ -124,6 +130,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             if (transferData.success && transferData.user) {
               console.log("✅ OAuth session transfer successful:", transferData.user);
               setUser(transferData.user);
+              setError(null);
               setLoading(false);
               return;
             }
