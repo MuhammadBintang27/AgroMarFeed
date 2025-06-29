@@ -11,14 +11,21 @@ const PageLoading: React.FC<PageLoadingProps> = ({
   color = 'primary'
 }) => {
   const colorClasses = {
-    primary: 'text-blue-600',
-    secondary: 'text-green-600',
+    primary: 'text-green-600',
+    secondary: 'text-yellow-500',
     white: 'text-white',
     gray: 'text-gray-600'
   };
 
+  const barClasses = {
+    primary: 'bg-green-500',
+    secondary: 'bg-yellow-400',
+    white: 'bg-white',
+    gray: 'bg-gray-400'
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-yellow-50 to-yellow-100">
       <div className="text-center">
         {/* Animated Farm Scene */}
         <div className="relative mb-8">
@@ -61,7 +68,7 @@ const PageLoading: React.FC<PageLoadingProps> = ({
               {[...Array(4)].map((_, i) => (
                 <div
                   key={i}
-                  className={`absolute w-1 h-1 bg-current ${colorClasses[color]} rounded-full animate-ping`}
+                  className={`absolute w-1 h-1 bg-current ${color === 'secondary' ? 'text-yellow-400' : colorClasses[color]} rounded-full animate-ping`}
                   style={{
                     left: `${20 + i * 20}%`,
                     top: `${30 + i * 10}%`,
@@ -83,7 +90,7 @@ const PageLoading: React.FC<PageLoadingProps> = ({
             {[...Array(3)].map((_, i) => (
               <div
                 key={i}
-                className={`w-2 h-2 rounded-full bg-current ${colorClasses[color]} animate-bounce`}
+                className={`w-2 h-2 rounded-full bg-current ${color === 'secondary' ? 'text-yellow-400' : colorClasses[color]} animate-bounce`}
                 style={{
                   animationDelay: `${i * 0.2}s`,
                   animationDuration: '1s'
@@ -96,7 +103,7 @@ const PageLoading: React.FC<PageLoadingProps> = ({
         {/* Progress bar */}
         <div className="w-56 h-2 bg-gray-200 rounded-full mx-auto overflow-hidden shadow-inner">
           <div 
-            className={`h-full bg-gradient-to-r from-current to-transparent ${colorClasses[color]} rounded-full animate-pulse`}
+            className={`h-full ${barClasses[color]} rounded-full animate-pulse`}
             style={{
               width: '65%',
               animationDuration: '2s'

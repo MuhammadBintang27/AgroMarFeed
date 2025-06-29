@@ -3,6 +3,7 @@ export interface User {
   _id: string;
   name: string;
   email: string;
+  profile_picture?: string;
   accounts: Array<{
     provider: string;
     providerAccountId: string;
@@ -18,6 +19,7 @@ export interface User {
   }>;
 
   alamat?: Array<{
+    _id?: string;
     nama?: string;
     nomor_hp?: string;
     label_alamat?: string;

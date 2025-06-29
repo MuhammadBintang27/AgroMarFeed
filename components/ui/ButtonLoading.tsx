@@ -3,13 +3,13 @@ import LoadingSpinner from './LoadingSpinner';
 
 interface ButtonLoadingProps {
   size?: 'sm' | 'md' | 'lg';
-  color?: 'primary' | 'secondary' | 'white' | 'gray';
+  color?: 'green' | 'yellow' | 'white' | 'gray';
   text?: string;
 }
 
 const ButtonLoading: React.FC<ButtonLoadingProps> = ({
   size = 'sm',
-  color = 'white',
+  color = 'yellow',
   text
 }) => {
   return (
@@ -20,7 +20,7 @@ const ButtonLoading: React.FC<ButtonLoadingProps> = ({
         className=""
       />
       {text && (
-        <span className="text-sm">{text}</span>
+        <span className="text-sm font-semibold text-gray-700">{text}</span>
       )}
     </div>
   );

@@ -15,6 +15,21 @@ interface CityOption {
   zip_code: string;
 }
 
+interface UserAddress {
+  _id?: string;
+  nama?: string;
+  nomor_hp?: string;
+  label_alamat?: string;
+  provinsi?: string;
+  kabupaten?: string;
+  kecamatan?: string;
+  desa?: string;
+  kode_pos?: number;
+  alamat_lengkap?: string;
+  catatan_kurir?: string;
+  is_active?: boolean;
+}
+
 export default function BuatTokoPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -35,6 +50,8 @@ export default function BuatTokoPage() {
     lokasi: null,
     alamat_lengkap: "",
   });
+  const [selectedUserAddress, setSelectedUserAddress] = useState<UserAddress | null>(null);
+  const [useExistingAddress, setUseExistingAddress] = useState(false);
   const [verifikasiWajah, setVerifikasiWajah] = useState(false);
   const [setuju, setSetuju] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -67,6 +84,15 @@ export default function BuatTokoPage() {
       .finally(() => setCheckingStore(false));
   }, [userId]);
 
+  // Auto-fill form data from user profile
+  useEffect(() => {
+    if (user) {
+      setNama(user.name || "");
+      setEmail(user.email || "");
+      setNomorHp(user.detail?.[0]?.no_telpon || "");
+    }
+  }, [user]);
+
   // Validasi per step
   const isStep1Valid = nama && nik && fotoKtp && verifikasiWajah && setuju;
   const isStep2Valid =
@@ -74,9 +100,8 @@ export default function BuatTokoPage() {
     email &&
     nomorHp &&
     deskripsi &&
-    alamat.label_alamat &&
-    alamat.lokasi &&
-    alamat.alamat_lengkap;
+    ((useExistingAddress && selectedUserAddress) || 
+     (!useExistingAddress && alamat.label_alamat && alamat.lokasi && alamat.alamat_lengkap));
 
   const handleFotoKtpChange = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -111,6 +136,11 @@ export default function BuatTokoPage() {
   const handleLokasiChange = (lokasi: CityOption | null) =>
     setAlamat((a) => ({ ...a, lokasi }));
 
+  const handleUserAddressChange = (addressId: string) => {
+    const address = user?.alamat?.find(addr => addr._id === addressId);
+    setSelectedUserAddress(address || null);
+  };
+
   // Submit dengan konfirmasi dan redirect tujuan
   const handleSubmit = async (redirectTo: "tokoSaya" | "tambahProduk") => {
     if (!userId) {
@@ -140,6 +170,33 @@ export default function BuatTokoPage() {
         const uploadData = await uploadRes.json();
         fotoKtpUrl = uploadData.url || "";
       }
+
+      // Determine which address to use
+      let storeAddress;
+      if (useExistingAddress && selectedUserAddress) {
+        storeAddress = {
+          label_alamat: selectedUserAddress.label_alamat || "Alamat Toko",
+          provinsi: selectedUserAddress.provinsi,
+          kabupaten: selectedUserAddress.kabupaten,
+          kecamatan: selectedUserAddress.kecamatan,
+          desa: selectedUserAddress.desa,
+          kode_pos: selectedUserAddress.kode_pos,
+          alamat_lengkap: selectedUserAddress.alamat_lengkap,
+        };
+      } else {
+        storeAddress = {
+          label_alamat: alamat.label_alamat,
+          provinsi: alamat.lokasi?.province_name,
+          kabupaten: alamat.lokasi?.city_name,
+          kecamatan: alamat.lokasi?.district_name,
+          desa: alamat.lokasi?.subdistrict_name,
+          kode_pos: alamat.lokasi?.zip_code
+            ? Number(alamat.lokasi.zip_code)
+            : undefined,
+          alamat_lengkap: alamat.alamat_lengkap,
+        };
+      }
+
       const payload = {
         user_id: userId,
         jenis_usaha: jenisUsaha,
@@ -150,17 +207,7 @@ export default function BuatTokoPage() {
         email,
         nomor_hp: nomorHp,
         deskripsi,
-        alamat: {
-          label_alamat: alamat.label_alamat,
-          provinsi: alamat.lokasi?.province_name,
-          kabupaten: alamat.lokasi?.city_name,
-          kecamatan: alamat.lokasi?.district_name,
-          desa: alamat.lokasi?.subdistrict_name,
-          kode_pos: alamat.lokasi?.zip_code
-            ? Number(alamat.lokasi.zip_code)
-            : undefined,
-          alamat_lengkap: alamat.alamat_lengkap,
-        },
+        alamat: storeAddress,
       };
       const res = await fetch("/api/stores", {
         method: "POST",
@@ -484,50 +531,105 @@ export default function BuatTokoPage() {
             </div>
             {/* Alamat 2 kolom */}
             <h2 className="text-xl font-bold mb-4">Alamat Toko</h2>
-            <div className="grid md:grid-cols-2 gap-8 mb-6">
-              {/* Kiri */}
-              <div>
-                <label className="block font-semibold mb-1">Cari Lokasi</label>
-                <CityAutocomplete
-                  value={alamat.lokasi}
-                  onChange={handleLokasiChange}
-                  placeholder="Cari lokasi (kelurahan/kecamatan/kota)..."
-                />
-                <label className="block font-semibold mb-1 mt-4">
-                  Kode Pos
+            
+            {/* Pilihan Alamat */}
+            <div className="mb-6">
+              <div className="flex items-center gap-4 mb-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="addressType"
+                    checked={useExistingAddress}
+                    onChange={() => setUseExistingAddress(true)}
+                    className="mr-2"
+                  />
+                  <span>Gunakan Alamat yang Sudah Ada</span>
                 </label>
-                <input
-                  type="text"
-                  className="w-full mb-2 px-4 py-2 bg-gray-100 rounded-lg"
-                  placeholder="Kode Pos"
-                  value={alamat.lokasi?.zip_code || ""}
-                  readOnly
-                />
-              </div>
-              {/* Kanan */}
-              <div>
-                <label className="block font-semibold mb-1">Label Alamat</label>
-                <input
-                  type="text"
-                  className="w-full mb-2 px-4 py-2 bg-gray-100 rounded-lg"
-                  placeholder="Label Alamat"
-                  name="label_alamat"
-                  value={alamat.label_alamat}
-                  onChange={handleAlamatChange}
-                  required
-                />
-                <label className="block font-semibold mb-1 mt-4">
-                  Alamat Lengkap
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="addressType"
+                    checked={!useExistingAddress}
+                    onChange={() => setUseExistingAddress(false)}
+                    className="mr-2"
+                  />
+                  <span>Input Alamat Baru</span>
                 </label>
-                <textarea
-                  className="w-full mb-2 px-4 py-2 bg-gray-100 rounded-lg min-h-[80px]"
-                  placeholder="Alamat Lengkap"
-                  name="alamat_lengkap"
-                  value={alamat.alamat_lengkap}
-                  onChange={handleAlamatChange}
-                  required
-                />
               </div>
+
+              {useExistingAddress ? (
+                <div className="mb-6">
+                  <label className="block font-semibold mb-2">Pilih Alamat</label>
+                  <select
+                    className="w-full px-4 py-2 bg-gray-100 rounded-lg"
+                    value={selectedUserAddress?._id || ""}
+                    onChange={(e) => handleUserAddressChange(e.target.value)}
+                    required
+                  >
+                    <option value="">Pilih alamat dari profil Anda...</option>
+                    {user?.alamat?.map((addr) => (
+                      <option key={addr._id} value={addr._id}>
+                        {addr.label_alamat || "Alamat Tanpa Label"} - {addr.alamat_lengkap}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedUserAddress && (
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                      <h4 className="font-semibold mb-2">Detail Alamat:</h4>
+                      <p><strong>Nama:</strong> {selectedUserAddress.nama}</p>
+                      <p><strong>HP:</strong> {selectedUserAddress.nomor_hp}</p>
+                      <p><strong>Alamat:</strong> {selectedUserAddress.alamat_lengkap}</p>
+                      <p><strong>Lokasi:</strong> {selectedUserAddress.desa}, {selectedUserAddress.kecamatan}, {selectedUserAddress.kabupaten}, {selectedUserAddress.provinsi} {selectedUserAddress.kode_pos}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-8 mb-6">
+                  {/* Kiri */}
+                  <div>
+                    <label className="block font-semibold mb-1">Cari Lokasi</label>
+                    <CityAutocomplete
+                      value={alamat.lokasi}
+                      onChange={handleLokasiChange}
+                      placeholder="Cari lokasi (kelurahan/kecamatan/kota)..."
+                    />
+                    <label className="block font-semibold mb-1 mt-4">
+                      Kode Pos
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full mb-2 px-4 py-2 bg-gray-100 rounded-lg"
+                      placeholder="Kode Pos"
+                      value={alamat.lokasi?.zip_code || ""}
+                      readOnly
+                    />
+                  </div>
+                  {/* Kanan */}
+                  <div>
+                    <label className="block font-semibold mb-1">Label Alamat</label>
+                    <input
+                      type="text"
+                      className="w-full mb-2 px-4 py-2 bg-gray-100 rounded-lg"
+                      placeholder="Label Alamat"
+                      name="label_alamat"
+                      value={alamat.label_alamat}
+                      onChange={handleAlamatChange}
+                      required
+                    />
+                    <label className="block font-semibold mb-1 mt-4">
+                      Alamat Lengkap
+                    </label>
+                    <textarea
+                      className="w-full mb-2 px-4 py-2 bg-gray-100 rounded-lg min-h-[80px]"
+                      placeholder="Alamat Lengkap"
+                      name="alamat_lengkap"
+                      value={alamat.alamat_lengkap}
+                      onChange={handleAlamatChange}
+                      required
+                    />
+                  </div>
+                </div>
+              )}
             </div>
             {error && <div className="text-red-500 mb-2 text-sm">{error}</div>}
             <div className="flex gap-4">

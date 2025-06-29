@@ -15,6 +15,7 @@ interface UserContextType {
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   clearUser: () => void;
 }
 
@@ -178,6 +179,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     loading,
     error,
     refetch,
+    refreshUser: refetch,
     clearUser,
   };
 
