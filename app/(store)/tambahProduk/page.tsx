@@ -297,6 +297,8 @@ export default function TambahProdukPage() {
     file: File;
     type: "ai" | "original";
   } | null>(null);
+  const [aiEditUsed, setAiEditUsed] = useState(false);
+  const [aiEditTooltip, setAiEditTooltip] = useState("");
 
   // Check authentication on component mount
   useEffect(() => {
@@ -518,9 +520,16 @@ export default function TambahProdukPage() {
   }, [isDragging, isResizing, popupPosition, dragOffset]);
 
   const handleAIEnhance = async () => {
+    if (aiEditUsed) {
+      setAiEditTooltip(
+        "AI Edit hanya bisa digunakan 1x per halaman. Silakan refresh untuk mencoba lagi."
+      );
+      return;
+    }
     setAiLoading(true);
     setAiError("");
     setAiImage(null);
+    setAiEditTooltip("");
     try {
       if (!originalImageFile) {
         setAiError("Upload gambar terlebih dahulu.");
@@ -541,6 +550,7 @@ export default function TambahProdukPage() {
         method: "POST",
         body: formData,
       });
+      setAiEditUsed(true);
       if (!res.ok) {
         const errText = await res.text();
         setAiError("Gagal mengedit gambar dengan AI: " + errText);
@@ -876,15 +886,22 @@ export default function TambahProdukPage() {
                           aiLoading ||
                           !originalImageFile ||
                           !form.name.trim() ||
-                          !form.description.trim()
+                          !form.description.trim() ||
+                          aiEditUsed
                         }
+                        {...(aiEditUsed
+                          ? {
+                              title:
+                                "AI Edit hanya bisa digunakan 1x per halaman. Silakan refresh untuk mencoba lagi.",
+                            }
+                          : {})}
                       >
-                        {aiLoading
-                          ? "Memproses dengan AI..."
-                          : "AI Edit"}
+                        {aiLoading ? "Memproses dengan AI..." : "AI Edit"}
                       </button>
-                      {aiError && (
-                        <div className="text-red-500 text-xs">{aiError}</div>
+                      {aiEditTooltip && (
+                        <div className="text-xs text-yellow-700 mt-1">
+                          {aiEditTooltip}
+                        </div>
                       )}
                       {(aiImage || aiLoading) && (
                         <div className="flex gap-4 items-center mt-2">
