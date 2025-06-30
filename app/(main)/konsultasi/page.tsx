@@ -148,17 +148,6 @@ export default function ConsultationPage() {
               }}
               disabled={searchLoading}
             />
-            {searchLoading ? (
-              <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-black/20 border-t-black/50 rounded-full animate-spin"></div>
-            ) : (
-              <button
-                onClick={handleSearch}
-                disabled={!searchInput.trim()}
-                className="p-1 hover:bg-black/10 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Search className="w-4 h-4 sm:w-5 sm:h-5 text-black/50" />
-              </button>
-            )}
           </div>
         </div>
 

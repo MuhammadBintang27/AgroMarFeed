@@ -195,7 +195,7 @@ const Detail = () => {
 
   // Function to load more reviews
   const loadMoreReviews = () => {
-    setDisplayedReviews(prev => prev + 3);
+    setDisplayedReviews((prev) => prev + 3);
   };
 
   // Function to show all reviews
@@ -526,7 +526,8 @@ const Detail = () => {
                     className="bg-3 px-6 py-2 rounded-full text-black font-medium hover:bg-3/90 transition"
                     onClick={loadMoreReviews}
                   >
-                    Lihat {Math.min(3, reviews.length - displayedReviews)} Ulasan Lainnya
+                    Lihat {Math.min(3, reviews.length - displayedReviews)}{" "}
+                    Ulasan Lainnya
                   </button>
                   {reviews.length > 6 && (
                     <button

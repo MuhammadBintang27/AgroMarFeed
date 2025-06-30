@@ -72,7 +72,9 @@ const PaymentPageContent = () => {
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
   const [selectedShipping, setSelectedShipping] =
     useState<ShippingOption | null>(null);
-  const [selectedUserAddress, setSelectedUserAddress] = useState<Alamat | null>(null);
+  const [selectedUserAddress, setSelectedUserAddress] = useState<Alamat | null>(
+    null
+  );
   const [selectedOrigin, setSelectedOrigin] = useState<any>(null);
   const [selectedDestination, setSelectedDestination] = useState<any>(null);
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
@@ -134,17 +136,21 @@ const PaymentPageContent = () => {
   useEffect(() => {
     if (user) {
       fetchCartData(user._id);
-      
+
       // Auto-select main address if available
       if (user.alamat && user.alamat.length > 0) {
-        const mainAddress = user.alamat.find(addr => addr.is_active);
+        const mainAddress = user.alamat.find((addr) => addr.is_active);
         if (mainAddress) {
           setSelectedUserAddress(mainAddress as Alamat);
           // Auto-search destination based on main address
           if (mainAddress.kabupaten) {
-            fetch(`/api/shipping/search-destination?keyword=${encodeURIComponent(mainAddress.kabupaten)}`)
-              .then(res => res.json())
-              .then(data => {
+            fetch(
+              `/api/shipping/search-destination?keyword=${encodeURIComponent(
+                mainAddress.kabupaten
+              )}`
+            )
+              .then((res) => res.json())
+              .then((data) => {
                 if (data.data && data.data.length > 0) {
                   const destination = data.data[0];
                   setSelectedDestination({
@@ -154,7 +160,9 @@ const PaymentPageContent = () => {
                   });
                 }
               })
-              .catch(err => console.error("Error searching destination:", err));
+              .catch((err) =>
+                console.error("Error searching destination:", err)
+              );
           }
         }
       }
@@ -289,15 +297,19 @@ const PaymentPageContent = () => {
   };
 
   const handleUserAddressChange = (addressId: string) => {
-    const address = user?.alamat?.find(addr => addr._id === addressId);
+    const address = user?.alamat?.find((addr) => addr._id === addressId);
     // Cast the address to Alamat type before setting state
-    setSelectedUserAddress(address as Alamat || null);
-    
+    setSelectedUserAddress((address as Alamat) || null);
+
     // Auto-search destination based on selected address
     if (address?.kabupaten) {
-      fetch(`/api/shipping/search-destination?keyword=${encodeURIComponent(address.kabupaten)}`)
-        .then(res => res.json())
-        .then(data => {
+      fetch(
+        `/api/shipping/search-destination?keyword=${encodeURIComponent(
+          address.kabupaten
+        )}`
+      )
+        .then((res) => res.json())
+        .then((data) => {
           if (data.data && data.data.length > 0) {
             const destination = data.data[0];
             setSelectedDestination({
@@ -307,7 +319,7 @@ const PaymentPageContent = () => {
             });
           }
         })
-        .catch(err => console.error("Error searching destination:", err));
+        .catch((err) => console.error("Error searching destination:", err));
     }
   };
 
@@ -780,10 +792,12 @@ const PaymentPageContent = () => {
 
                   {/* Pilih Alamat dari Profil */}
                   <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Pilih Alamat Pengiriman</label>
-                    
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Pilih Alamat Pengiriman
+                    </label>
+
                     {/* Check if user has addresses */}
-                    {(!user?.alamat || user.alamat.length === 0) ? (
+                    {!user?.alamat || user.alamat.length === 0 ? (
                       <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center">
                         <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
                           <svg
@@ -810,7 +824,8 @@ const PaymentPageContent = () => {
                           Belum Ada Alamat Tersimpan
                         </h3>
                         <p className="text-yellow-700 mb-4">
-                          Anda perlu menambahkan alamat pengiriman terlebih dahulu sebelum melakukan checkout.
+                          Anda perlu menambahkan alamat pengiriman terlebih
+                          dahulu sebelum melakukan checkout.
                         </p>
                         <div className="space-y-2">
                           <button
@@ -832,17 +847,23 @@ const PaymentPageContent = () => {
                         <select
                           className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           value={selectedUserAddress?._id || ""}
-                          onChange={e => handleUserAddressChange(e.target.value)}
+                          onChange={(e) =>
+                            handleUserAddressChange(e.target.value)
+                          }
                         >
                           <option value="">Pilih alamat pengiriman...</option>
-                          {(user?.alamat as Alamat[] | undefined)?.map(alamat => (
-                            <option key={alamat._id} value={alamat._id}>
-                              {alamat.is_active ? "🏠 " : ""}{alamat.label_alamat || alamat.alamat_lengkap} - {alamat.nama}
-                              {alamat.is_active ? " (Utama)" : ""}
-                            </option>
-                          ))}
+                          {(user?.alamat as Alamat[] | undefined)?.map(
+                            (alamat) => (
+                              <option key={alamat._id} value={alamat._id}>
+                                {alamat.is_active ? "🏠 " : ""}
+                                {alamat.label_alamat ||
+                                  alamat.alamat_lengkap} - {alamat.nama}
+                                {alamat.is_active ? " (Utama)" : ""}
+                              </option>
+                            )
+                          )}
                         </select>
-                        
+
                         {/* Add new address option */}
                         <div className="mt-3 text-center">
                           <button
@@ -863,12 +884,28 @@ const PaymentPageContent = () => {
                         Detail Alamat Pengiriman:
                       </h4>
                       <div className="space-y-1 text-sm">
-                        <p><strong>Nama:</strong> {selectedUserAddress.nama}</p>
-                        <p><strong>HP:</strong> {selectedUserAddress.nomor_hp}</p>
-                        <p><strong>Alamat:</strong> {selectedUserAddress.alamat_lengkap}</p>
-                        <p><strong>Lokasi:</strong> {selectedUserAddress.desa}, {selectedUserAddress.kecamatan}, {selectedUserAddress.kabupaten}, {selectedUserAddress.provinsi} {selectedUserAddress.kode_pos}</p>
+                        <p>
+                          <strong>Nama:</strong> {selectedUserAddress.nama}
+                        </p>
+                        <p>
+                          <strong>HP:</strong> {selectedUserAddress.nomor_hp}
+                        </p>
+                        <p>
+                          <strong>Alamat:</strong>{" "}
+                          {selectedUserAddress.alamat_lengkap}
+                        </p>
+                        <p>
+                          <strong>Lokasi:</strong> {selectedUserAddress.desa},{" "}
+                          {selectedUserAddress.kecamatan},{" "}
+                          {selectedUserAddress.kabupaten},{" "}
+                          {selectedUserAddress.provinsi}{" "}
+                          {selectedUserAddress.kode_pos}
+                        </p>
                         {selectedUserAddress.catatan_kurir && (
-                          <p><strong>Catatan:</strong> {selectedUserAddress.catatan_kurir}</p>
+                          <p>
+                            <strong>Catatan:</strong>{" "}
+                            {selectedUserAddress.catatan_kurir}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -876,21 +913,21 @@ const PaymentPageContent = () => {
 
                   {/* Form Catatan */}
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Catatan (Opsional)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Catatan (Opsional)
+                    </label>
                     <textarea
                       value={notes}
-                      onChange={e => setNotes(e.target.value)}
+                      onChange={(e) => setNotes(e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       rows={2}
                       placeholder="Catatan tambahan untuk kurir atau pesanan"
                     />
                   </div>
-
-                  
                 </div>
 
                 {/* Shipping Options */}
-                {(!user?.alamat || user.alamat.length === 0) ? (
+                {!user?.alamat || user.alamat.length === 0 ? (
                   <div className="bg-white rounded-2xl p-8 shadow-lg">
                     <h2 className="text-xl font-semibold mb-6 text-black">
                       Pilihan Pengiriman
@@ -921,7 +958,8 @@ const PaymentPageContent = () => {
                         Pilih Alamat Terlebih Dahulu
                       </h3>
                       <p className="text-yellow-700 mb-4">
-                        Opsi pengiriman akan muncul setelah Anda memilih alamat pengiriman.
+                        Opsi pengiriman akan muncul setelah Anda memilih alamat
+                        pengiriman.
                       </p>
                       <button
                         onClick={() => router.push("/profile")}
@@ -1087,7 +1125,7 @@ const PaymentPageContent = () => {
                 </div>
 
                 {/* Checkout Button */}
-                {(!user?.alamat || user.alamat.length === 0) ? (
+                {!user?.alamat || user.alamat.length === 0 ? (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
                     <p className="text-yellow-800 text-sm mb-3">
                       Anda perlu menambahkan alamat pengiriman terlebih dahulu
@@ -1108,9 +1146,7 @@ const PaymentPageContent = () => {
                           : "bg-gray-100 text-gray-400 cursor-not-allowed"
                       }`}
                     disabled={
-                      !selectedShipping ||
-                      !selectedUserAddress ||
-                      isLoading
+                      !selectedShipping || !selectedUserAddress || isLoading
                     }
                     onClick={handleCheckout}
                   >

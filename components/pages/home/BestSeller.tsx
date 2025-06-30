@@ -12,6 +12,12 @@ const BestSeller = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Function to truncate text with ellipsis
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + "...";
+  };
+
   useEffect(() => {
     let ignore = false;
     setLoading(true);
@@ -119,7 +125,7 @@ const BestSeller = () => {
             ) : product ? (
               <>
                 <p className="text-base md:text-xl text-gray-700 whitespace-pre-line mb-4 leading-relaxed">
-                  {product.description}
+                  {truncateText(product.description, 150)}
                 </p>
                 <div className="flex justify-center">
                   <Button
@@ -169,7 +175,7 @@ const BestSeller = () => {
             ) : product ? (
               <>
                 <p className="text-base md:text-xl text-gray-700 whitespace-pre-line mb-4 leading-relaxed">
-                  {product.description}
+                  {truncateText(product.description, 200)}
                 </p>
                 <div className="flex justify-center md:justify-start">
                   <Button

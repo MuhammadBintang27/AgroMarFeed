@@ -14,6 +14,7 @@ export default function ArticlePage() {
   const [visibleCount, setVisibleCount] = useState(6);
   const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
 
   useEffect(() => {
     async function loadArticles() {
@@ -45,6 +46,16 @@ export default function ArticlePage() {
   const visibleArticles = filteredArticles.slice(0, visibleCount);
   const hasMore = visibleArticles.length < filteredArticles.length;
 
+  // Handler for search with loading animation
+  const handleSearch = () => {
+    setSearchLoading(true);
+    setSearchTerm(searchInput);
+    setTimeout(() => {
+      setSearchLoading(false);
+      setVisibleCount(6); // Reset visible count when searching
+    }, 800);
+  };
+
   return (
     <div className="min-h-screen pt-20 md:pt-32 pb-16 bg-white">
       <ChatbotWidget />
@@ -69,7 +80,9 @@ export default function ArticlePage() {
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-8">
             <div className="flex items-center gap-2 bg-6 rounded-full px-3 py-2 w-full md:w-[440px]">
               <svg
-                className="w-5 h-5 text-gray-400"
+                className={`w-5 h-5 text-gray-400 ${
+                  searchLoading ? "animate-spin" : ""
+                }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -89,9 +102,10 @@ export default function ArticlePage() {
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    setSearchTerm(searchInput);
+                    handleSearch();
                   }
                 }}
+                disabled={searchLoading}
               />
             </div>
             <div className="flex gap-4">
@@ -121,6 +135,11 @@ export default function ArticlePage() {
           {/* Articles Grid */}
           {loading ? (
             <div className="text-center text-black">Loading articles...</div>
+          ) : searchLoading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="w-16 h-16 border-4 border-gray-200 border-t-[#6D8044] rounded-full animate-spin mb-4"></div>
+              <p className="text-black/60 text-lg">Mencari artikel...</p>
+            </div>
           ) : filteredArticles.length === 0 ? (
             <div className="text-center text-black">No articles available</div>
           ) : (

@@ -502,7 +502,7 @@ export default function ProfilePage() {
             </div>
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className="bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600"
+              className="bg-2 text-white px-4 py-2 rounded-[25] hover:bg-orange-600"
             >
               {isEditing ? "Batal" : "Edit Profil"}
             </button>
@@ -511,7 +511,7 @@ export default function ProfilePage() {
           {isEditing ? (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-bold text-gray-700 mb-1">
                   Nama Pengguna
                 </label>
                 <input
@@ -522,7 +522,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-bold text-gray-700 mb-1">
                   Nomor Telepon
                 </label>
                 <input
@@ -533,7 +533,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-bold text-gray-700 mb-1">
                   Tanggal Lahir
                 </label>
                 <input
@@ -544,7 +544,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-bold text-gray-700 mb-1">
                   Jenis Kelamin
                 </label>
                 <select
@@ -560,37 +560,31 @@ export default function ProfilePage() {
               <div className="flex gap-2">
                 <button
                   onClick={handleProfileUpdate}
-                  className="bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600"
+                  className="bg-3 text-white px-4 py-2 rounded-[25] hover:bg-orange-600"
                 >
                   Simpan Perubahan
-                </button>
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
-                >
-                  Batal
                 </button>
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm">
-              <div className="font-medium">Nama Pengguna</div>
+              <div className="font-bold">Nama Pengguna</div>
               <div>{user.name}</div>
 
-              <div className="font-medium">Email</div>
+              <div className="font-bold">Email</div>
               <div>{user.email}</div>
 
-              <div className="font-medium">Nomor Telepon</div>
+              <div className="font-bold">Nomor Telepon</div>
               <div>{user.detail?.[0]?.no_telpon || "-"}</div>
 
-              <div className="font-medium">Tanggal Lahir</div>
+              <div className="font-bold">Tanggal Lahir</div>
               <div>
                 {user.detail?.[0]?.tanggal_lahir
                   ? new Date(user.detail[0].tanggal_lahir).toLocaleDateString()
                   : "-"}
               </div>
 
-              <div className="font-medium">Jenis Kelamin</div>
+              <div className="font-bold">Jenis Kelamin</div>
               <div>{user.detail?.[0]?.jenis_kelamin || "-"}</div>
             </div>
           )}
@@ -600,7 +594,7 @@ export default function ProfilePage() {
               <h3 className="text-lg font-semibold">Alamat</h3>
               <button
                 onClick={() => setIsAddingAddress(!isAddingAddress)}
-                className="bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600 text-sm"
+                className="bg-3 text-white px-4 py-2 rounded-[25] hover:bg-orange-600 text-sm"
               >
                 {isAddingAddress ? "Batal" : "Tambah Alamat"}
               </button>
@@ -794,7 +788,7 @@ export default function ProfilePage() {
                       </div>
                       <button
                         onClick={() => handleDeleteAddress(alamat._id!)}
-                        className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
+                        className="text-xs bg-red-500 text-white px-2 py-1 rounded-[25] hover:bg-red-600 transition-colors"
                       >
                         Hapus
                       </button>

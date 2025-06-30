@@ -8,6 +8,7 @@ import { MessageCircle, X, Send, Bot, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useUser } from "@/contexts/UserContext";
 
 interface Product {
   _id: string;
@@ -34,7 +35,7 @@ export default function ChatbotWidget() {
   const [message, setMessage] = useState("");
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [userName, setUserName] = useState("User");
+  const { user } = useUser();
   const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
   const pathname = usePathname();
 
@@ -42,13 +43,14 @@ export default function ChatbotWidget() {
   const isAuthPage = pathname?.startsWith("/auth");
 
   useEffect(() => {
+    const userName = user?.name || "User";
     setChatHistory([
       {
         type: "ai",
         content: `Halo ${userName}! Saya AgroMarFeed AI, Silahkan tanyakan sesuatu jika butuh bantuan!`,
       },
     ]);
-  }, [userName]);
+  }, [user?.name]);
 
   const handleSend = async () => {
     if (!message.trim()) return;
@@ -354,15 +356,36 @@ export default function ChatbotWidget() {
           ) : (
             <button
               onClick={() => setIsOpen(true)}
-              className="group p-4 rounded-full shadow-lg border-0 hover:shadow-xl transition-all duration-300 bg-[#6d8044] hover:bg-[#6d8044]/80 hover:scale-110"
+              className="group p-2 rounded-full transition-all duration-300 hover:scale-120 animate-float"
               aria-label="Open chat"
+              style={{
+                animation: "float 3s ease-in-out infinite",
+              }}
             >
-              <MessageCircle size={24} className="text-white" />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+              <div className="relative w-18 h-18 md:w-24 md:h-24">
+                <Image
+                  src="/images/ai1.png"
+                  alt="AI Assistant"
+                  fill
+                  className="object-contain group-hover:scale-110 transition-transform duration-300"
+                />
+                <div className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+              </div>
             </button>
           )}
         </div>
       )}
+      <style jsx>{`
+        @keyframes float {
+          0%,
+          100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+      `}</style>
     </>
   );
 }

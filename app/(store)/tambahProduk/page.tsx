@@ -287,6 +287,16 @@ export default function TambahProdukPage() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [showCropModal, setShowCropModal] = useState(false);
   const [originalImageFile, setOriginalImageFile] = useState<File | null>(null);
+  const [aiImage, setAiImage] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const [selectedImageType, setSelectedImageType] = useState<"original" | "ai">(
+    "original"
+  );
+  const [cropSource, setCropSource] = useState<{
+    file: File;
+    type: "ai" | "original";
+  } | null>(null);
 
   // Check authentication on component mount
   useEffect(() => {
@@ -385,13 +395,20 @@ export default function TambahProdukPage() {
     }
   };
 
-  const handleCropComplete = (croppedImage: File) => {
-    setImageFile(croppedImage);
-    setShowCropModal(false);
-  };
-
   const handleEditImage = () => {
-    if (originalImageFile) {
+    if (selectedImageType === "ai" && aiImage) {
+      // Convert base64 to File for cropper
+      const byteString = atob(aiImage);
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      const aiFile = new File([ab], "ai-enhanced.jpg", { type: "image/jpeg" });
+      setCropSource({ file: aiFile, type: "ai" });
+      setShowCropModal(true);
+    } else if (originalImageFile) {
+      setCropSource({ file: originalImageFile, type: "original" });
       setShowCropModal(true);
     }
   };
@@ -500,6 +517,67 @@ export default function TambahProdukPage() {
     }
   }, [isDragging, isResizing, popupPosition, dragOffset]);
 
+  const handleAIEnhance = async () => {
+    setAiLoading(true);
+    setAiError("");
+    setAiImage(null);
+    try {
+      if (!originalImageFile) {
+        setAiError("Upload gambar terlebih dahulu.");
+        setAiLoading(false);
+        return;
+      }
+      if (!form.name.trim() || !form.description.trim()) {
+        setAiError("Nama produk dan deskripsi wajib diisi untuk AI Edit.");
+        setAiLoading(false);
+        return;
+      }
+      const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
+      const formData = new FormData();
+      formData.append("file", originalImageFile);
+      formData.append("name", form.name);
+      formData.append("description", form.description);
+      const res = await fetch(`${API_BASE}/api/chat/enhance-image`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        setAiError("Gagal mengedit gambar dengan AI: " + errText);
+        setAiLoading(false);
+        return;
+      }
+      const data = await res.json();
+      if (data.image) {
+        setAiImage(data.image);
+        setSelectedImageType("ai");
+      } else {
+        setAiError("Gagal mendapatkan gambar dari AI.");
+      }
+    } catch (err: any) {
+      setAiError(err.message || "Gagal mengedit gambar dengan AI");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleCropComplete = (croppedImage: File) => {
+    if (cropSource?.type === "ai") {
+      // Update aiImage
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const base64 = (e.target?.result as string)?.split(",")[1];
+        setAiImage(base64 || null);
+      };
+      reader.readAsDataURL(croppedImage);
+    } else {
+      setImageFile(croppedImage);
+      setOriginalImageFile(croppedImage);
+    }
+    setShowCropModal(false);
+    setCropSource(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -529,9 +607,25 @@ export default function TambahProdukPage() {
         setLoading(false);
         return;
       }
+      // Use selected image (original or AI)
+      let uploadImageFile = imageFile;
+      if (selectedImageType === "ai" && aiImage) {
+        // Convert base64 to File
+        const byteString = atob(aiImage);
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+        uploadImageFile = new File(
+          [ab],
+          originalImageFile?.name || "ai-enhanced.jpg",
+          { type: "image/jpeg" }
+        );
+      }
       // Upload gambar ke /api/store
       const imgForm = new FormData();
-      imgForm.append("file", imageFile);
+      imgForm.append("file", uploadImageFile);
       const uploadRes = await fetch("/api/store", {
         method: "POST",
         body: imgForm,
@@ -735,35 +829,107 @@ export default function TambahProdukPage() {
                   className="w-full px-4 py-2 rounded-lg border border-gray-200 bg-white"
                 />
                 {imageFile && (
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      <img
-                        src={URL.createObjectURL(imageFile)}
-                        alt="Preview"
-                        className="w-24 h-24 object-cover rounded-lg border"
-                      />
-                      {originalImageFile && (
-                        <button
-                          type="button"
-                          onClick={handleEditImage}
-                          className="absolute -top-2 -right-2 bg-blue-500 text-white p-1 rounded-full hover:bg-blue-600 transition"
-                          title="Edit Gambar"
-                        >
-                          <Crop size={12} />
-                        </button>
-                      )}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        <img
+                          src={
+                            selectedImageType === "ai" && aiImage
+                              ? `data:image/jpeg;base64,${aiImage}`
+                              : URL.createObjectURL(imageFile)
+                          }
+                          alt="Preview"
+                          className="w-24 h-24 object-cover rounded-lg border"
+                        />
+                        {originalImageFile && (
+                          <button
+                            type="button"
+                            onClick={handleEditImage}
+                            className="absolute -top-2 -right-2 bg-blue-500 text-white p-1 rounded-full hover:bg-blue-600 transition"
+                            title="Edit Gambar"
+                          >
+                            <Crop size={12} />
+                          </button>
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        <p>Ukuran: 1:1 (Persegi)</p>
+                        <p>Format: JPG, PNG</p>
+                        {originalImageFile && (
+                          <button
+                            type="button"
+                            onClick={handleEditImage}
+                            className="text-blue-500 hover:text-blue-600 underline"
+                          >
+                            Klik untuk edit posisi & ukuran
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600">
-                      <p>Ukuran: 1:1 (Persegi)</p>
-                      <p>Format: JPG, PNG</p>
-                      {originalImageFile && (
-                        <button
-                          type="button"
-                          onClick={handleEditImage}
-                          className="text-blue-500 hover:text-blue-600 underline"
-                        >
-                          Klik untuk edit posisi & ukuran
-                        </button>
+                    {/* AI Enhance Button and Previews */}
+                    <div className="flex flex-col gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={handleAIEnhance}
+                        className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 w-fit disabled:opacity-50"
+                        disabled={
+                          aiLoading ||
+                          !originalImageFile ||
+                          !form.name.trim() ||
+                          !form.description.trim()
+                        }
+                      >
+                        {aiLoading
+                          ? "Memproses dengan AI..."
+                          : "AI Edit"}
+                      </button>
+                      {aiError && (
+                        <div className="text-red-500 text-xs">{aiError}</div>
+                      )}
+                      {(aiImage || aiLoading) && (
+                        <div className="flex gap-4 items-center mt-2">
+                          <div className="flex flex-col items-center">
+                            <label className="flex items-center gap-1">
+                              <input
+                                type="radio"
+                                checked={selectedImageType === "original"}
+                                onChange={() =>
+                                  setSelectedImageType("original")
+                                }
+                              />
+                              <span className="text-xs">Gambar Asli</span>
+                            </label>
+                            <img
+                              src={URL.createObjectURL(imageFile)}
+                              alt="Original"
+                              className="w-20 h-20 object-cover rounded border mt-1"
+                            />
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <label className="flex items-center gap-1">
+                              <input
+                                type="radio"
+                                checked={selectedImageType === "ai"}
+                                onChange={() => setSelectedImageType("ai")}
+                                disabled={!aiImage}
+                              />
+                              <span className="text-xs">AI Edit</span>
+                            </label>
+                            {aiLoading ? (
+                              <div className="w-20 h-20 flex items-center justify-center border rounded bg-gray-100 animate-pulse">
+                                <span className="text-xs text-gray-400">
+                                  Loading...
+                                </span>
+                              </div>
+                            ) : aiImage ? (
+                              <img
+                                src={`data:image/jpeg;base64,${aiImage}`}
+                                alt="AI Enhanced"
+                                className="w-20 h-20 object-cover rounded border mt-1"
+                              />
+                            ) : null}
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -889,11 +1055,14 @@ export default function TambahProdukPage() {
           )}
 
           {/* Image Cropper Modal */}
-          {showCropModal && originalImageFile && (
+          {showCropModal && cropSource && (
             <ImageCropper
-              imageFile={originalImageFile}
+              imageFile={cropSource.file}
               onCropComplete={handleCropComplete}
-              onCancel={() => setShowCropModal(false)}
+              onCancel={() => {
+                setShowCropModal(false);
+                setCropSource(null);
+              }}
             />
           )}
         </div>
