@@ -8,6 +8,8 @@ import { motion } from "framer-motion";
 import { fetchProducts, Product } from "@/lib/api/fetchProducts";
 import WishlistButton from "@/components/ui/WishlistButton";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import ButtonLoading from "@/components/ui/ButtonLoading";
+import { useRouter } from "next/navigation";
 
 // Rating Stars Component
 const RatingStars = ({ rating }: { rating: number }) => {
@@ -172,6 +174,8 @@ const ProdukPakan = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lihatSemuaLoading, setLihatSemuaLoading] = useState(false);
+  const router = useRouter();
 
   const categories = [
     { label: "Ruminansia", image: "/images/kategori/Ruminansia.png" },
@@ -321,11 +325,29 @@ const ProdukPakan = () => {
           initial={{ y: 100, opacity: 0 }}
           whileInView={{ y: 0, opacity: 1 }}
           transition={{ duration: 1 }}
-          href="/katalog"
-          className="inline-flex items-center gap-2 text-black/40 text-base hover:scale-105 duration-300"
+          href="#"
+          className={`inline-flex items-center gap-2 text-black/40 text-base hover:scale-105 duration-300 ${lihatSemuaLoading ? 'cursor-not-allowed opacity-60' : ''}`}
+          onClick={e => {
+            if (lihatSemuaLoading) return;
+            e.preventDefault();
+            setLihatSemuaLoading(true);
+            setTimeout(() => {
+              router.push("/katalog");
+              setLihatSemuaLoading(false);
+            }, 800);
+          }}
         >
-          Lihat semua
-          <ArrowRight className="ml-0" />
+          {lihatSemuaLoading ? (
+            <>
+              <LoadingSpinner size="sm" color="yellow" className="mr-2" />
+              Menuju Katalog...
+            </>
+          ) : (
+            <>
+              Lihat semua
+              <ArrowRight className="ml-0" />
+            </>
+          )}
         </motion.a>
       </div>
 

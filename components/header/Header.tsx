@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   FaShoppingBasket,
   FaHeart,
@@ -19,8 +19,60 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
 
+  // Loading states for icon and text buttons
+  const [cartLoading, setCartLoading] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [registerLoading, setRegisterLoading] = useState(false);
+
   // Hide header on auth pages to prevent interference with login
   const isAuthPage = pathname?.startsWith("/auth");
+
+  // Animation CSS
+  const bounceAnim = "animate-bounce-fast";
+  const flashAnim = "animate-flash-bg";
+  const [navFlash, setNavFlash] = useState({
+    home: false,
+    katalog: false,
+    konsultasi: false,
+    artikel: false,
+  });
+
+  // Add keyframes for bounce and flash
+  if (typeof window !== 'undefined') {
+    const styleId = 'header-anim-style';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.innerHTML = `
+        @keyframes bounce-fast {
+          0%, 100% { transform: translateY(0); }
+          30% { transform: translateY(-10px); }
+          50% { transform: translateY(-5px); }
+          70% { transform: translateY(-15px); }
+        }
+        .animate-bounce-fast {
+          animation: bounce-fast 0.9s;
+        }
+        @keyframes flash-bg {
+          0%, 100% { background-color: #f7ab31; color: #fff; }
+          50% { background-color: #fff; color: #f7ab31; }
+        }
+        .animate-flash-bg {
+          animation: flash-bg 0.7s;
+        }
+        @keyframes flash-text {
+          0%, 100% { color: #fff; }
+          50% { color: #f7ab31; }
+        }
+        .animate-flash-text {
+          animation: flash-text 0.7s;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }
 
   return (
     <>
@@ -39,16 +91,44 @@ export default function Header() {
           {/* Desktop Navigation Centered */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <nav className="flex items-center bg-1 text-white px-8 py-3 rounded-full gap-6 text-sm font-medium">
-              <Link href="/" className="hover:scale-105">
+              <Link
+                href="/"
+                className={`hover:scale-105 ${navFlash.home ? 'animate-flash-text' : ''}`}
+                onClick={e => {
+                  setNavFlash(f => ({ ...f, home: true }));
+                  setTimeout(() => setNavFlash(f => ({ ...f, home: false })), 700);
+                }}
+              >
                 Beranda
               </Link>
-              <Link href="/katalog" className="hover:scale-105">
+              <Link
+                href="/katalog"
+                className={`hover:scale-105 ${navFlash.katalog ? 'animate-flash-text' : ''}`}
+                onClick={e => {
+                  setNavFlash(f => ({ ...f, katalog: true }));
+                  setTimeout(() => setNavFlash(f => ({ ...f, katalog: false })), 700);
+                }}
+              >
                 Cari Pakan
               </Link>
-              <Link href="/konsultasi" className="hover:scale-105">
+              <Link
+                href="/konsultasi"
+                className={`hover:scale-105 ${navFlash.konsultasi ? 'animate-flash-text' : ''}`}
+                onClick={e => {
+                  setNavFlash(f => ({ ...f, konsultasi: true }));
+                  setTimeout(() => setNavFlash(f => ({ ...f, konsultasi: false })), 700);
+                }}
+              >
                 Konsul Pakan
               </Link>
-              <Link href="/artikel" className="hover:scale-105">
+              <Link
+                href="/artikel"
+                className={`hover:scale-105 ${navFlash.artikel ? 'animate-flash-text' : ''}`}
+                onClick={e => {
+                  setNavFlash(f => ({ ...f, artikel: true }));
+                  setTimeout(() => setNavFlash(f => ({ ...f, artikel: false })), 700);
+                }}
+              >
                 Artikel & Tips
               </Link>
             </nav>
@@ -80,13 +160,29 @@ export default function Header() {
               <>
                 <Link
                   href="/auth/login"
-                  className="bg-2 text-white px-4 py-2 rounded-full text-sm font-medium transition-transform duration-150 hover:scale-105"
+                  className={`bg-2 text-white px-4 py-2 rounded-full text-sm font-medium transition-transform duration-150 hover:scale-105 ${loginLoading ? 'animate-flash-text' : ''}`}
+                  onClick={e => {
+                    e.preventDefault();
+                    setLoginLoading(true);
+                    setTimeout(() => {
+                      setLoginLoading(false);
+                      window.location.href = '/auth/login';
+                    }, 700);
+                  }}
                 >
                   Masuk
                 </Link>
                 <Link
                   href="/auth/register"
-                  className="bg-1 text-white px-4 py-2 rounded-full text-sm font-medium transition-transform duration-150 hover:scale-105"
+                  className={`bg-1 text-white px-4 py-2 rounded-full text-sm font-medium transition-transform duration-150 hover:scale-105 ${registerLoading ? 'animate-flash-text' : ''}`}
+                  onClick={e => {
+                    e.preventDefault();
+                    setRegisterLoading(true);
+                    setTimeout(() => {
+                      setRegisterLoading(false);
+                      window.location.href = '/auth/register';
+                    }, 700);
+                  }}
                 >
                   Daftar
                 </Link>

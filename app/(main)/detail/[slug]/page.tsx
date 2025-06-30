@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
 import WishlistButton from "@/components/ui/WishlistButton";
 import PageLoading from "@/components/ui/PageLoading";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 // Category Icon Component
 const CategoryIcon = ({ category }: { category: string }) => {
@@ -189,6 +190,7 @@ const Detail = () => {
   const slug = params.slug as string;
   const { user } = useUser();
   const [selectedWeight, setSelectedWeight] = useState<Weight | null>(null);
+  const [beliLoading, setBeliLoading] = useState(false);
 
   const increment = () => setQuantity((q) => q + 1);
   const decrement = () => setQuantity((q) => (q > 0 ? q - 1 : 0));
@@ -392,6 +394,7 @@ const Detail = () => {
                 />
                 <button
                   className="bg-3 px-5 py-2 rounded-full text-black font-medium hover:bg-3/90 transition"
+                  disabled={beliLoading}
                   onClick={async () => {
                     if (!user) {
                       alert("Silakan login terlebih dahulu");
@@ -406,6 +409,7 @@ const Detail = () => {
                       alert("Pilih berat produk terlebih dahulu");
                       return;
                     }
+                    setBeliLoading(true);
                     // Tambahkan ke keranjang dengan jumlah dan berat yang dipilih
                     const response = await fetch("/api/cart/add", {
                       method: "POST",
@@ -425,9 +429,17 @@ const Detail = () => {
                       const data = await response.json();
                       alert(data.message || "Gagal menambahkan ke keranjang");
                     }
+                    setBeliLoading(false);
                   }}
                 >
-                  Beli Sekarang
+                  {beliLoading ? (
+                    <>
+                      <LoadingSpinner size="sm" color="yellow" className="mr-2" />
+                      Memproses...
+                    </>
+                  ) : (
+                    "Beli Sekarang"
+                  )}
                 </button>
                 <WishlistButton productId={product._id} size="lg" />
               </div>

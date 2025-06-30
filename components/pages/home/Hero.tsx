@@ -4,8 +4,15 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import Button from "../../ui/Button";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import ButtonLoading from "../../ui/ButtonLoading";
+import LoadingSpinner from "../../ui/LoadingSpinner";
 
 const Hero = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
   return (
     <section className="relative w-full min-h-screen flex flex-col justify-start pb-10">
       {/* Gambar background */}
@@ -49,12 +56,28 @@ const Hero = () => {
           transition={{ duration: 0.8, delay: 0.3 }}
         >
           <Button
-            href="/katalog"
             size="md"
             className="mb-6 text-sm px-4 py-2 md:text-base md:px-6 md:py-3 transform transition-all duration-300 hover:scale-105 hover:brightness-110 hover:shadow-lg"
+            disabled={isLoading}
+            onClick={() => {
+              setIsLoading(true);
+              setTimeout(() => {
+                router.push("/katalog");
+                setIsLoading(false);
+              }, 800);
+            }}
           >
-            Lihat Produk
-            <ArrowRight className="ml-2 w-4 h-4 md:w-5 md:h-5" />
+            {isLoading ? (
+              <>
+                <LoadingSpinner size="sm" color="yellow" className="mr-2" />
+                Menuju Katalog...
+              </>
+            ) : (
+              <>
+                Lihat Produk
+                <ArrowRight className="ml-2 w-4 h-4 md:w-5 md:h-5" />
+              </>
+            )}
           </Button>
         </motion.div>
       </div>

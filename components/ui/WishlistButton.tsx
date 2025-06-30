@@ -86,6 +86,29 @@ const WishlistButton: React.FC<WishlistButtonProps> = ({
     }
   };
 
+  // Add heartbeat animation style
+  const heartbeatStyle = `
+  @keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    10%, 30% { transform: scale(1.2); }
+    20%, 40% { transform: scale(0.95); }
+    50% { transform: scale(1.1); }
+    60% { transform: scale(0.98); }
+    70% { transform: scale(1.05); }
+    80% { transform: scale(1); }
+  }
+  `;
+
+  if (typeof window !== 'undefined') {
+    const styleId = 'wishlist-heartbeat-style';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.innerHTML = heartbeatStyle;
+      document.head.appendChild(style);
+    }
+  }
+
   return (
     <button
       onClick={toggleWishlist}
@@ -94,7 +117,17 @@ const WishlistButton: React.FC<WishlistButtonProps> = ({
       title={isInWishlist ? "Hapus dari wishlist" : "Tambah ke wishlist"}
     >
       <Heart 
-        className={`${sizeClasses[size]} ${isInWishlist ? 'fill-red-500 text-red-500' : ''}`} 
+        className={
+          `${sizeClasses[size]} ` +
+          (
+            isLoading
+              ? 'fill-red-500 text-red-500 animate-heartbeat'
+              : isInWishlist
+                ? 'fill-red-500 text-red-500'
+                : ''
+          )
+        }
+        style={isLoading ? { animation: 'heartbeat 0.8s infinite' } : {}}
       />
     </button>
   );

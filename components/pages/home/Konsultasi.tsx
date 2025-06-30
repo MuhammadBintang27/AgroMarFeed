@@ -4,10 +4,15 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import { fetchKonsultan, Konsultan } from "@/lib/api/fetchKonsultan";
+import ButtonLoading from "@/components/ui/ButtonLoading";
+import { useRouter } from "next/navigation";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const Konsultasi = () => {
   const [konsultanList, setKonsultanList] = useState<Konsultan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     async function loadKonsultan() {
@@ -56,11 +61,25 @@ const Konsultasi = () => {
           </p>
           <div className="flex justify-center md:justify-start">
             <Button
-              href="/konsultasi"
               size="md"
               className="bg-3 text-black font-semibold px-6 py-3 rounded-full hover:brightness-110 hover:scale-105 transform transition duration-300"
+              disabled={isLoading}
+              onClick={() => {
+                setIsLoading(true);
+                setTimeout(() => {
+                  router.push("/konsultasi");
+                  setIsLoading(false);
+                }, 800);
+              }}
             >
-              Mulai Konsultasi
+              {isLoading ? (
+                <>
+                  <LoadingSpinner size="sm" color="yellow" className="mr-2" />
+                  Menuju Konsultasi...
+                </>
+              ) : (
+                <>Mulai Konsultasi</>
+              )}
             </Button>
           </div>
         </div>

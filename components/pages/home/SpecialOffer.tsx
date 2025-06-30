@@ -6,6 +6,8 @@ import { motion } from "framer-motion";
 import { fetchProducts, Product } from "@/lib/api/fetchProducts";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Link from "next/link";
+import ButtonLoading from "@/components/ui/ButtonLoading";
+import { useRouter } from "next/navigation";
 
 // Loading Skeleton for Special Offer Cards
 const SpecialOfferCardSkeleton = ({ index }: { index: number }) => (
@@ -34,6 +36,8 @@ const SpecialOffer = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [buttonLoading, setButtonLoading] = useState([false, false]);
+  const router = useRouter();
 
   useEffect(() => {
     let ignore = false;
@@ -172,17 +176,37 @@ const SpecialOffer = () => {
                 </div>
 
                 {/* Tombol Beli Sekarang */}
-                <Link
-                  href={`/detail/${product._id}`}
+                <button
+                  type="button"
                   className={`inline-flex items-center justify-center gap-2 text-xs md:text-sm lg:text-base px-4 py-2 rounded-[25px] font-medium transition-all duration-300 hover:scale-105 ${
                     idx === 0
                       ? "bg-1 text-white hover:bg-1/90"
                       : "bg-3 text-black hover:bg-3/90"
                   }`}
+                  disabled={buttonLoading[idx]}
+                  onClick={() => {
+                    const newLoading = [...buttonLoading];
+                    newLoading[idx] = true;
+                    setButtonLoading(newLoading);
+                    setTimeout(() => {
+                      router.push(`/detail/${product._id}`);
+                      newLoading[idx] = false;
+                      setButtonLoading([...newLoading]);
+                    }, 800);
+                  }}
                 >
-                  Beli Sekarang
-                  <ArrowRight className="w-3 h-3 md:w-4 md:h-4" />
-                </Link>
+                  {buttonLoading[idx] ? (
+                    <>
+                      <LoadingSpinner size="sm" color={idx === 0 ? "green" : "yellow"} className="mr-2" />
+                      Menuju Detail...
+                    </>
+                  ) : (
+                    <>
+                      Beli Sekarang
+                      <ArrowRight className="w-3 h-3 md:w-4 md:h-4" />
+                    </>
+                  )}
+                </button>
               </div>
 
               {/* Kolom Kanan - Gambar */}

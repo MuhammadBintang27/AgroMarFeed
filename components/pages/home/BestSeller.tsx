@@ -6,11 +6,15 @@ import React, { useEffect, useState } from "react";
 import Button from "../../ui/Button";
 import { fetchProducts, Product } from "@/lib/api/fetchProducts";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import ButtonLoading from "../../ui/ButtonLoading";
+import { useRouter } from "next/navigation";
 
 const BestSeller = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [buttonLoading, setButtonLoading] = useState(false);
+  const router = useRouter();
 
   // Function to truncate text with ellipsis
   const truncateText = (text: string, maxLength: number) => {
@@ -128,14 +132,24 @@ const BestSeller = () => {
                   {truncateText(product.description, 150)}
                 </p>
                 <div className="flex justify-center">
-                  <Button
-                    href={`/detail/${product._id}`}
-                    size="md"
-                    className="hover:scale-105 hover:brightness-110 duration-300 bg-1 text-white mb-6"
-                  >
-                    Lihat Produk
-                    <ArrowRight className="ml-2" />
-                  </Button>
+                  {buttonLoading ? (
+                    <ButtonLoading size="md" color="yellow" text="Menuju Detail..." className="mb-6" />
+                  ) : (
+                    <Button
+                      size="md"
+                      className="hover:scale-105 hover:brightness-110 duration-300 bg-1 text-white mb-6"
+                      onClick={() => {
+                        setButtonLoading(true);
+                        setTimeout(() => {
+                          router.push(`/detail/${product._id}`);
+                          setButtonLoading(false);
+                        }, 800);
+                      }}
+                    >
+                      Lihat Produk
+                      <ArrowRight className="ml-2" />
+                    </Button>
+                  )}
                 </div>
               </>
             ) : (
@@ -178,14 +192,24 @@ const BestSeller = () => {
                   {truncateText(product.description, 200)}
                 </p>
                 <div className="flex justify-center md:justify-start">
-                  <Button
-                    href={`/detail/${product._id}`}
-                    size="md"
-                    className="hover:scale-105 hover:brightness-110 duration-300 bg-1 text-white mb-6"
-                  >
-                    Lihat Produk
-                    <ArrowRight className="ml-2" />
-                  </Button>
+                  {buttonLoading ? (
+                    <ButtonLoading size="md" color="yellow" text="Menuju Detail..." className="mb-6" />
+                  ) : (
+                    <Button
+                      size="md"
+                      className="hover:scale-105 hover:brightness-110 duration-300 bg-1 text-white mb-6"
+                      onClick={() => {
+                        setButtonLoading(true);
+                        setTimeout(() => {
+                          router.push(`/detail/${product._id}`);
+                          setButtonLoading(false);
+                        }, 800);
+                      }}
+                    >
+                      Lihat Produk
+                      <ArrowRight className="ml-2" />
+                    </Button>
+                  )}
                 </div>
               </>
             ) : (

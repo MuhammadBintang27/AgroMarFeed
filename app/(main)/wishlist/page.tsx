@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
 import ChatbotWidget from "@/components/ChatbotWidget";
 import PageLoading from "@/components/ui/PageLoading";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 interface WishlistItem {
   _id: string;
@@ -28,6 +29,9 @@ const Wishlist = () => {
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
   const router = useRouter();
+  const [addToCartLoading, setAddToCartLoading] = useState<string | null>(null);
+  const [removeLoading, setRemoveLoading] = useState<string | null>(null);
+  const [jelajahiLoading, setJelajahiLoading] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -54,6 +58,7 @@ const Wishlist = () => {
   };
 
   const removeFromWishlist = async (productId: string) => {
+    setRemoveLoading(productId);
     try {
       const response = await fetch(`/api/wishlist/remove/${productId}`, {
         method: 'DELETE',
@@ -67,10 +72,13 @@ const Wishlist = () => {
     } catch (error) {
       console.error('Error removing from wishlist:', error);
       alert('Gagal menghapus dari wishlist');
+    } finally {
+      setRemoveLoading(null);
     }
   };
 
   const addToCart = async (productId: string) => {
+    setAddToCartLoading(productId);
     try {
       const response = await fetch('/api/cart/add', {
         method: 'POST',
@@ -90,7 +98,6 @@ const Wishlist = () => {
           method: 'DELETE',
         });
         if (removeResponse.ok) {
-          // Update local state to remove the item from wishlist
           setWishlistItems(prev => prev.filter(item => item.product_id._id !== productId));
           alert('Produk berhasil ditambahkan ke keranjang dan dihapus dari wishlist!');
           router.push('/keranjang');
@@ -105,6 +112,8 @@ const Wishlist = () => {
     } catch (error) {
       console.error('Error adding to cart:', error);
       alert('Gagal menambahkan ke keranjang');
+    } finally {
+      setAddToCartLoading(null);
     }
   };
 
@@ -141,10 +150,26 @@ const Wishlist = () => {
             <h3 className="text-xl font-medium text-black mb-2">Wishlist Kosong</h3>
             <p className="text-black/50 mb-6">Anda belum memiliki produk di wishlist</p>
             <Link 
-              href="/katalog" 
-              className="bg-1 text-white px-6 py-3 rounded-full hover:bg-opacity-90 transition"
+              href="#"
+              className={`bg-1 text-white px-6 py-3 rounded-full hover:bg-opacity-90 transition flex items-center justify-center w-48 mx-auto${jelajahiLoading ? ' cursor-not-allowed opacity-70' : ''}`}
+              onClick={e => {
+                if (jelajahiLoading) return;
+                e.preventDefault();
+                setJelajahiLoading(true);
+                setTimeout(() => {
+                  router.push('/katalog');
+                  setJelajahiLoading(false);
+                }, 800);
+              }}
             >
-              Jelajahi Produk
+              {jelajahiLoading ? (
+                <>
+                  <LoadingSpinner size="sm" color="white" className="mr-2" />
+                  Menuju Katalog...
+                </>
+              ) : (
+                'Jelajahi Produk'
+              )}
             </Link>
           </div>
         ) : (
@@ -193,16 +218,31 @@ const Wishlist = () => {
                   <button
                     onClick={() => addToCart(item.product_id._id)}
                     className="flex-1 bg-1 text-white py-2 px-3 rounded-full text-sm font-medium hover:bg-opacity-90 transition flex items-center justify-center gap-2"
+                    disabled={addToCartLoading === item.product_id._id || removeLoading === item.product_id._id}
                   >
-                    <ShoppingCart className="w-4 h-4" />
-                    Tambah ke Keranjang
+                    {addToCartLoading === item.product_id._id ? (
+                      <>
+                        <LoadingSpinner size="sm" color="white" className="mr-2" />
+                        Memproses...
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="w-4 h-4" />
+                        Tambah ke Keranjang
+                      </>
+                    )}
                   </button>
                   <button
                     onClick={() => removeFromWishlist(item.product_id._id)}
                     className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition flex items-center justify-center"
                     title="Hapus dari wishlist"
+                    disabled={removeLoading === item.product_id._id || addToCartLoading === item.product_id._id}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    {removeLoading === item.product_id._id ? (
+                      <LoadingSpinner size="sm" color="white" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
               </motion.div>
