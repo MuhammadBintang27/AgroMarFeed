@@ -15,6 +15,7 @@ import {
   ZoomIn,
   ZoomOut,
   XCircle,
+  ArrowLeft,
 } from "lucide-react";
 
 const defaultWeight = { id: "", value: "", price: 0 };
@@ -298,7 +299,7 @@ export default function TambahProdukPage() {
     type: "ai" | "original";
   } | null>(null);
   const [aiEditUsed, setAiEditUsed] = useState(false);
-  const [aiEditTooltip, setAiEditTooltip] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
 
   // Check authentication on component mount
   useEffect(() => {
@@ -334,6 +335,16 @@ export default function TambahProdukPage() {
     };
     fetchStore();
   }, [user]);
+
+  useEffect(() => {
+    // Deteksi mobile
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<any>) => {
     const { name, value, type } = e.target;
@@ -520,16 +531,9 @@ export default function TambahProdukPage() {
   }, [isDragging, isResizing, popupPosition, dragOffset]);
 
   const handleAIEnhance = async () => {
-    if (aiEditUsed) {
-      setAiEditTooltip(
-        "AI Edit hanya bisa digunakan 1x per halaman. Silakan refresh untuk mencoba lagi."
-      );
-      return;
-    }
     setAiLoading(true);
     setAiError("");
     setAiImage(null);
-    setAiEditTooltip("");
     try {
       if (!originalImageFile) {
         setAiError("Upload gambar terlebih dahulu.");
@@ -550,10 +554,21 @@ export default function TambahProdukPage() {
         method: "POST",
         body: formData,
       });
-      setAiEditUsed(true);
       if (!res.ok) {
         const errText = await res.text();
+        // Check for validation error from backend
+        let isValidationError = false;
+        try {
+          const errJson = JSON.parse(errText);
+          if (
+            errJson?.error &&
+            errJson.error.toLowerCase().includes("tidak sesuai ketentuan")
+          ) {
+            isValidationError = true;
+          }
+        } catch {}
         setAiError("Gagal mengedit gambar dengan AI: " + errText);
+        if (!isValidationError) setAiEditUsed(true); // Only disable if not validation error
         setAiLoading(false);
         return;
       }
@@ -561,11 +576,14 @@ export default function TambahProdukPage() {
       if (data.image) {
         setAiImage(data.image);
         setSelectedImageType("ai");
+        setAiEditUsed(true); // Only disable after success
       } else {
         setAiError("Gagal mendapatkan gambar dari AI.");
+        setAiEditUsed(true);
       }
     } catch (err: any) {
       setAiError(err.message || "Gagal mengedit gambar dengan AI");
+      setAiEditUsed(true);
     } finally {
       setAiLoading(false);
     }
@@ -703,6 +721,15 @@ export default function TambahProdukPage() {
       {/* Show main content if user is authenticated */}
       {!userLoading && user && (
         <div className="w-full max-w-2xl mx-auto bg-white rounded-2xl p-8">
+          {/* Tombol Back */}
+          <button
+            type="button"
+            onClick={() => router.push("/tokoSaya")}
+            className="flex items-center gap-2 text-sm text-gray-700 hover:text-yellow-600 mb-4 font-semibold"
+          >
+            <ArrowLeft size={18} />
+            Kembali ke Toko Saya
+          </button>
           <h1 className="text-3xl font-extrabold text-[#39381F] mb-8 text-center">
             Tambah Produk
           </h1>
@@ -881,7 +908,7 @@ export default function TambahProdukPage() {
                       <button
                         type="button"
                         onClick={handleAIEnhance}
-                        className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 w-fit disabled:opacity-50"
+                        className="bg-3 text-white px-3 py-1 rounded hover:bg-yellow-600 w-fit disabled:opacity-50 flex items-center gap-2"
                         disabled={
                           aiLoading ||
                           !originalImageFile ||
@@ -889,19 +916,13 @@ export default function TambahProdukPage() {
                           !form.description.trim() ||
                           aiEditUsed
                         }
-                        {...(aiEditUsed
-                          ? {
-                              title:
-                                "AI Edit hanya bisa digunakan 1x per halaman. Silakan refresh untuk mencoba lagi.",
-                            }
-                          : {})}
                       >
+                        <Sparkles size={16} />
                         {aiLoading ? "Memproses dengan AI..." : "AI Edit"}
                       </button>
-                      {aiEditTooltip && (
-                        <div className="text-xs text-yellow-700 mt-1">
-                          {aiEditTooltip}
-                        </div>
+
+                      {aiError && (
+                        <div className="text-red-500 text-xs">{aiError}</div>
                       )}
                       {(aiImage || aiLoading) && (
                         <div className="flex gap-4 items-center mt-2">
@@ -1011,19 +1032,53 @@ export default function TambahProdukPage() {
           {/* Review Popup Window */}
           {showReviewPopup && (
             <div
-              className="fixed inset-0 z-50 pointer-events-none"
-              style={{
-                left: `${popupPosition.x}px`,
-                top: `${popupPosition.y}px`,
-                width: `${popupSize.width}px`,
-                height: `${popupSize.height}px`,
-              }}
+              className={`fixed z-50 pointer-events-none ${
+                isMobile
+                  ? "inset-0 flex items-center justify-center px-2 py-8" // Centered on mobile
+                  : "inset-0"
+              }`}
+              style={
+                isMobile
+                  ? {
+                      left: undefined,
+                      top: undefined,
+                      width: "100vw",
+                      height: "100vh",
+                      padding: 0,
+                    }
+                  : {
+                      left: `${popupPosition.x}px`,
+                      top: `${popupPosition.y}px`,
+                      width: `${popupSize.width}px`,
+                      height: `${popupSize.height}px`,
+                    }
+              }
             >
-              <div className="bg-white rounded-lg shadow-2xl border-2 border-gray-200 w-full h-full flex flex-col pointer-events-auto">
+              <div
+                className={`bg-white rounded-lg shadow-2xl border-2 border-gray-200 w-full h-full flex flex-col pointer-events-auto ${
+                  isMobile ? "max-w-full max-h-full w-full h-auto" : ""
+                }`}
+                style={
+                  isMobile
+                    ? {
+                        maxWidth: "100vw",
+                        maxHeight: "90vh",
+                        minHeight: "40vh",
+                        minWidth: "0",
+                        margin: 0,
+                        padding: 0,
+                      }
+                    : {}
+                }
+              >
                 {/* Header */}
                 <div
-                  className="bg-gray-100 px-4 py-2 rounded-t-lg flex items-center justify-between cursor-move"
-                  onMouseDown={(e) => handleMouseDown(e, "drag")}
+                  className={`bg-gray-100 px-4 py-2 rounded-t-lg flex items-center justify-between ${
+                    isMobile ? "cursor-default" : "cursor-move"
+                  }`}
+                  onMouseDown={
+                    isMobile ? undefined : (e) => handleMouseDown(e, "drag")
+                  }
                 >
                   <div className="flex items-center gap-2">
                     <Move size={16} className="text-gray-500" />
@@ -1040,7 +1095,6 @@ export default function TambahProdukPage() {
                     </button>
                   </div>
                 </div>
-
                 {/* Content */}
                 <div className="flex-1 p-4 overflow-auto">
                   {reviewLoading ? (
@@ -1059,14 +1113,15 @@ export default function TambahProdukPage() {
                     />
                   )}
                 </div>
-
-                {/* Resize Handle */}
-                <div
-                  className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
-                  onMouseDown={(e) => handleMouseDown(e, "resize")}
-                >
-                  <div className="w-0 h-0 border-l-8 border-l-transparent border-b-8 border-b-gray-400"></div>
-                </div>
+                {/* Resize Handle (desktop only) */}
+                {!isMobile && (
+                  <div
+                    className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
+                    onMouseDown={(e) => handleMouseDown(e, "resize")}
+                  >
+                    <div className="w-0 h-0 border-l-8 border-l-transparent border-b-8 border-b-gray-400"></div>
+                  </div>
+                )}
               </div>
             </div>
           )}
