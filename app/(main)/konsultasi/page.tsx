@@ -100,8 +100,7 @@ export default function ConsultationPage() {
             Konsultasi Ahli Pakan & Dokter Hewan Langsung
           </h1>
           <p className="text-gray-600">
-            Paket ikan, pakan ayam, dan ternak dari limbah agro-maritim. Hemat
-            hingga 30%! Beli pakan, bantu bumi.
+            Konsultasi langsung dengan ahli pakan dan dokter hewan untuk solusi tepat bagi kebutuhan ternak Anda.
           </p>
         </div>
 

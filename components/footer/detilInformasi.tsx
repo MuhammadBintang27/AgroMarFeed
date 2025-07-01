@@ -6,17 +6,17 @@ export default function InformativeFooter() {
     {
       image: "/images/home/gratisOngkir.png",
       title: "Gratis Ongkir",
-      description: "Pelet ikan, pakan ayam, dan ternak",
+      description: "Nikmati pengiriman gratis untuk berbagai produk pakan pilihan",
     },
     {
       image: "/images/cart/pembayaranMudah.png",
       title: "Pembayaran Mudah",
-      description: "Pelet ikan, pakan ayam, dan ternak",
+      description: "Transaksi cepat dan fleksibel dengan berbagai metode pembayaran",
     },
     {
       image: "/images/cart/melayani.png",
       title: "24x7 Melayani",
-      description: "Pelet ikan, pakan ayam, dan ternak",
+      description: "Layanan pelanggan dan sistem toko online aktif setiap saat",
     },
   ];
 
