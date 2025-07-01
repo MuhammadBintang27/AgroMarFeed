@@ -390,7 +390,7 @@ export default function TokoSayaPage() {
             <div className="bg-[#39381F] rounded-2xl p-4 sm:p-6 flex flex-col md:flex-row md:items-center md:justify-between mb-6 sm:mb-8 shadow-lg relative">
               <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-5">
                 <img
-                  src="/images/home/avatar.png"
+                  src="/images/icons/tokoSaya.png"
                   alt="Toko"
                   className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white object-cover mb-2 sm:mb-0"
                 />
@@ -734,19 +734,34 @@ export default function TokoSayaPage() {
               <div className="bg-white rounded-2xl shadow p-3 sm:p-6 mb-6 sm:mb-8">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 border-b pb-2 gap-2 sm:gap-0">
                   <div className="flex gap-2 sm:gap-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-200">
-                    {subTabList.map((tab) => (
-                      <button
-                        key={tab.key}
-                        className={`text-sm sm:text-base font-semibold pb-1 border-b-2 transition whitespace-nowrap ${
-                          activeSubTab === tab.key
-                            ? "border-yellow-400 text-yellow-600"
-                            : "border-transparent text-gray-400 hover:text-yellow-600"
-                        }`}
-                        onClick={() => setActiveSubTab(tab.key)}
-                      >
-                        {tab.label} (0)
-                      </button>
-                    ))}
+                    {subTabList.map((tab) => {
+                      let count = 0;
+                      if (tab.key === "produkSaya") {
+                        count = products.length;
+                      }
+                      if (tab.key === "habis") {
+                        count = products.filter(
+                          (p) => (p.stock ?? 0) === 0
+                        ).length;
+                      }
+                      if (tab.key === "diperiksa") {
+                        // Jika ingin menambah status diperiksa, tambahkan field pada Product
+                        count = 0;
+                      }
+                      return (
+                        <button
+                          key={tab.key}
+                          className={`text-sm sm:text-base font-semibold pb-1 border-b-2 transition whitespace-nowrap ${
+                            activeSubTab === tab.key
+                              ? "border-yellow-400 text-yellow-600"
+                              : "border-transparent text-gray-400 hover:text-yellow-600"
+                          }`}
+                          onClick={() => setActiveSubTab(tab.key)}
+                        >
+                          {tab.label} ({count})
+                        </button>
+                      );
+                    })}
                   </div>
                   <button
                     className="bg-yellow-400 hover:bg-yellow-500 text-[#39381F] px-4 py-2 rounded-lg font-bold shadow transition w-full sm:w-auto"
