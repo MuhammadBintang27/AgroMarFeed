@@ -55,7 +55,9 @@ export default function ProfilePage() {
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [profileImageUrl, setProfileImageUrl] = useState<string>("/images/home/avatar.png");
+  const [profileImageUrl, setProfileImageUrl] = useState<string>(
+    "/images/home/avatar.png"
+  );
   const router = useRouter();
 
   // Form states
@@ -80,7 +82,10 @@ export default function ProfilePage() {
     is_active: false,
   });
 
-  const [selectedLocation, setSelectedLocation] = useState<CityOption | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<CityOption | null>(
+    null
+  );
+  const [activeTab, setActiveTab] = useState<"profil" | "alamat">("profil");
 
   useEffect(() => {
     if (userError) {
@@ -106,15 +111,15 @@ export default function ProfilePage() {
       setFormData({
         name: user.name || "",
         no_telpon: user.detail?.[0]?.no_telpon || "",
-        tanggal_lahir: user.detail?.[0]?.tanggal_lahir 
-          ? new Date(user.detail[0].tanggal_lahir).toISOString().split('T')[0]
+        tanggal_lahir: user.detail?.[0]?.tanggal_lahir
+          ? new Date(user.detail[0].tanggal_lahir).toISOString().split("T")[0]
           : "",
         jenis_kelamin: user.detail?.[0]?.jenis_kelamin || "",
       });
 
       // Set profile image URL
       if (user.profile_picture) {
-        if (user.profile_picture.startsWith('data:')) {
+        if (user.profile_picture.startsWith("data:")) {
           // Base64 image
           setProfileImageUrl(user.profile_picture);
         } else {
@@ -158,23 +163,27 @@ export default function ProfilePage() {
 
       const updateData = {
         name: formData.name,
-        detail: [{
-          no_telpon: formData.no_telpon,
-          tanggal_lahir: formData.tanggal_lahir ? new Date(formData.tanggal_lahir) : null,
-          jenis_kelamin: formData.jenis_kelamin,
-        }]
+        detail: [
+          {
+            no_telpon: formData.no_telpon,
+            tanggal_lahir: formData.tanggal_lahir
+              ? new Date(formData.tanggal_lahir)
+              : null,
+            jenis_kelamin: formData.jenis_kelamin,
+          },
+        ],
       };
 
       const response = await fetch(`/api/user/${user?._id}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(updateData),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update profile');
+        throw new Error("Failed to update profile");
       }
 
       setSuccess("Profil berhasil diperbarui!");
@@ -201,20 +210,20 @@ export default function ProfilePage() {
       const reader = new FileReader();
       reader.onload = async (e) => {
         const base64String = e.target?.result as string;
-        
+
         // Update profile with base64 image
         const response = await fetch(`/api/user/${user?._id}`, {
-          method: 'PATCH',
+          method: "PATCH",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            profile_picture: base64String
+            profile_picture: base64String,
           }),
         });
 
         if (!response.ok) {
-          throw new Error('Failed to upload photo');
+          throw new Error("Failed to upload photo");
         }
 
         setSuccess("Foto profil berhasil diupload!");
@@ -252,40 +261,47 @@ export default function ProfilePage() {
       setSuccess("");
 
       // Validasi form
-      if (!addressForm.nama || !addressForm.nomor_hp || !addressForm.alamat_lengkap || !addressForm.provinsi) {
+      if (
+        !addressForm.nama ||
+        !addressForm.nomor_hp ||
+        !addressForm.alamat_lengkap ||
+        !addressForm.provinsi
+      ) {
         setError("Lengkapi semua field yang wajib diisi");
         return;
       }
 
       // Jika user belum punya alamat utama dan tidak mencentang checkbox, otomatis set sebagai utama
-      const hasMainAddress = user?.alamat?.some(addr => addr.is_active);
-      const finalAddressForm = {...addressForm};
+      const hasMainAddress = user?.alamat?.some((addr) => addr.is_active);
+      const finalAddressForm = { ...addressForm };
       if (!hasMainAddress && !addressForm.is_active) {
         finalAddressForm.is_active = true;
       }
 
       const response = await fetch(`/api/user/${user?._id}/alamat`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(finalAddressForm),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to add address');
+        throw new Error(errorData.error || "Failed to add address");
       }
 
       const result = await response.json();
-      
+
       // Pesan sukses yang lebih informatif
       if (finalAddressForm.is_active) {
-        setSuccess("Alamat berhasil ditambahkan dan diatur sebagai alamat utama!");
+        setSuccess(
+          "Alamat berhasil ditambahkan dan diatur sebagai alamat utama!"
+        );
       } else {
         setSuccess("Alamat berhasil ditambahkan!");
       }
-      
+
       setIsAddingAddress(false);
       setSelectedLocation(null);
       setAddressForm({
@@ -315,13 +331,16 @@ export default function ProfilePage() {
       setError("");
       setSuccess("");
 
-      const response = await fetch(`/api/user/${user?._id}/alamat/${alamatId}`, {
-        method: 'DELETE',
-      });
+      const response = await fetch(
+        `/api/user/${user?._id}/alamat/${alamatId}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete address');
+        throw new Error(errorData.error || "Failed to delete address");
       }
 
       const result = await response.json();
@@ -338,13 +357,16 @@ export default function ProfilePage() {
       setError("");
       setSuccess("");
 
-      const response = await fetch(`/api/user/${user?._id}/alamat/${alamatId}/utama`, {
-        method: 'PATCH',
-      });
+      const response = await fetch(
+        `/api/user/${user?._id}/alamat/${alamatId}/utama`,
+        {
+          method: "PATCH",
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to set main address');
+        throw new Error(errorData.error || "Failed to set main address");
       }
 
       const result = await response.json();
@@ -352,11 +374,14 @@ export default function ProfilePage() {
       refreshUser(); // Refresh user context
     } catch (err: any) {
       console.error("Set main address failed:", err);
-      setError(err.message || "Gagal mengatur alamat utama. Silakan coba lagi.");
+      setError(
+        err.message || "Gagal mengatur alamat utama. Silakan coba lagi."
+      );
     }
   };
 
-  if (loading) return <PageLoading text="AgroMarFeed Sedang Memuat Profil Anda..."/>;
+  if (loading)
+    return <PageLoading text="AgroMarFeed Sedang Memuat Profil Anda..." />;
   if (!user) return <div>Not authenticated</div>;
 
   return (
@@ -434,17 +459,21 @@ export default function ProfilePage() {
             <div>
               <p className="font-semibold text-black">Akun Saya</p>
               <div className="ml-4 mt-1 flex flex-col gap-1 text-sm">
-                <button className="text-left text-black hover:underline">
+                <button
+                  className={`text-left text-black hover:underline ${
+                    activeTab === "profil" ? "font-bold underline" : ""
+                  }`}
+                  onClick={() => setActiveTab("profil")}
+                >
                   Profil
                 </button>
-                <button className="text-left text-black hover:underline">
-                  Ubah Kata Sandi
-                </button>
-                <button className="text-left text-black hover:underline">
-                  Pengaturan Notifikasi
-                </button>
-                <button className="text-left text-black hover:underline">
-                  Pengaturan Privasi
+                <button
+                  className={`text-left text-black hover:underline ${
+                    activeTab === "alamat" ? "font-bold underline" : ""
+                  }`}
+                  onClick={() => setActiveTab("alamat")}
+                >
+                  Alamat
                 </button>
               </div>
             </div>
@@ -492,398 +521,422 @@ export default function ProfilePage() {
 
         {/* Konten kanan */}
         <div className="w-full lg:w-[70%]">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-1">Profil Saya</h2>
-              <p className="text-sm text-gray-600">
-                Kelola informasi profil Anda untuk mengontrol, melindungi, dan
-                mengamankan akun
-              </p>
-            </div>
-            <button
-              onClick={() => setIsEditing(!isEditing)}
-              className="bg-2 text-white px-4 py-2 rounded-[25] hover:bg-orange-600"
-            >
-              {isEditing ? "Batal" : "Edit Profil"}
-            </button>
-          </div>
-
-          {isEditing ? (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">
-                  Nama Pengguna
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">
-                  Nomor Telepon
-                </label>
-                <input
-                  type="tel"
-                  value={formData.no_telpon}
-                  onChange={(e) => setFormData({...formData, no_telpon: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">
-                  Tanggal Lahir
-                </label>
-                <input
-                  type="date"
-                  value={formData.tanggal_lahir}
-                  onChange={(e) => setFormData({...formData, tanggal_lahir: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">
-                  Jenis Kelamin
-                </label>
-                <select
-                  value={formData.jenis_kelamin}
-                  onChange={(e) => setFormData({...formData, jenis_kelamin: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                >
-                  <option value="">Pilih Jenis Kelamin</option>
-                  <option value="Laki-laki">Laki-laki</option>
-                  <option value="Perempuan">Perempuan</option>
-                </select>
-              </div>
-              <div className="flex gap-2">
+          {activeTab === "profil" && (
+            <>
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold mb-1">Profil Saya</h2>
+                  <p className="text-sm text-gray-600">
+                    Kelola informasi profil Anda untuk mengontrol, melindungi,
+                    dan mengamankan akun
+                  </p>
+                </div>
                 <button
-                  onClick={handleProfileUpdate}
-                  className="bg-3 text-white px-4 py-2 rounded-[25] hover:bg-orange-600"
+                  onClick={() => setIsEditing(!isEditing)}
+                  className="bg-2 text-white px-4 py-2 rounded-[25] hover:bg-orange-600"
                 >
-                  Simpan Perubahan
+                  {isEditing ? "Batal" : "Edit Profil"}
                 </button>
               </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm">
-              <div className="font-bold">Nama Pengguna</div>
-              <div>{user.name}</div>
 
-              <div className="font-bold">Email</div>
-              <div>{user.email}</div>
-
-              <div className="font-bold">Nomor Telepon</div>
-              <div>{user.detail?.[0]?.no_telpon || "-"}</div>
-
-              <div className="font-bold">Tanggal Lahir</div>
-              <div>
-                {user.detail?.[0]?.tanggal_lahir
-                  ? new Date(user.detail[0].tanggal_lahir).toLocaleDateString()
-                  : "-"}
-              </div>
-
-              <div className="font-bold">Jenis Kelamin</div>
-              <div>{user.detail?.[0]?.jenis_kelamin || "-"}</div>
-            </div>
-          )}
-
-          <div className="mt-10">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Alamat</h3>
-              <button
-                onClick={() => setIsAddingAddress(!isAddingAddress)}
-                className="bg-3 text-white px-4 py-2 rounded-[25] hover:bg-orange-600 text-sm"
-              >
-                {isAddingAddress ? "Batal" : "Tambah Alamat"}
-              </button>
-            </div>
-
-            {isAddingAddress && (
-              <div className="mb-6 p-4 border border-gray-200 rounded-md">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {isEditing ? (
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nama Penerima
+                    <label className="block text-sm font-bold text-gray-700 mb-1">
+                      Nama Pengguna
                     </label>
                     <input
                       type="text"
-                      value={addressForm.nama}
-                      onChange={(e) => setAddressForm({...addressForm, nama: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none "
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nomor HP
+                    <label className="block text-sm font-bold text-gray-700 mb-1">
+                      Nomor Telepon
                     </label>
                     <input
                       type="tel"
-                      value={addressForm.nomor_hp}
-                      onChange={(e) => setAddressForm({...addressForm, nomor_hp: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      value={formData.no_telpon}
+                      onChange={(e) =>
+                        setFormData({ ...formData, no_telpon: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none "
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Label Alamat
+                    <label className="block text-sm font-bold text-gray-700 mb-1">
+                      Tanggal Lahir
                     </label>
                     <input
-                      type="text"
-                      value={addressForm.label_alamat}
-                      onChange={(e) => setAddressForm({...addressForm, label_alamat: e.target.value})}
-                      placeholder="Rumah, Kantor, dll"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      type="date"
+                      value={formData.tanggal_lahir}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          tanggal_lahir: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none "
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Cari Lokasi
+                    <label className="block text-sm font-bold text-gray-700 mb-1">
+                      Jenis Kelamin
                     </label>
-                    <CityAutocomplete
-                      value={selectedLocation}
-                      onChange={handleLocationChange}
-                      placeholder="Cari kota/kecamatan/kelurahan..."
-                    />
+                    <select
+                      value={formData.jenis_kelamin}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          jenis_kelamin: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none "
+                    >
+                      <option value="">Pilih Jenis Kelamin</option>
+                      <option value="Laki-laki">Laki-laki</option>
+                      <option value="Perempuan">Perempuan</option>
+                    </select>
                   </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleProfileUpdate}
+                      className="bg-3 text-white px-4 py-2 rounded-[25] hover:bg-orange-600"
+                    >
+                      Simpan Perubahan
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+                  <div className="font-bold">Nama Pengguna</div>
+                  <div>{user.name}</div>
+
+                  <div className="font-bold">Email</div>
+                  <div>{user.email}</div>
+
+                  <div className="font-bold">Nomor Telepon</div>
+                  <div>{user.detail?.[0]?.no_telpon || "-"}</div>
+
+                  <div className="font-bold">Tanggal Lahir</div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Kode Pos
-                    </label>
-                    <input
-                      type="number"
-                      value={addressForm.kode_pos}
-                      onChange={(e) => setAddressForm({...addressForm, kode_pos: parseInt(e.target.value)})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      readOnly
-                    />
+                    {user.detail?.[0]?.tanggal_lahir
+                      ? new Date(
+                          user.detail[0].tanggal_lahir
+                        ).toLocaleDateString()
+                      : "-"}
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Provinsi
-                    </label>
-                    <input
-                      type="text"
-                      value={addressForm.provinsi}
-                      onChange={(e) => setAddressForm({...addressForm, provinsi: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      readOnly
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Kabupaten
-                    </label>
-                    <input
-                      type="text"
-                      value={addressForm.kabupaten}
-                      onChange={(e) => setAddressForm({...addressForm, kabupaten: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      readOnly
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Kecamatan
-                    </label>
-                    <input
-                      type="text"
-                      value={addressForm.kecamatan}
-                      onChange={(e) => setAddressForm({...addressForm, kecamatan: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      readOnly
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Desa
-                    </label>
-                    <input
-                      type="text"
-                      value={addressForm.desa}
-                      onChange={(e) => setAddressForm({...addressForm, desa: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      readOnly
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Alamat Lengkap
-                    </label>
-                    <textarea
-                      value={addressForm.alamat_lengkap}
-                      onChange={(e) => setAddressForm({...addressForm, alamat_lengkap: e.target.value})}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Catatan untuk Kurir
-                    </label>
-                    <textarea
-                      value={addressForm.catatan_kurir}
-                      onChange={(e) => setAddressForm({...addressForm, catatan_kurir: e.target.value})}
-                      rows={2}
-                      placeholder="Contoh: Rumah warna biru, dekat masjid"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="flex items-center">
+
+                  <div className="font-bold">Jenis Kelamin</div>
+                  <div>{user.detail?.[0]?.jenis_kelamin || "-"}</div>
+                </div>
+              )}
+            </>
+          )}
+
+          {activeTab === "alamat" && (
+            <div className="mt-10">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Alamat</h3>
+                <button
+                  onClick={() => setIsAddingAddress(!isAddingAddress)}
+                  className="bg-3 text-white px-4 py-2 rounded-[25] hover:bg-orange-600 text-sm"
+                >
+                  {isAddingAddress ? "Batal" : "Tambah Alamat"}
+                </button>
+              </div>
+
+              {isAddingAddress && (
+                <div className="mb-6 p-4 border border-gray-200 rounded-md">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nama Penerima
+                      </label>
                       <input
-                        type="checkbox"
-                        checked={addressForm.is_active}
-                        onChange={(e) => setAddressForm({...addressForm, is_active: e.target.checked})}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-gray-700">
-                        {user.alamat && user.alamat.length > 0 
-                          ? "Jadikan alamat utama (akan mengganti alamat utama saat ini)"
-                          : "Jadikan alamat utama (alamat pertama akan otomatis jadi utama)"
+                        type="text"
+                        value={addressForm.nama}
+                        onChange={(e) =>
+                          setAddressForm({
+                            ...addressForm,
+                            nama: e.target.value,
+                          })
                         }
-                      </span>
-                    </label>
-                    {user.alamat && user.alamat.length > 0 && !user.alamat.some(addr => addr.is_active) && (
-                      <p className="text-xs text-yellow-600 mt-1">
-                        ⚠️ Anda belum memiliki alamat utama. Disarankan untuk mencentang opsi ini.
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex gap-2 mt-4">
-                  <button
-                    onClick={handleAddAddress}
-                    className="bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600"
-                  >
-                    Tambah Alamat
-                  </button>
-                  <button
-                    onClick={() => setIsAddingAddress(false)}
-                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
-                  >
-                    Batal
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {user.alamat && user.alamat.length > 0 ? (
-              <div className="flex flex-col gap-4">
-                {/* Tampilkan Alamat Utama */}
-                {user.alamat.filter(alamat => alamat.is_active).map((alamat, idx) => (
-                  <div
-                    key={alamat._id || idx}
-                    className="border-2 border-blue-500 bg-blue-50 p-4 rounded-md"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-blue-800">
-                          {alamat.label_alamat || "Alamat Utama"}
-                        </p>
-                        <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded">
-                          Alamat Utama
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none "
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nomor HP
+                      </label>
+                      <input
+                        type="tel"
+                        value={addressForm.nomor_hp}
+                        onChange={(e) =>
+                          setAddressForm({
+                            ...addressForm,
+                            nomor_hp: e.target.value,
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none "
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Label Alamat
+                      </label>
+                      <input
+                        type="text"
+                        value={addressForm.label_alamat}
+                        onChange={(e) =>
+                          setAddressForm({
+                            ...addressForm,
+                            label_alamat: e.target.value,
+                          })
+                        }
+                        placeholder="Rumah, Kantor, dll"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none "
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Cari Lokasi
+                      </label>
+                      <CityAutocomplete
+                        value={selectedLocation}
+                        onChange={handleLocationChange}
+                        placeholder="Cari kota/kecamatan/kelurahan..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Kode Pos
+                      </label>
+                      <input
+                        type="number"
+                        value={addressForm.kode_pos}
+                        onChange={(e) =>
+                          setAddressForm({
+                            ...addressForm,
+                            kode_pos: parseInt(e.target.value),
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none "
+                        readOnly
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Provinsi
+                      </label>
+                      <input
+                        type="text"
+                        value={addressForm.provinsi}
+                        onChange={(e) =>
+                          setAddressForm({
+                            ...addressForm,
+                            provinsi: e.target.value,
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none "
+                        readOnly
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Kabupaten
+                      </label>
+                      <input
+                        type="text"
+                        value={addressForm.kabupaten}
+                        onChange={(e) =>
+                          setAddressForm({
+                            ...addressForm,
+                            kabupaten: e.target.value,
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none "
+                        readOnly
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Kecamatan
+                      </label>
+                      <input
+                        type="text"
+                        value={addressForm.kecamatan}
+                        onChange={(e) =>
+                          setAddressForm({
+                            ...addressForm,
+                            kecamatan: e.target.value,
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none "
+                        readOnly
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Desa
+                      </label>
+                      <input
+                        type="text"
+                        value={addressForm.desa}
+                        onChange={(e) =>
+                          setAddressForm({
+                            ...addressForm,
+                            desa: e.target.value,
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none "
+                        readOnly
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Alamat Lengkap
+                      </label>
+                      <textarea
+                        value={addressForm.alamat_lengkap}
+                        onChange={(e) =>
+                          setAddressForm({
+                            ...addressForm,
+                            alamat_lengkap: e.target.value,
+                          })
+                        }
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none "
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Catatan untuk Kurir
+                      </label>
+                      <textarea
+                        value={addressForm.catatan_kurir}
+                        onChange={(e) =>
+                          setAddressForm({
+                            ...addressForm,
+                            catatan_kurir: e.target.value,
+                          })
+                        }
+                        rows={2}
+                        placeholder="Contoh: Rumah warna biru, dekat masjid"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none "
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={addressForm.is_active}
+                          onChange={(e) =>
+                            setAddressForm({
+                              ...addressForm,
+                              is_active: e.target.checked,
+                            })
+                          }
+                          className="mr-2"
+                        />
+                        <span className="text-sm text-gray-700">
+                          {user.alamat && user.alamat.length > 0
+                            ? "Jadikan alamat utama (akan mengganti alamat utama saat ini)"
+                            : "Jadikan alamat utama (alamat pertama akan otomatis jadi utama)"}
                         </span>
-                      </div>
-                      <button
-                        onClick={() => handleDeleteAddress(alamat._id!)}
-                        className="text-xs bg-red-500 text-white px-2 py-1 rounded-[25] hover:bg-red-600 transition-colors"
-                      >
-                        Hapus
-                      </button>
-                    </div>
-                    <div className="space-y-1 text-sm">
-                      <p><strong>Nama:</strong> {alamat.nama}</p>
-                      <p><strong>HP:</strong> {alamat.nomor_hp}</p>
-                      <p><strong>Alamat:</strong> {alamat.alamat_lengkap}</p>
-                      <p><strong>Lokasi:</strong> {alamat.desa}, {alamat.kecamatan}, {alamat.kabupaten}, {alamat.provinsi} {alamat.kode_pos}</p>
-                      {alamat.catatan_kurir && (
-                        <p><strong>Catatan:</strong> {alamat.catatan_kurir}</p>
-                      )}
+                      </label>
+                      {user.alamat &&
+                        user.alamat.length > 0 &&
+                        !user.alamat.some((addr) => addr.is_active) && (
+                          <p className="text-xs text-yellow-600 mt-1">
+                            ⚠️ Anda belum memiliki alamat utama. Disarankan
+                            untuk mencentang opsi ini.
+                          </p>
+                        )}
                     </div>
                   </div>
-                ))}
-
-                {/* Tampilkan Alamat Lainnya */}
-                {user.alamat.filter(alamat => !alamat.is_active).map((alamat, idx) => (
-                  <div
-                    key={alamat._id || idx}
-                    className="border border-gray-200 p-4 rounded-md"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <p className="font-medium">
-                        {alamat.label_alamat || "Alamat Tanpa Label"}
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleSetMainAddress(alamat._id!)}
-                          className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors"
-                        >
-                          Jadikan Utama
-                        </button>
-                        <button
-                          onClick={() => handleDeleteAddress(alamat._id!)}
-                          className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
-                        >
-                          Hapus
-                        </button>
-                      </div>
-                    </div>
-                    <div className="space-y-1 text-sm">
-                      <p><strong>Nama:</strong> {alamat.nama}</p>
-                      <p><strong>HP:</strong> {alamat.nomor_hp}</p>
-                      <p><strong>Alamat:</strong> {alamat.alamat_lengkap}</p>
-                      <p><strong>Lokasi:</strong> {alamat.desa}, {alamat.kecamatan}, {alamat.kabupaten}, {alamat.provinsi} {alamat.kode_pos}</p>
-                      {alamat.catatan_kurir && (
-                        <p><strong>Catatan:</strong> {alamat.catatan_kurir}</p>
-                      )}
-                    </div>
+                  <div className="flex gap-2 mt-4">
+                    <button
+                      onClick={handleAddAddress}
+                      className="bg-3 text-white px-4 py-2 rounded-md hover:bg-orange-600"
+                    >
+                      Tambah Alamat
+                    </button>
+                    <button
+                      onClick={() => setIsAddingAddress(false)}
+                      className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                    >
+                      Batal
+                    </button>
                   </div>
-                ))}
-
-                {/* Info jika tidak ada alamat utama */}
-                {!user.alamat.some(alamat => alamat.is_active) && user.alamat.length > 0 && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-                    <p className="text-yellow-800 text-sm">
-                      <strong>Peringatan:</strong> Anda belum memiliki alamat utama. 
-                      Silakan pilih salah satu alamat sebagai alamat utama untuk checkout.
-                    </p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="bg-gray-50 border border-gray-200 rounded-md p-6 text-center">
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-4">
-                  <svg
-                    className="h-6 w-6 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Belum Ada Alamat Tersimpan
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Tambahkan alamat pengiriman untuk memudahkan proses checkout.
-                </p>
-              </div>
-            )}
-          </div>
+              )}
+
+              {!isAddingAddress && user.alamat && user.alamat.length > 0 ? (
+                <div className="flex flex-col gap-4">
+                  {[...user.alamat]
+                    .sort((a, b) =>
+                      a.is_active === b.is_active ? 0 : a.is_active ? -1 : 1
+                    )
+                    .map((alamat, idx) => (
+                      <div
+                        key={alamat._id || idx}
+                        className="bg-[#F7F7FA] p-6 rounded-2xl relative flex flex-col min-h-[160px]"
+                      >
+                        {/* Badge atau tombol di pojok kanan atas */}
+                        {alamat.is_active ? (
+                          <span className="absolute top-4 right-4 text-gray-600 px-4 py-1 rounded-full text-sm font-semibold z-10">
+                            Alamat Utama
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleSetMainAddress(alamat._id!)}
+                            className="absolute top-4 right-4 border border-yellow-400 text-gray-600 px-4 py-1 rounded-full text-sm font-semibold hover:bg-yellow-50 transition z-10"
+                          >
+                            Jadikan alamat utama
+                          </button>
+                        )}
+                        <div className="flex-1 min-w-0 pr-36">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-bold text-lg text-black">
+                              {alamat.nama}
+                            </span>
+                            <span className="font-bold text-lg text-black">
+                              |
+                            </span>
+                            <span className="font-bold text-lg text-black">
+                              {alamat.nomor_hp}
+                            </span>
+                          </div>
+                          <div className="text-gray-500 text-sm mb-2 break-words">
+                            {alamat.alamat_lengkap}
+                          </div>
+                          <div className="text-gray-400 text-xs mb-2 break-words uppercase">
+                            {alamat.desa && `${alamat.desa}, `}
+                            {alamat.kecamatan && `${alamat.kecamatan}, `}
+                            {alamat.kabupaten && `${alamat.kabupaten}, `}
+                            {alamat.provinsi && `${alamat.provinsi}, `}
+                            ID, {alamat.kode_pos}
+                          </div>
+                        </div>
+                        <div className="absolute bottom-4 right-4 flex gap-2 z-10">
+                          <button
+                            onClick={() => handleDeleteAddress(alamat._id!)}
+                            className="bg-red-500 text-white px-5 py-1 rounded-full text-sm font-semibold hover:bg-red-600 transition"
+                          >
+                            Hapus
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              ) : null}
+            </div>
+          )}
         </div>
       </div>
     </section>

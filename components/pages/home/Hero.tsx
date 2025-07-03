@@ -36,8 +36,8 @@ const Hero = () => {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="hover:scale-105 duration-300 text-white text-2xl sm:text-3xl md:text-5xl font-bold mb-4 md:mb-6 leading-snug"
         >
-          Diskon Pakan Ramah Lingkungan <br className="hidden md:block" />
-          Mulai Hari Ini!
+          Bersama AgroMarFeed, Limbah Bernilai<br className="hidden md:block" />
+          Ternak Sejahtera
         </motion.h1>
 
         <motion.p
@@ -46,9 +46,7 @@ const Hero = () => {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="hover:scale-105 duration-300 text-white/80 text-sm sm:text-base md:text-lg mb-6 md:mb-8 max-w-xl leading-relaxed"
         >
-          Pelet ikan, pakan ayam, dan ternak dari limbah agro-maritim. Hemat
-          hingga 30%! Beli pakan, bantu bumi.
-        </motion.p>
+        Dari limbah agro-maritim menjadi nutrisi ternak. Solusi cerdas mendorong ekonomi sirkular demi kesejahteraan Masyarakat.</motion.p>
 
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
