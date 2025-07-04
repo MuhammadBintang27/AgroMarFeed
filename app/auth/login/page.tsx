@@ -7,7 +7,6 @@ import Image from "next/image";
 import Link from "next/link";
 import Footer from "@/components/footer/Footer";
 import { useUser } from "@/contexts/UserContext";
-import { FiEye, FiEyeOff } from "react-icons/fi"; // 👈 Icon import
 
 export default function LoginPage() {
   const [credentials, setCredentials] = useState<AuthCredentials>({
@@ -16,7 +15,6 @@ export default function LoginPage() {
   });
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { refetch } = useUser();
 
@@ -168,26 +166,16 @@ export default function LoginPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Password
                 </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={credentials.password}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    className="w-full p-3 bg-gray-100 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-bg-2 outline-none disabled:opacity-50 disabled:cursor-not-allowed pr-10"
-                    placeholder="Enter your password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-3 flex items-center text-gray-600"
-                    tabIndex={-1}
-                  >
-                    {showPassword ? <FiEyeOff /> : <FiEye />}
-                  </button>
-                </div>
+                <input
+                  type="password"
+                  name="password"
+                  value={credentials.password}
+                  onChange={handleInputChange}
+                  disabled={loading}
+                  className="w-full p-3 bg-gray-100 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-bg-2 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  placeholder="Enter your password"
+                  required
+                />
               </div>
               <button
                 type="submit"

@@ -100,7 +100,8 @@ export default function ConsultationPage() {
             Konsultasi Ahli Pakan & Dokter Hewan Langsung
           </h1>
           <p className="text-gray-600">
-            Konsultasi langsung dengan ahli pakan dan dokter hewan untuk solusi tepat bagi kebutuhan ternak Anda.
+            Konsultasi langsung dengan ahli pakan dan dokter hewan untuk solusi
+            tepat bagi kebutuhan ternak Anda.
           </p>
         </div>
 

@@ -450,7 +450,12 @@ export default function OrderHistoryPage() {
                           key={index}
                           className="flex items-center space-x-4"
                         >
-                          <div className="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <div
+                            className="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center cursor-pointer"
+                            onClick={() =>
+                              router.push(`/detail/${orderItem.product_id._id}`)
+                            }
+                          >
                             {orderItem.product_id.imageUrl ? (
                               <img
                                 src={orderItem.product_id.imageUrl}
@@ -553,7 +558,7 @@ export default function OrderHistoryPage() {
 
                   {/* Item Actions */}
                   <div className="mt-6 pt-6 border-t border-gray-200">
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-start">
                       <div className="text-sm text-gray-600">
                         <p>
                           Status:{" "}
@@ -566,29 +571,31 @@ export default function OrderHistoryPage() {
                           </span>
                         </p>
                       </div>
-                      <div className="space-x-3">
-                        <button
-                          onClick={() => handleItemClick(item)}
-                          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                        >
-                          {selectedItem?._id === item._id
-                            ? "Sembunyikan Detail"
-                            : "Lihat Detail"}
-                        </button>
-                        {item.payment_status === "pending" && (
-                          <>
+                      <div className="flex flex-col items-end space-y-2">
+                        <div className="flex space-x-3">
+                          <button
+                            onClick={() => handleItemClick(item)}
+                            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                          >
+                            {selectedItem?._id === item._id
+                              ? "Sembunyikan Detail"
+                              : "Lihat Detail"}
+                          </button>
+                          {item.payment_status === "pending" && (
                             <button
                               onClick={() => handlePayNow(item)}
                               className="text-sm bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-200"
                             >
                               Bayar Sekarang
                             </button>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {isAppointment(item)
-                                ? "Klik untuk melanjutkan pembayaran konsultasi."
-                                : "Klik untuk melihat instruksi pembayaran tanpa input ulang."}
-                            </p>
-                          </>
+                          )}
+                        </div>
+                        {item.payment_status === "pending" && (
+                          <p className="text-xs text-gray-500 text-right">
+                            {isAppointment(item)
+                              ? "Klik untuk melanjutkan pembayaran konsultasi."
+                              : "Klik untuk melihat instruksi pembayaran tanpa input ulang."}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -732,7 +739,7 @@ export default function OrderHistoryPage() {
                     );
                   }
                 }}
-                className="w-full bg-orange-600 text-white py-3 px-4 rounded-lg hover:bg-orange-700 transition duration-200"
+                className="w-full bg-3 text-white py-3 px-4 rounded-lg hover:scale-102 transition duration-200"
               >
                 Bayar Sekarang
               </button>
@@ -740,7 +747,7 @@ export default function OrderHistoryPage() {
 
             <button
               onClick={() => setShowPaymentModal(false)}
-              className="w-full mt-3 bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition duration-200"
+              className="w-full mt-3 bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:scale-102 transition duration-200"
             >
               Tutup
             </button>
