@@ -1,12 +1,13 @@
 "use client";
 import { useState, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { login, initiateGoogleLogin} from "@/lib/auth";
+import { login, initiateGoogleLogin } from "@/lib/auth";
 import { AuthCredentials } from "@/types";
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "@/components/footer/Footer";
 import { useUser } from "@/contexts/UserContext";
+import { FiEye, FiEyeOff } from "react-icons/fi"; // 👈 Icon import
 
 export default function LoginPage() {
   const [credentials, setCredentials] = useState<AuthCredentials>({
@@ -15,6 +16,7 @@ export default function LoginPage() {
   });
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { refetch } = useUser();
 
@@ -24,7 +26,9 @@ export default function LoginPage() {
       const urlParams = new URLSearchParams(window.location.search);
       const oauthError = urlParams.get("error");
       if (oauthError === "oauth_failed") {
-        setError("OAuth login failed. Please try again or use email/password login.");
+        setError(
+          "OAuth login failed. Please try again or use email/password login."
+        );
         // Clean up the URL
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.delete("error");
@@ -39,22 +43,25 @@ export default function LoginPage() {
     setError("");
 
     try {
-      console.log('🔍 Login form submitted with:', { email: credentials.email, password: credentials.password ? '[HIDDEN]' : 'missing' });
-      
+      console.log("🔍 Login form submitted with:", {
+        email: credentials.email,
+        password: credentials.password ? "[HIDDEN]" : "missing",
+      });
+
       const response = await login(credentials);
-      console.log('✅ Login response:', response);
-      
+      console.log("✅ Login response:", response);
+
       // Immediately refetch user data to update the UI
-      console.log('🔄 Refetching user data...');
+      console.log("🔄 Refetching user data...");
       await refetch();
-      
+
       // Add a small delay to ensure UserContext is updated
       setTimeout(() => {
-        console.log('✅ Redirecting to home page...');
+        console.log("✅ Redirecting to home page...");
         router.push("/");
       }, 500);
     } catch (err: any) {
-      console.error('❌ Login error:', err);
+      console.error("❌ Login error:", err);
       setError(err.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
@@ -161,16 +168,26 @@ export default function LoginPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Password
                 </label>
-                <input
-                  type="password"
-                  name="password"
-                  value={credentials.password}
-                  onChange={handleInputChange}
-                  disabled={loading}
-                  className="w-full p-3 bg-gray-100 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-bg-2 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                  placeholder="Enter your password"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={credentials.password}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    className="w-full p-3 bg-gray-100 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-bg-2 outline-none disabled:opacity-50 disabled:cursor-not-allowed pr-10"
+                    placeholder="Enter your password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-3 flex items-center text-gray-600"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <FiEyeOff /> : <FiEye />}
+                  </button>
+                </div>
               </div>
               <button
                 type="submit"

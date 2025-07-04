@@ -460,16 +460,16 @@ export default function ProfilePage() {
               <p className="font-semibold text-black">Akun Saya</p>
               <div className="ml-4 mt-1 flex flex-col gap-1 text-sm">
                 <button
-                  className={`text-left text-black hover:underline ${
-                    activeTab === "profil" ? "font-bold underline" : ""
+                  className={`text-left text-black hover:font-bold ${
+                    activeTab === "profil" ? "font-bold" : ""
                   }`}
                   onClick={() => setActiveTab("profil")}
                 >
                   Profil
                 </button>
                 <button
-                  className={`text-left text-black hover:underline ${
-                    activeTab === "alamat" ? "font-bold underline" : ""
+                  className={`text-left text-black hover:font-bold ${
+                    activeTab === "alamat" ? "font-bold" : ""
                   }`}
                   onClick={() => setActiveTab("alamat")}
                 >
@@ -862,13 +862,13 @@ export default function ProfilePage() {
                   <div className="flex gap-2 mt-4">
                     <button
                       onClick={handleAddAddress}
-                      className="bg-3 text-white px-4 py-2 rounded-md hover:bg-orange-600"
+                      className="bg-3 text-white px-4 py-2 rounded-md hover:scale-103 transition-all duration-300"
                     >
                       Tambah Alamat
                     </button>
                     <button
                       onClick={() => setIsAddingAddress(false)}
-                      className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                      className="bg-gray-500 text-white px-4 py-2 rounded-md hover:scale-103 transition-all duration-300"
                     >
                       Batal
                     </button>
@@ -900,12 +900,12 @@ export default function ProfilePage() {
                             Jadikan alamat utama
                           </button>
                         )}
-                        <div className="flex-1 min-w-0 pr-36">
-                          <div className="flex items-center gap-2 mb-1">
+                        <div className="flex-1 min-w-0 pr-36 sm:pr-36 pr-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1 pr-0 sm:pr-0">
                             <span className="font-bold text-lg text-black">
                               {alamat.nama}
                             </span>
-                            <span className="font-bold text-lg text-black">
+                            <span className="hidden sm:inline font-bold text-lg text-black">
                               |
                             </span>
                             <span className="font-bold text-lg text-black">
