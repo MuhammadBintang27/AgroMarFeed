@@ -20,7 +20,7 @@ const Footer: React.FC = () => {
         <div>
           <h2 className="text-xl font-semibold mb-4">AgroMarFeed</h2>
           <p className="text-sm text-gray-300 mb-3 leading-relaxed">
-            Pelet ikan, pakan ayam, dan ternak dari limbah agro-maritim. Hemat
+            Pelet ikan, pakan ayam, dan ternak dari limbah agro-marine. Hemat
             hingga 30%! Beli pakan, bantu bumi.
           </p>
           <div className="flex gap-5">

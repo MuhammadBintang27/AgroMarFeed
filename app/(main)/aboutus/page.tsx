@@ -9,7 +9,7 @@ export default function AboutUsPage() {
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-black mb-4">Tentang Kami</h1>
           <p className="text-gray-600 text-lg">
-            Inovasi Pakan Ternak Berbasis Limbah Agro-Maritim untuk Masa Depan
+            Inovasi Pakan Ternak Berbasis Limbah Agro-Marine untuk Masa Depan
             yang Berkelanjutan
           </p>
         </div>
@@ -23,7 +23,7 @@ export default function AboutUsPage() {
             <p className="text-gray-700 mb-4 text-justify">
               Kami percaya bahwa masa depan peternakan Indonesia bergantung pada
               solusi yang tidak hanya efisien, tapi juga berkelanjutan. Kami
-              menghadirkan pakan ternak dari limbah agro-maritim untuk membantu
+              menghadirkan pakan ternak dari limbah agro-marine untuk membantu
               peternak mengurangi biaya operasional hingga 30%, sekaligus
               menjaga lingkungan dari pencemaran limbah organik.
             </p>
@@ -62,7 +62,7 @@ export default function AboutUsPage() {
                 Berkelanjutan
               </h3>
               <p className="text-gray-600 text-justify">
-                Semua bahan kami berasal dari limbah agro-maritim yang diolah
+                Semua bahan kami berasal dari limbah agro-marine yang diolah
                 secara ramah lingkungan, tanpa bahan kimia berbahaya.
               </p>
             </div>

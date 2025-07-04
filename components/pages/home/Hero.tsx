@@ -46,7 +46,7 @@ const Hero = () => {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="hover:scale-105 duration-300 text-white/80 text-sm sm:text-base md:text-lg mb-6 md:mb-8 max-w-xl leading-relaxed"
         >
-        Dari limbah agro-maritim menjadi nutrisi ternak. Solusi cerdas mendorong ekonomi sirkular demi kesejahteraan Masyarakat.</motion.p>
+        Dari limbah agro-marine menjadi nutrisi ternak. Solusi cerdas mendorong ekonomi sirkular demi kesejahteraan Masyarakat.</motion.p>
 
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}

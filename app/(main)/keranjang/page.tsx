@@ -270,7 +270,7 @@ export default function CartPage() {
             Keranjang Belanja
           </h1>
           <p className="text-gray-600 text-sm md:text-base">
-            Pelet ikan, pakan ayam, dan ternak dari limbah agro-maritim. Hemat
+            Pelet ikan, pakan ayam, dan ternak dari limbah agro-marine. Hemat
             hingga 30%! Beli pakan, bantu bumi.
           </p>
         </div>

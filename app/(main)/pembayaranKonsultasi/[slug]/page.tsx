@@ -582,7 +582,7 @@ const BookingPageContent = () => {
               Konsultasi Ahli Pakan & Dokter Hewan Langsung
             </h1>
             <p className="text-black text-sm max-w-2xl mx-auto">
-              Paket ikan, pakan ayam, dan ternak dari limbah agro-maritim. Hemat
+              Paket ikan, pakan ayam, dan ternak dari limbah agro-marine. Hemat
               hingga 30%! Beli pakan, bantu bumi.
             </p>
           </div>

@@ -331,7 +331,7 @@ const Katalog = () => {
           Cari Pakan
         </h2>
         <p className="text-black/50 max-w-2xl mb-10">
-          Pelet ikan, pakan ayam, dan ternak dari limbah agro-maritim. Hemat
+          Pelet ikan, pakan ayam, dan ternak dari limbah agro-marine. Hemat
           hingga 30%! Beli pakan, bantu bumi.
         </p>
         <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-6">

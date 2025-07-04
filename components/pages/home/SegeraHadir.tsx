@@ -37,7 +37,7 @@ const SegeraHadir = () => {
             30 Kg
           </p>
           <p className="text-white/70 text-xs sm:text-sm max-w-xs">
-            Peternak dari limbah agro-maritim. Hemat hingga 30%! Beli pakan,
+            Peternak dari limbah agro-marine. Hemat hingga 30%! Beli pakan,
             bantu bumi.
           </p>
         </div>
