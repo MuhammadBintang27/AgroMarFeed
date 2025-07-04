@@ -272,22 +272,22 @@ export default function OrderHistoryPage() {
     <div className="min-h-screen bg-gray-50 py-8 pt-12 md:pt-24">
       <div className="max-w-4xl mx-auto px-4">
         <div className="mb-8">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                 Riwayat Pesanan & Konsultasi
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-sm sm:text-base">
                 Lihat semua pesanan dan konsultasi Anda
               </p>
             </div>
             <button
               onClick={handleRefreshOrders}
               disabled={loading}
-              className="bg-2 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 disabled:bg-gray-400 flex items-center gap-2"
+              className="bg-2 text-white px-3 py-2 sm:px-4 rounded-lg hover:bg-blue-700 transition duration-200 disabled:bg-gray-400 flex items-center gap-2 text-sm sm:text-base self-start sm:self-auto"
             >
               <svg
-                className="w-4 h-4"
+                className="w-3 h-3 sm:w-4 sm:h-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -351,40 +351,40 @@ export default function OrderHistoryPage() {
                 className="bg-white rounded-lg shadow-md overflow-hidden"
               >
                 {/* Item Header */}
-                <div className="p-6 border-b border-gray-200">
+                <div className="p-4 sm:p-6 border-b border-gray-200">
                   <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-2">
                         {isAppointment(item) ? (
-                          <span className="bg-4 text-white text-xs font-bold px-2 py-1 rounded-full">
+                          <span className="bg-4 text-white text-xs font-bold px-2 py-1 rounded-full self-start">
                             Konsultasi
                           </span>
                         ) : (
-                          <span className="bg-5 text-white text-xs font-bold px-2 py-1 rounded-full">
+                          <span className="bg-5 text-white text-xs font-bold px-2 py-1 rounded-full self-start">
                             Order
                           </span>
                         )}
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 break-all">
                           {item.orderId}
                         </h3>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1">
                         {formatDate(item.createdAt)}
                       </p>
                       {isAppointment(item) ? (
-                        <p className="text-sm text-gray-600">
+                        <p className="text-xs sm:text-sm text-gray-600 break-words">
                           {item.nama_lengkap} - {item.email}
                         </p>
                       ) : (
-                        <p className="text-sm text-gray-600">
+                        <p className="text-xs sm:text-sm text-gray-600 break-words">
                           {item.shipping_address.nama} -{" "}
                           {item.shipping_address.alamat},{" "}
                           {item.shipping_address.kota}
                         </p>
                       )}
                     </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-gray-900">
+                    <div className="text-right ml-2 sm:ml-4">
+                      <p className="text-base sm:text-lg font-bold text-gray-900">
                         Rp{" "}
                         {(isAppointment(item)
                           ? item.total_harga
@@ -392,7 +392,7 @@ export default function OrderHistoryPage() {
                         ).toLocaleString()}
                       </p>
                       <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-medium mt-2 ${getStatusColor(
+                        className={`inline-block px-2 py-1 sm:px-3 rounded-full text-xs font-medium mt-1 sm:mt-2 ${getStatusColor(
                           item.payment_status
                         )}`}
                       >
@@ -559,11 +559,11 @@ export default function OrderHistoryPage() {
                   {/* Item Actions */}
                   <div className="mt-6 pt-6 border-t border-gray-200">
                     <div className="flex justify-between items-start">
-                      <div className="text-sm text-gray-600">
+                      <div className="text-xs sm:text-sm text-gray-600">
                         <p>
                           Status:{" "}
                           <span
-                            className={`inline-block px-2 py-1 rounded text-xs font-medium ${getStatusColor(
+                            className={`inline-block px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs font-medium ${getStatusColor(
                               item.status
                             )}`}
                           >
@@ -571,11 +571,11 @@ export default function OrderHistoryPage() {
                           </span>
                         </p>
                       </div>
-                      <div className="flex flex-col items-end space-y-2">
-                        <div className="flex space-x-3">
+                      <div className="flex flex-col items-end space-y-1 sm:space-y-2">
+                        <div className="flex space-x-2 sm:space-x-3">
                           <button
                             onClick={() => handleItemClick(item)}
-                            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                            className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium"
                           >
                             {selectedItem?._id === item._id
                               ? "Sembunyikan Detail"
@@ -584,7 +584,7 @@ export default function OrderHistoryPage() {
                           {item.payment_status === "pending" && (
                             <button
                               onClick={() => handlePayNow(item)}
-                              className="text-sm bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-200"
+                              className="text-xs sm:text-sm bg-blue-600 text-white px-2 py-1 sm:px-4 sm:py-2 rounded hover:bg-blue-700 transition duration-200"
                             >
                               Bayar Sekarang
                             </button>
@@ -624,7 +624,9 @@ export default function OrderHistoryPage() {
                         <div>
                           <p className="text-gray-600">Status Pembayaran:</p>
                           <p className="font-medium">
-                            {getStatusText(item.payment_status)}
+                            <span className={`inline-block px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs font-medium ${getStatusColor(item.payment_status)}`}>
+                              {getStatusText(item.payment_status)}
+                            </span>
                           </p>
                         </div>
                         <div>
@@ -633,7 +635,9 @@ export default function OrderHistoryPage() {
                             {isAppointment(item) ? "Konsultasi" : "Pesanan"}:
                           </p>
                           <p className="font-medium">
-                            {getStatusText(item.status)}
+                            <span className={`inline-block px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs font-medium ${getStatusColor(item.status)}`}>
+                              {getStatusText(item.status)}
+                            </span>
                           </p>
                         </div>
                         {isAppointment(item) ? (
