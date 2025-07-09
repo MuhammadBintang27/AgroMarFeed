@@ -56,7 +56,7 @@ export default function ProfilePage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState<string>(
-    "/images/home/avatar.png"
+    "/images/home/avatar.jpg"
   );
   const router = useRouter();
 
@@ -124,10 +124,10 @@ export default function ProfilePage() {
           setProfileImageUrl(user.profile_picture);
         } else {
           // File path - convert to base64 or use default
-          setProfileImageUrl("/images/home/avatar.png");
+          setProfileImageUrl("/images/home/avatar.jpg");
         }
       } else {
-        setProfileImageUrl("/images/home/avatar.png");
+        setProfileImageUrl("/images/home/avatar.jpg");
       }
     }
   }, [user]);
