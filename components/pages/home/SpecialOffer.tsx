@@ -133,7 +133,7 @@ const SpecialOffer = () => {
             >
               {/* Kolom Kiri - Teks */}
               <div
-                className={`w-1/2 p-4 md:p-6 flex flex-col justify-between ${
+                className={`w-1/2 p-4 md:p-6 flex flex-col justify-between min-w-0 ${
                   idx === 0 ? "text-black" : "text-white"
                 }`}
               >
@@ -167,9 +167,16 @@ const SpecialOffer = () => {
 
                   {/* Harga Setelah Diskon */}
                   <span
-                    className={`text-2xl md:text-4xl lg:text-5xl font-black mb-4 ${
+                    className={`special-offer-price mb-4 ${
                       idx === 0 ? "text-black" : "text-white"
-                    } drop-shadow-sm`}
+                    } drop-shadow-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-full block`}
+                    style={{
+                      fontSize: "clamp(1.1rem, 5vw, 2.5rem)",
+                      lineHeight: 1.1,
+                      wordBreak: "keep-all",
+                      textAlign: "left",
+                    }}
+                    title={formatPrice(Math.round(product.price * 0.75))}
                   >
                     {formatPrice(Math.round(product.price * 0.75))}
                   </span>
@@ -197,7 +204,11 @@ const SpecialOffer = () => {
                 >
                   {buttonLoading[idx] ? (
                     <>
-                      <LoadingSpinner size="sm" color={idx === 0 ? "green" : "yellow"} className="mr-2" />
+                      <LoadingSpinner
+                        size="sm"
+                        color={idx === 0 ? "green" : "yellow"}
+                        className="mr-2"
+                      />
                       Menuju Detail...
                     </>
                   ) : (
@@ -210,8 +221,8 @@ const SpecialOffer = () => {
               </div>
 
               {/* Kolom Kanan - Gambar */}
-              <div className="w-1/2 flex items-center justify-center">
-                <div className="relative w-full h-56">
+              <div className="w-1/2 flex items-center justify-center overflow-hidden">
+                <div className="relative w-full h-56 max-h-56 flex items-center justify-center">
                   <Image
                     src={product.imageUrl || "/images/placeholder.png"}
                     alt={product.name}
@@ -219,6 +230,11 @@ const SpecialOffer = () => {
                     className="object-contain"
                     quality={100}
                     sizes="(max-width: 768px) 50vw, 400px"
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: "14rem",
+                      minHeight: "8rem",
+                    }}
                   />
                 </div>
               </div>

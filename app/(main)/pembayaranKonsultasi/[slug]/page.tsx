@@ -4,7 +4,7 @@ import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Calendar, Clock, MapPin, User, Mail, Phone } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
-import { PageLoading, ButtonLoading } from '@/components/ui/loading';
+import { PageLoading, ButtonLoading } from "@/components/ui/loading";
 
 // Define appointment type
 interface AppointmentDetails {
@@ -41,18 +41,25 @@ const BookingPageContent = () => {
     email: "",
     no_hp: "",
   });
+  // Error state for validation
+  const [formErrors, setFormErrors] = useState({
+    nama_lengkap: "",
+    email: "",
+    no_hp: "",
+  });
 
   // Add loading state
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Tambahan untuk appointment detail jika ada order_id
-  const [appointmentDetails, setAppointmentDetails] = useState<AppointmentDetails | null>(null);
+  const [appointmentDetails, setAppointmentDetails] =
+    useState<AppointmentDetails | null>(null);
   const [appointmentLoading, setAppointmentLoading] = useState(false);
-  const orderId = searchParams.get('order_id');
+  const orderId = searchParams.get("order_id");
 
   // Check for Midtrans redirect parameters
-  const transactionStatus = searchParams.get('transaction_status');
-  const orderIdFromMidtrans = searchParams.get('order_id');
+  const transactionStatus = searchParams.get("transaction_status");
+  const orderIdFromMidtrans = searchParams.get("order_id");
   const finalOrderId = orderId || orderIdFromMidtrans;
 
   // Jika ada order_id, fetch detail appointment
@@ -60,17 +67,17 @@ const BookingPageContent = () => {
     if (finalOrderId) {
       setAppointmentLoading(true);
       fetchAppointmentDetails(finalOrderId)
-        .then(data => {
-          console.log('Appointment data received:', data);
+        .then((data) => {
+          console.log("Appointment data received:", data);
           if (data) {
             setAppointmentDetails(data);
           } else {
-            console.error('No appointment data received');
+            console.error("No appointment data received");
             setAppointmentDetails(null);
           }
         })
         .catch((error) => {
-          console.error('Error fetching appointment:', error);
+          console.error("Error fetching appointment:", error);
           setAppointmentDetails(null);
         })
         .finally(() => setAppointmentLoading(false));
@@ -84,11 +91,11 @@ const BookingPageContent = () => {
         const data = await response.json();
         return data;
       } else {
-        console.error('Failed to fetch appointment details');
+        console.error("Failed to fetch appointment details");
         return null;
       }
     } catch (error) {
-      console.error('Error fetching appointment details:', error);
+      console.error("Error fetching appointment details:", error);
       return null;
     }
   };
@@ -100,6 +107,39 @@ const BookingPageContent = () => {
       ...prev,
       [name]: value,
     }));
+    // Validation
+    if (name === "nama_lengkap") {
+      if (!/^[A-Za-z\s]{2,}$/.test(value)) {
+        setFormErrors((prev) => ({
+          ...prev,
+          nama_lengkap: "Nama hanya boleh huruf dan minimal 2 karakter.",
+        }));
+      } else {
+        setFormErrors((prev) => ({ ...prev, nama_lengkap: "" }));
+      }
+    }
+    if (name === "email") {
+      if (!/^\S+@\S+\.\S+$/.test(value)) {
+        setFormErrors((prev) => ({
+          ...prev,
+          email: "Format email tidak valid.",
+        }));
+      } else {
+        setFormErrors((prev) => ({ ...prev, email: "" }));
+      }
+    }
+    if (name === "no_hp") {
+      // Hanya angka, diawali 0 atau +, minimal 9 digit, maksimal 15 digit
+      const phone = value.trim();
+      if (!/^([0]|\+)[0-9]{8,14}$/.test(phone)) {
+        setFormErrors((prev) => ({
+          ...prev,
+          no_hp: "No. telepon harus angka, diawali 0 atau +, 9-15 digit.",
+        }));
+      } else {
+        setFormErrors((prev) => ({ ...prev, no_hp: "" }));
+      }
+    }
   };
 
   // Add validation check
@@ -109,7 +149,10 @@ const BookingPageContent = () => {
       formData.email &&
       formData.no_hp &&
       selectedDate &&
-      selectedTime
+      selectedTime &&
+      !formErrors.nama_lengkap &&
+      !formErrors.email &&
+      !formErrors.no_hp
     );
   };
 
@@ -364,99 +407,185 @@ const BookingPageContent = () => {
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <p className="text-red-500">Appointment tidak ditemukan.</p>
-            <button onClick={() => router.push('/konsultasi')} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded">Kembali ke Konsultasi</button>
+            <button
+              onClick={() => router.push("/konsultasi")}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+            >
+              Kembali ke Konsultasi
+            </button>
           </div>
         </div>
       );
     }
-    
+
     // Handle Midtrans redirect status
-    let statusMessage = '';
-    let statusColor = '';
+    let statusMessage = "";
+    let statusColor = "";
     let statusIcon = null;
-    
-    if (transactionStatus === 'capture' || transactionStatus === 'settlement') {
-      statusMessage = 'Pembayaran Konsultasi Berhasil!';
-      statusColor = 'text-green-600';
+
+    if (transactionStatus === "capture" || transactionStatus === "settlement") {
+      statusMessage = "Pembayaran Konsultasi Berhasil!";
+      statusColor = "text-green-600";
       statusIcon = (
         <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
-          <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+          <svg
+            className="h-8 w-8 text-green-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M5 13l4 4L19 7"
+            ></path>
           </svg>
         </div>
       );
-    } else if (transactionStatus === 'pending') {
-      statusMessage = 'Menunggu Pembayaran Konsultasi';
-      statusColor = 'text-yellow-600';
+    } else if (transactionStatus === "pending") {
+      statusMessage = "Menunggu Pembayaran Konsultasi";
+      statusColor = "text-yellow-600";
       statusIcon = (
         <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 mb-6">
-          <svg className="h-8 w-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          <svg
+            className="h-8 w-8 text-yellow-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
           </svg>
         </div>
       );
-    } else if (transactionStatus === 'cancel' || transactionStatus === 'deny' || transactionStatus === 'expire') {
-      statusMessage = 'Pembayaran Konsultasi Gagal';
-      statusColor = 'text-red-600';
+    } else if (
+      transactionStatus === "cancel" ||
+      transactionStatus === "deny" ||
+      transactionStatus === "expire"
+    ) {
+      statusMessage = "Pembayaran Konsultasi Gagal";
+      statusColor = "text-red-600";
       statusIcon = (
         <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
-          <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+          <svg
+            className="h-8 w-8 text-red-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
           </svg>
         </div>
       );
     }
-    
+
     // Cek tipe ID
-    const isOrder = appointmentDetails.orderId?.startsWith('ORDER-');
-    const isConsultation = appointmentDetails.orderId?.startsWith('KONSULTASI-');
+    const isOrder = appointmentDetails.orderId?.startsWith("ORDER-");
+    const isConsultation =
+      appointmentDetails.orderId?.startsWith("KONSULTASI-");
 
     // Jika sudah dibayar (paid/settlement)
-    if (appointmentDetails.payment_status === 'paid' || transactionStatus === 'settlement') {
+    if (
+      appointmentDetails.payment_status === "paid" ||
+      transactionStatus === "settlement"
+    ) {
       return (
         <div className="min-h-screen flex items-center justify-center">
           <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
             <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
-              <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+              <svg
+                className="h-8 w-8 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Pembayaran Konsultasi Sudah Diterima</h1>
-            <p className="text-gray-600 mb-6">Terima kasih, appointment Anda sudah dibayar dan sedang diproses.</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Pembayaran Konsultasi Sudah Diterima
+            </h1>
+            <p className="text-gray-600 mb-6">
+              Terima kasih, appointment Anda sudah dibayar dan sedang diproses.
+            </p>
             {/* Detail Appointment */}
             <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-              <h3 className="font-semibold text-gray-900 mb-3">Detail Appointment:</h3>
+              <h3 className="font-semibold text-gray-900 mb-3">
+                Detail Appointment:
+              </h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Order ID:</span>
-                  <span className="font-medium text-gray-900">{appointmentDetails.orderId}</span>
+                  <span className="font-medium text-gray-900">
+                    {appointmentDetails.orderId}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total:</span>
-                  <span className="font-medium text-gray-900">Rp {appointmentDetails.total_harga?.toLocaleString()}</span>
+                  <span className="font-medium text-gray-900">
+                    Rp {appointmentDetails.total_harga?.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Status:</span>
-                  <span className="font-medium text-gray-900">{appointmentDetails.status}</span>
+                  <span className="font-medium text-gray-900">
+                    {appointmentDetails.status}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Pembayaran:</span>
-                  <span className="font-medium text-gray-900">{appointmentDetails.payment_status}</span>
+                  <span className="font-medium text-gray-900">
+                    {appointmentDetails.payment_status}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Layanan:</span>
-                  <span className="font-medium text-gray-900">{appointmentDetails.service}</span>
+                  <span className="font-medium text-gray-900">
+                    {appointmentDetails.service}
+                  </span>
                 </div>
                 {appointmentDetails.zoom_link && (
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Link Zoom:</span>
-                    <a href={appointmentDetails.zoom_link} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 underline break-all">{appointmentDetails.zoom_link}</a>
+                    <a
+                      href={appointmentDetails.zoom_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-blue-600 underline break-all"
+                    >
+                      {appointmentDetails.zoom_link}
+                    </a>
                   </div>
                 )}
               </div>
             </div>
-            <button onClick={() => router.push('/riwayatBelanja')} className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition duration-200 mb-2">Lihat Riwayat Pesanan</button>
-            <button onClick={() => router.push('/konsultasi')} className="w-full bg-gray-300 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-400 transition duration-200">Kembali ke Konsultasi</button>
+            <button
+              onClick={() => router.push("/riwayatBelanja")}
+              className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition duration-200 mb-2"
+            >
+              Lihat Riwayat Pesanan
+            </button>
+            <button
+              onClick={() => router.push("/konsultasi")}
+              className="w-full bg-gray-300 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-400 transition duration-200"
+            >
+              Kembali ke Konsultasi
+            </button>
           </div>
         </div>
       );
@@ -466,47 +595,73 @@ const BookingPageContent = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
           {statusIcon}
-          <h1 className={`text-2xl font-bold mb-4 ${statusColor || 'text-gray-900'}`}>{statusMessage || 'Menunggu Pembayaran Konsultasi'}</h1>
+          <h1
+            className={`text-2xl font-bold mb-4 ${
+              statusColor || "text-gray-900"
+            }`}
+          >
+            {statusMessage || "Menunggu Pembayaran Konsultasi"}
+          </h1>
           <p className="text-gray-600 mb-6">
-            {transactionStatus === 'pending' 
-              ? 'Silakan selesaikan pembayaran konsultasi Anda sesuai instruksi berikut:'
-              : 'Status pembayaran konsultasi Anda saat ini:'
-            }
+            {transactionStatus === "pending"
+              ? "Silakan selesaikan pembayaran konsultasi Anda sesuai instruksi berikut:"
+              : "Status pembayaran konsultasi Anda saat ini:"}
           </p>
           {/* Detail Appointment */}
           <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-            <h3 className="font-semibold text-gray-900 mb-3">Detail Appointment:</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">
+              Detail Appointment:
+            </h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">Order ID:</span>
-                <span className="font-medium text-gray-900">{appointmentDetails.orderId}</span>
+                <span className="font-medium text-gray-900">
+                  {appointmentDetails.orderId}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Total:</span>
-                <span className="font-medium text-gray-900">Rp {appointmentDetails.total_harga?.toLocaleString()}</span>
+                <span className="font-medium text-gray-900">
+                  Rp {appointmentDetails.total_harga?.toLocaleString()}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Status:</span>
-                <span className="font-medium text-gray-900">{appointmentDetails.status}</span>
+                <span className="font-medium text-gray-900">
+                  {appointmentDetails.status}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Pembayaran:</span>
-                <span className="font-medium text-gray-900">{appointmentDetails.payment_status}</span>
+                <span className="font-medium text-gray-900">
+                  {appointmentDetails.payment_status}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Layanan:</span>
-                <span className="font-medium text-gray-900">{appointmentDetails.service}</span>
+                <span className="font-medium text-gray-900">
+                  {appointmentDetails.service}
+                </span>
               </div>
               {appointmentDetails.zoom_link && (
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Link Zoom:</span>
-                  <a href={appointmentDetails.zoom_link} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 underline break-all">{appointmentDetails.zoom_link}</a>
+                  <a
+                    href={appointmentDetails.zoom_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-blue-600 underline break-all"
+                  >
+                    {appointmentDetails.zoom_link}
+                  </a>
                 </div>
               )}
               {transactionStatus && (
                 <div className="flex justify-between">
                   <span className="text-gray-600">Status Midtrans:</span>
-                  <span className="font-medium text-gray-900">{transactionStatus}</span>
+                  <span className="font-medium text-gray-900">
+                    {transactionStatus}
+                  </span>
                 </div>
               )}
             </div>
@@ -518,18 +673,32 @@ const BookingPageContent = () => {
             Refresh Status Pembayaran
           </button>
           {/* Tombol Bayar Sekarang di Midtrans */}
-          {appointmentDetails.payment_status === 'pending' && appointmentDetails.snap_redirect_url && (
-            <div className="mb-2">
-              <button
-                onClick={() => window.location.href = appointmentDetails.snap_redirect_url ?? ''}
-                className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200"
-              >
-                Dapatkan Kode Pembayaran Kembali
-              </button>
-            </div>
-          )}
-          <button onClick={() => router.push('/riwayatBelanja')} className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition duration-200 mb-2">Lihat Riwayat Pesanan</button>
-          <button onClick={() => router.push('/konsultasi')} className="w-full bg-gray-300 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-400 transition duration-200">Kembali ke Konsultasi</button>
+          {appointmentDetails.payment_status === "pending" &&
+            appointmentDetails.snap_redirect_url && (
+              <div className="mb-2">
+                <button
+                  onClick={() =>
+                    (window.location.href =
+                      appointmentDetails.snap_redirect_url ?? "")
+                  }
+                  className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition duration-200"
+                >
+                  Dapatkan Kode Pembayaran Kembali
+                </button>
+              </div>
+            )}
+          <button
+            onClick={() => router.push("/riwayatBelanja")}
+            className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition duration-200 mb-2"
+          >
+            Lihat Riwayat Pesanan
+          </button>
+          <button
+            onClick={() => router.push("/konsultasi")}
+            className="w-full bg-gray-300 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-400 transition duration-200"
+          >
+            Kembali ke Konsultasi
+          </button>
         </div>
       </div>
     );
@@ -582,8 +751,8 @@ const BookingPageContent = () => {
               Konsultasi Ahli Pakan & Dokter Hewan Langsung
             </h1>
             <p className="text-black text-sm max-w-2xl mx-auto">
-              Paket ikan, pakan ayam, dan ternak dari limbah agro-marine. Hemat
-              hingga 30%! Beli pakan, bantu bumi.
+            Konsultasi langsung dengan ahli pakan dan dokter hewan untuk solusi
+            tepat bagi kebutuhan ternak Anda.
             </p>
           </div>
 
@@ -631,54 +800,58 @@ const BookingPageContent = () => {
             </div>
 
             {/* Calendar and Time Selection */}
-            <div className="grid md:grid-cols-2 gap-8 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-8">
               {/* Calendar Section */}
               <div className="border rounded-xl p-6 bg-gray-50">
                 <h3 className="text-lg font-semibold mb-4 flex items-center justify-between text-black">
-                  <span className="flex items-center">
-                    <Calendar className="w-5 h-5 mr-2 text-2 text-black" />
-                    Pilih Tanggal
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={prevMonth}
-                      className="p-1 hover:bg-gray-200 rounded-full transition-all"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 19l-7-7 7-7"
-                        />
-                      </svg>
-                    </button>
-                    <span className="text-sm font-medium min-w-[140px] text-center">
-                      {getMonthName(currentMonth)}
+                  <div className="flex flex-wrap items-center w-full gap-2 justify-between">
+                    <span className="flex items-center mb-2 md:mb-0">
+                      <Calendar className="w-5 h-5 mr-2 text-2 text-black" />
+                      Pilih Tanggal
                     </span>
-                    <button
-                      onClick={nextMonth}
-                      className="p-1 hover:bg-gray-200 rounded-full transition-all"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                    <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto justify-between sm:justify-normal">
+                      <button
+                        onClick={prevMonth}
+                        className="p-1 hover:bg-gray-200 rounded-full transition-all"
+                        style={{ minWidth: 32 }}
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </button>
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 19l-7-7 7-7"
+                          />
+                        </svg>
+                      </button>
+                      <span className="text-sm font-medium min-w-[100px] max-w-[140px] text-center truncate">
+                        {getMonthName(currentMonth)}
+                      </span>
+                      <button
+                        onClick={nextMonth}
+                        className="p-1 hover:bg-gray-200 rounded-full transition-all"
+                        style={{ minWidth: 32 }}
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </h3>
                 <div className="bg-white rounded-lg p-4">
@@ -697,8 +870,10 @@ const BookingPageContent = () => {
                       <button
                         key={i}
                         disabled={date === null || (date && isPastDate(date))}
-                        className={`text-center p-2 text-sm rounded-lg transition-all
-                          ${date === null ? "invisible" : ""}
+                        className={`text-center text-sm rounded-lg transition-all aspect-square w-full flex items-center justify-center
+                          ${
+                            date === null ? "opacity-0 pointer-events-none" : ""
+                          }
                           ${
                             date && isPastDate(date)
                               ? "text-gray-300 cursor-not-allowed"
@@ -717,6 +892,7 @@ const BookingPageContent = () => {
                         onClick={() =>
                           date && !isPastDate(date) && setSelectedDate(date)
                         }
+                        style={{ minHeight: 36, minWidth: 36 }}
                       >
                         {date ? date.getDate() : ""}
                       </button>
@@ -789,51 +965,68 @@ const BookingPageContent = () => {
                     Nama Lengkap<span className="text-red-500 ml-1">*</span>
                   </label>
                   <div className="relative">
-                    <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                     <input
                       type="text"
                       name="nama_lengkap"
                       value={formData.nama_lengkap}
                       onChange={handleInputChange}
-                      className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-2/20 focus:border-2 transition-all"
+                      className="w-full pl-10 pr-4 h-12 border rounded-lg focus:ring-2 focus:ring-2/20 focus:border-2 transition-all"
                       placeholder="Masukkan nama lengkap"
                       required
                     />
                   </div>
+                  {formErrors.nama_lengkap && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {formErrors.nama_lengkap}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-700">
                     Email<span className="text-red-500 ml-1">*</span>
                   </label>
                   <div className="relative">
-                    <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                     <input
                       type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-2/20 focus:border-2 transition-all"
+                      className="w-full pl-10 pr-4 h-12 border rounded-lg focus:ring-2 focus:ring-2/20 focus:border-2 transition-all"
                       placeholder="Masukkan email"
                       required
                     />
                   </div>
+                  {formErrors.email && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {formErrors.email}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-700">
                     No. Telepon<span className="text-red-500 ml-1">*</span>
                   </label>
                   <div className="relative">
-                    <Phone className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Phone className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                     <input
                       type="tel"
                       name="no_hp"
                       value={formData.no_hp}
                       onChange={handleInputChange}
-                      className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-2/20 focus:border-2 transition-all"
+                      className="w-full pl-10 pr-4 h-12 border rounded-lg focus:ring-2 focus:ring-2/20 focus:border-2 transition-all"
                       placeholder="Masukkan no. telepon"
                       required
+                      inputMode="tel"
+                      pattern="^([0]|\+)[0-9]{8,14}$"
                     />
                   </div>
+                  {formErrors.no_hp && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {formErrors.no_hp}
+                    </p>
+                  )}
                 </div>
               </div>
 

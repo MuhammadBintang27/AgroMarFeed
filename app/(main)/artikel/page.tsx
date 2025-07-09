@@ -71,8 +71,7 @@ export default function ArticlePage() {
               Artikel & Tips
             </h1>
             <p className="text-black text-sm max-w-2xl mx-auto">
-              Pelet ikan, pakan ayam, dan ternak dari limbah agro-marine. Hemat
-              hingga 30%! Beli pakan, bantu bumi.
+            Ubah Limbah Jadi Peluang! Temukan cara cerdas membuat pakan hemat, sehat, dan ramah lingkungan.
             </p>
           </div>
 

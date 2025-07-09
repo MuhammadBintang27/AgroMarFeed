@@ -35,8 +35,8 @@ const markdownToHtml = (markdown: string) => {
       /^\*(.*?)\*$/gm,
       '<h2 class="text-xl font-semibold text-gray-800 mb-2">$1</h2>'
     )
-    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+    .replace(/^\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>')
+    .replace(/^\*(.*?)\*/g, '<em class="italic">$1</em>')
     .replace(/\n/g, "<br>")
     .replace(/^- (.*)/gm, '<li class="ml-4">$1</li>')
     .replace(/(<li.*<\/li>)/g, '<ul class="list-disc ml-4 mb-2">$1</ul>');
@@ -145,6 +145,30 @@ const ImageCropper = ({
     setIsDragging(false);
   };
 
+  // Touch events for mobile drag
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      setIsDragging(true);
+      setDragStart({
+        x: touch.clientX - position.x,
+        y: touch.clientY - position.y,
+      });
+    }
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (isDragging && e.touches.length === 1) {
+      const touch = e.touches[0];
+      setPosition({
+        x: touch.clientX - dragStart.x,
+        y: touch.clientY - dragStart.y,
+      });
+    }
+  };
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
   const handleCrop = () => {
     if (!canvasRef.current) return;
 
@@ -171,7 +195,7 @@ const ImageCropper = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg p-6 max-w-2xl w-full">
+      <div className="bg-white rounded-lg p-2 sm:p-6 max-w-full w-full sm:max-w-2xl">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Edit Gambar (1:1)</h3>
           <button
@@ -182,25 +206,29 @@ const ImageCropper = ({
           </button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex flex-col gap-4 lg:flex-row">
           {/* Canvas Container */}
-          <div className="flex-1">
-            <div className="border-2 border-gray-300 rounded-lg overflow-hidden inline-block">
+          <div className="flex-1 w-full overflow-auto flex justify-center">
+            <div className="border-2 border-gray-300 rounded-lg overflow-hidden inline-block w-full max-w-[400px]">
               <canvas
                 ref={canvasRef}
                 width={400}
                 height={400}
-                className="block cursor-move"
+                className="block cursor-move w-full h-auto max-w-full"
+                style={{ maxWidth: "100%", height: "auto" }}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
               />
             </div>
           </div>
 
           {/* Controls */}
-          <div className="lg:w-64 space-y-4">
+          <div className="w-full lg:w-64 space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">Zoom</label>
               <div className="flex items-center gap-2">
@@ -688,7 +716,7 @@ export default function TambahProdukPage() {
   };
 
   return (
-    <section className="min-h-screen py-10 px-2 md:px-0 flex items-center justify-center">
+    <section className="min-h-screen py-10 px-2 md:px-0 overflow-x-hidden">
       {/* Show loading while checking authentication */}
       {userLoading && (
         <div className="text-center">
@@ -720,7 +748,7 @@ export default function TambahProdukPage() {
 
       {/* Show main content if user is authenticated */}
       {!userLoading && user && (
-        <div className="w-full max-w-2xl mx-auto bg-white rounded-2xl p-8">
+        <div className="w-full max-w-2xl mx-auto bg-white rounded-2xl p-4 md:p-8">
           {/* Tombol Back */}
           <button
             type="button"
@@ -770,7 +798,7 @@ export default function TambahProdukPage() {
                 rows={3}
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div>
                 <label className="font-semibold block mb-2 text-[#39381F]">
                   Kategori <span className="text-red-500">*</span>
@@ -826,7 +854,7 @@ export default function TambahProdukPage() {
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="font-semibold block mb-2 text-[#39381F]">
                   Harga Satuan <span className="text-red-500">*</span>
@@ -867,7 +895,7 @@ export default function TambahProdukPage() {
                 />
                 {imageFile && (
                   <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
                       <div className="relative">
                         <img
                           src={

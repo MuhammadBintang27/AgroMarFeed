@@ -41,15 +41,16 @@ const markdownToHtml = (markdown: string) => {
 };
 
 // Image Cropper Component
+type ImageCropperProps = {
+  imageFile: File;
+  onCropComplete: (croppedImage: File) => void;
+  onCancel: () => void;
+};
 const ImageCropper = ({
   imageFile,
   onCropComplete,
   onCancel,
-}: {
-  imageFile: File;
-  onCropComplete: (croppedImage: File) => void;
-  onCancel: () => void;
-}) => {
+}: ImageCropperProps) => {
   const [scale, setScale] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -61,51 +62,33 @@ const ImageCropper = ({
   useEffect(() => {
     if (imageFile && canvasRef.current) {
       const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
-      const img = new Image();
-
+      const img = new window.Image();
       img.onload = () => {
-        // Set canvas size to 400x400 (1:1 ratio)
         canvas.width = 400;
         canvas.height = 400;
-
-        // Calculate initial scale to fit image in canvas
         const scaleX = canvas.width / img.width;
         const scaleY = canvas.height / img.height;
         const initialScale = Math.max(scaleX, scaleY);
-
         setScale(initialScale);
         drawImage();
       };
-
       img.src = URL.createObjectURL(imageFile);
       imageRef.current = img;
     }
+    // eslint-disable-next-line
   }, [imageFile]);
 
   const drawImage = () => {
     if (!canvasRef.current || !imageRef.current) return;
-
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     const img = imageRef.current;
-
     if (!ctx) return;
-
-    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Save context
     ctx.save();
-
-    // Move to center
     ctx.translate(canvas.width / 2, canvas.height / 2);
-
-    // Apply transformations
     ctx.rotate((rotation * Math.PI) / 180);
     ctx.scale(scale, scale);
-
-    // Draw image centered
     ctx.drawImage(
       img,
       -img.width / 2 + position.x / scale,
@@ -113,39 +96,50 @@ const ImageCropper = ({
       img.width,
       img.height
     );
-
-    // Restore context
     ctx.restore();
   };
-
   useEffect(() => {
     drawImage();
   }, [scale, rotation, position]);
 
+  // Mouse events
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
-    setDragStart({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y,
-    });
+    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
   };
-
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isDragging) {
-      setPosition({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y,
-      });
+      setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
     }
   };
-
   const handleMouseUp = () => {
     setIsDragging(false);
   };
-
+  // Touch events
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      setIsDragging(true);
+      setDragStart({
+        x: touch.clientX - position.x,
+        y: touch.clientY - position.y,
+      });
+    }
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (isDragging && e.touches.length === 1) {
+      const touch = e.touches[0];
+      setPosition({
+        x: touch.clientX - dragStart.x,
+        y: touch.clientY - dragStart.y,
+      });
+    }
+  };
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
   const handleCrop = () => {
     if (!canvasRef.current) return;
-
     canvasRef.current.toBlob(
       (blob) => {
         if (blob) {
@@ -160,16 +154,14 @@ const ImageCropper = ({
       0.9
     );
   };
-
   const resetTransform = () => {
     setScale(1);
     setRotation(0);
     setPosition({ x: 0, y: 0 });
   };
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg p-6 max-w-2xl w-full">
+      <div className="bg-white rounded-lg p-2 sm:p-6 max-w-full w-full sm:max-w-2xl">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Edit Gambar (1:1)</h3>
           <button
@@ -179,26 +171,28 @@ const ImageCropper = ({
             <X size={20} />
           </button>
         </div>
-
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Canvas Container */}
-          <div className="flex-1">
-            <div className="border-2 border-gray-300 rounded-lg overflow-hidden inline-block">
+        <div className="flex flex-col gap-4 lg:flex-row">
+          {/* Canvas */}
+          <div className="flex-1 w-full overflow-auto flex justify-center">
+            <div className="border-2 border-gray-300 rounded-lg overflow-hidden inline-block w-full max-w-[400px]">
               <canvas
                 ref={canvasRef}
                 width={400}
                 height={400}
-                className="block cursor-move"
+                className="block cursor-move w-full h-auto max-w-full"
+                style={{ maxWidth: "100%", height: "auto" }}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
               />
             </div>
           </div>
-
           {/* Controls */}
-          <div className="lg:w-64 space-y-4">
+          <div className="w-full lg:w-64 space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">Zoom</label>
               <div className="flex items-center gap-2">
@@ -219,7 +213,6 @@ const ImageCropper = ({
                 </button>
               </div>
             </div>
-
             <div>
               <label className="block text-sm font-medium mb-2">Rotasi</label>
               <div className="flex items-center gap-2">
@@ -234,7 +227,6 @@ const ImageCropper = ({
                 </span>
               </div>
             </div>
-
             <div className="space-y-2">
               <button
                 onClick={resetTransform}
@@ -287,6 +279,15 @@ export default function EditProdukPage() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [showCropModal, setShowCropModal] = useState(false);
   const [originalImageFile, setOriginalImageFile] = useState<File | null>(null);
+  // Tambahkan state isMobile di EditProdukPage
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Check authentication on component mount
   useEffect(() => {
@@ -491,6 +492,7 @@ export default function EditProdukPage() {
 
   const handleCropComplete = (croppedImage: File) => {
     setImageFile(croppedImage);
+    setOriginalImageFile(croppedImage);
     setShowCropModal(false);
   };
 
@@ -824,19 +826,53 @@ export default function EditProdukPage() {
           {/* Review Popup Window */}
           {showReviewPopup && (
             <div
-              className="fixed inset-0 z-50 pointer-events-none"
-              style={{
-                left: `${popupPosition.x}px`,
-                top: `${popupPosition.y}px`,
-                width: `${popupSize.width}px`,
-                height: `${popupSize.height}px`,
-              }}
+              className={`fixed z-50 pointer-events-none ${
+                isMobile
+                  ? "inset-0 flex items-center justify-center px-2 py-8"
+                  : "inset-0"
+              }`}
+              style={
+                isMobile
+                  ? {
+                      left: undefined,
+                      top: undefined,
+                      width: "100vw",
+                      height: "100vh",
+                      padding: 0,
+                    }
+                  : {
+                      left: `${popupPosition.x}px`,
+                      top: `${popupPosition.y}px`,
+                      width: `${popupSize.width}px`,
+                      height: `${popupSize.height}px`,
+                    }
+              }
             >
-              <div className="bg-white rounded-lg shadow-2xl border-2 border-gray-200 w-full h-full flex flex-col pointer-events-auto">
+              <div
+                className={`bg-white rounded-lg shadow-2xl border-2 border-gray-200 w-full h-full flex flex-col pointer-events-auto ${
+                  isMobile ? "max-w-full max-h-full w-full h-auto" : ""
+                }`}
+                style={
+                  isMobile
+                    ? {
+                        maxWidth: "100vw",
+                        maxHeight: "90vh",
+                        minHeight: "40vh",
+                        minWidth: "0",
+                        margin: 0,
+                        padding: 0,
+                      }
+                    : {}
+                }
+              >
                 {/* Header */}
                 <div
-                  className="bg-gray-100 px-4 py-2 rounded-t-lg flex items-center justify-between cursor-move"
-                  onMouseDown={(e) => handleMouseDown(e, "drag")}
+                  className={`bg-gray-100 px-4 py-2 rounded-t-lg flex items-center justify-between ${
+                    isMobile ? "cursor-default" : "cursor-move"
+                  }`}
+                  onMouseDown={
+                    isMobile ? undefined : (e) => handleMouseDown(e, "drag")
+                  }
                 >
                   <div className="flex items-center gap-2">
                     <Move size={16} className="text-gray-500" />
@@ -873,13 +909,15 @@ export default function EditProdukPage() {
                   )}
                 </div>
 
-                {/* Resize Handle */}
-                <div
-                  className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
-                  onMouseDown={(e) => handleMouseDown(e, "resize")}
-                >
-                  <div className="w-0 h-0 border-l-8 border-l-transparent border-b-8 border-b-gray-400"></div>
-                </div>
+                {/* Resize Handle (desktop only) */}
+                {!isMobile && (
+                  <div
+                    className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
+                    onMouseDown={(e) => handleMouseDown(e, "resize")}
+                  >
+                    <div className="w-0 h-0 border-l-8 border-l-transparent border-b-8 border-b-gray-400"></div>
+                  </div>
+                )}
               </div>
             </div>
           )}

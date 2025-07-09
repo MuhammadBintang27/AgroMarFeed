@@ -174,7 +174,7 @@ export default function ConsultationPage() {
               </div>
             ) : displayedKonsultan.length > 0 ? (
               <motion.div
-                className="grid grid-cols-1 md:grid-cols-3 gap-4"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, staggerChildren: 0.1 }}
