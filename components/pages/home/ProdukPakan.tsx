@@ -288,14 +288,14 @@ const ProdukPakan = () => {
         initial={{ y: 100, opacity: 0 }}
         whileInView={{ y: 0, opacity: 1 }}
         transition={{ duration: 1 }}
-        className="flex overflow-x-auto flex-nowrap gap-x-4 mb-6 pb-2 -mx-2 md:mx-0 md:flex-wrap md:overflow-visible md:gap-4"
+        className="flex flex-wrap gap-x-2 gap-y-2 mb-6 pb-2 -mx-2 md:mx-0 md:gap-4"
       >
         {categories.map((category) => (
           <Button
             key={category.label}
             href=""
             size="sm"
-            className={`hover:brightness-110 whitespace-nowrap text-xs md:text-sm px-4 py-2 flex items-center gap-2 ${
+            className={`flex-1 min-w-0 hover:brightness-110 whitespace-nowrap text-xs md:text-sm px-2 py-2 flex items-center gap-0 overflow-hidden ${
               activeCategory === category.label
                 ? "bg-1 text-white"
                 : "bg-2 text-white"
@@ -312,7 +312,7 @@ const ProdukPakan = () => {
               alt={category.label}
               width={24}
               height={24}
-              className="object-contain w-8 h-8"
+              className="object-contain w-8 h-8 max-w-[32px] max-h-[32px]"
             />
             {category.label}
           </Button>
@@ -326,8 +326,10 @@ const ProdukPakan = () => {
           whileInView={{ y: 0, opacity: 1 }}
           transition={{ duration: 1 }}
           href="#"
-          className={`inline-flex items-center gap-2 text-black/40 text-base hover:scale-105 duration-300 ${lihatSemuaLoading ? 'cursor-not-allowed opacity-60' : ''}`}
-          onClick={e => {
+          className={`inline-flex items-center gap-2 text-black/40 text-base hover:scale-105 duration-300 ${
+            lihatSemuaLoading ? "cursor-not-allowed opacity-60" : ""
+          }`}
+          onClick={(e) => {
             if (lihatSemuaLoading) return;
             e.preventDefault();
             setLihatSemuaLoading(true);

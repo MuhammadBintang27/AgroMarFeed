@@ -196,8 +196,14 @@ export default function ChatbotWidget() {
               {/* Header */}
               <div className="bg-[#6d8044] px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                    <Bot size={16} className="text-white" />
+                  <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center">
+                    <Image
+                      src="/images/ai1.png"
+                      alt="AI Assistant"
+                      width={76}
+                      height={76}
+                      className="object-contain"
+                    />
                   </div>
                   <div>
                     <div className="text-white font-semibold text-sm">
