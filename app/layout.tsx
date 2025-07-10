@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
 import Script from "next/script";
-import { useEffect } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,16 +27,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  useEffect(() => {
-    if (process.env.NODE_ENV === "production") {
-      window.console.log = () => {};
-      window.console.warn = () => {};
-      window.console.error = () => {};
-      window.console.info = () => {};
-      window.console.debug = () => {};
-    }
-  }, []);
-
   return (
     <html lang="en">
       <body
