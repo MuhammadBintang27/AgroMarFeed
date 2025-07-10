@@ -4,6 +4,15 @@ import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
 import Script from "next/script";
 
+// Disable all console output in production (browser only)
+if (typeof window !== "undefined" && process.env.NODE_ENV === "production") {
+  window.console.log = () => {};
+  window.console.warn = () => {};
+  window.console.error = () => {};
+  window.console.info = () => {};
+  window.console.debug = () => {};
+}
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
