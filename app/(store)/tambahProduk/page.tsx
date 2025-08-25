@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { createProduct } from "@/lib/api/fetchProducts";
 import imageCompression from "browser-image-compression";
 import { useUser } from "@/contexts/UserContext";
+import axios from "axios";
 import {
   Sparkles,
   X,
@@ -663,6 +664,27 @@ export default function TambahProdukPage() {
         setLoading(false);
         return;
       }
+
+      // Validate product type using the validation endpoint
+      try {
+        const validationRes = await axios.post('/api/chat/validate', {
+          name: form.name,
+          description: form.description,
+        });
+        
+        if (!validationRes.data.isValid) {
+          setError(validationRes.data.error);
+          setLoading(false);
+          return;
+        }
+      } catch (validationError: any) {
+        console.error('Validation error:', validationError);
+        const errorMessage = validationError.response?.data?.error || 'Gagal memvalidasi produk. Silakan coba lagi.';
+        setError(errorMessage);
+        setLoading(false);
+        return;
+      }
+
       // Use selected image (original or AI)
       let uploadImageFile = imageFile;
       if (selectedImageType === "ai" && aiImage) {
