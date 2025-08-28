@@ -36,7 +36,7 @@ const Hero = () => {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="hover:scale-105 duration-300 text-white text-2xl sm:text-3xl md:text-5xl font-bold mb-4 md:mb-6 leading-snug"
         >
-          Bersama AgroMarFeed, Limbah Bernilai<br className="hidden md:block" />
+          Bersama AgroMarFeed, Limbah Bernilai <br className="hidden md:block" />
           Ternak Sejahtera
         </motion.h1>
 

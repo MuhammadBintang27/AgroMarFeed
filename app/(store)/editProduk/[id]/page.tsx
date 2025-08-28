@@ -7,20 +7,23 @@ import {
   Sparkles,
   X,
   Maximize2,
-  Minimize2,
   Move,
   Crop,
   RotateCw,
   ZoomIn,
   ZoomOut,
   XCircle,
+  ArrowLeft,
+  Copy,
+  Check,
 } from "lucide-react";
 
-const defaultWeight = { id: "", value: "", price: 0 };
+const defaultWeight = { id: "", value: "", price: "", isCustom: false };
 
 const kategoriOptions = ["Ruminansia", "Non-ruminansia", "Akuakultur"];
 const limbahOptions = ["Limbah Pertanian", "Limbah Kelautan"];
 const fisikOptions = ["Pelet", "Fermentasi Padat", "Serbuk", "Granul Kasar"];
+const weightOptions = ["1kg", "2kg", "5kg", "10kg", "15kg", "20kg"];
 
 // Markdown to HTML converter
 const markdownToHtml = (markdown: string) => {
@@ -262,7 +265,7 @@ export default function EditProdukPage() {
     fisikOptions: "",
     price: 0,
     imageUrl: "",
-    stock: 0,
+    stock: "",
     weights: [{ ...defaultWeight }],
   });
   const [loading, setLoading] = useState(false);
@@ -281,6 +284,7 @@ export default function EditProdukPage() {
   const [originalImageFile, setOriginalImageFile] = useState<File | null>(null);
   // Tambahkan state isMobile di EditProdukPage
   const [isMobile, setIsMobile] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -313,10 +317,15 @@ export default function EditProdukPage() {
             fisikOptions: data.fisikOptions || "",
             price: data.price || 0,
             imageUrl: data.imageUrl || "",
-            stock: data.stock || 0,
+            stock: String(data.stock || ""),
             weights:
               data.weights && data.weights.length > 0
-                ? data.weights
+                ? data.weights.map((w: any) => ({
+                  id: w.id || "",
+                  value: w.value || "",
+                  price: String(w.price || ""),
+                  isCustom: !weightOptions.includes(w.value) && w.value !== ""
+                }))
                 : [{ ...defaultWeight }],
           });
         }
@@ -339,27 +348,47 @@ export default function EditProdukPage() {
   const handleWeightChange = (
     idx: number,
     field: string,
-    value: string | number
+    value: string | number,
+    isCustomMode?: boolean
   ) => {
     setForm((prev) => {
       const weights = [...prev.weights];
-      weights[idx] = { ...weights[idx], [field]: value };
-      return { ...prev, weights };
+
+      // If we're changing the value and setting custom mode
+      if (field === "value" && isCustomMode !== undefined) {
+        weights[idx] = { ...weights[idx], [field]: String(value), isCustom: isCustomMode };
+      } else {
+        weights[idx] = { ...weights[idx], [field]: String(value) };
+      }
+
+      // Calculate minimum price from all weights
+      const minPrice = Math.min(...weights.map(w => Number(w.price) || 0).filter(p => p > 0));
+      const price = isFinite(minPrice) ? minPrice : 0;
+
+      return { ...prev, weights, price };
     });
   };
 
   const addWeight = () => {
-    setForm((prev) => ({
-      ...prev,
-      weights: [...prev.weights, { ...defaultWeight }],
-    }));
+    setForm((prev) => {
+      const weights = [...prev.weights, { ...defaultWeight }];
+      // Calculate minimum price from all weights
+      const minPrice = Math.min(...weights.map(w => Number(w.price) || 0).filter(p => p > 0));
+      const price = isFinite(minPrice) ? minPrice : 0;
+
+      return { ...prev, weights, price };
+    });
   };
 
   const removeWeight = (idx: number) => {
-    setForm((prev) => ({
-      ...prev,
-      weights: prev.weights.filter((_, i) => i !== idx),
-    }));
+    setForm((prev) => {
+      const weights = prev.weights.filter((_, i) => i !== idx);
+      // Calculate minimum price from remaining weights
+      const minPrice = Math.min(...weights.map(w => Number(w.price) || 0).filter(p => p > 0));
+      const price = isFinite(minPrice) ? minPrice : 0;
+
+      return { ...prev, weights, price };
+    });
   };
 
   const handleReviewDescription = async () => {
@@ -414,8 +443,7 @@ export default function EditProdukPage() {
         err instanceof Error ? err.message : String(err)
       );
       setReviewResult(
-        `Gagal menghubungi AI: ${
-          err instanceof Error ? err.message : String(err)
+        `Gagal menghubungi AI: ${err instanceof Error ? err.message : String(err)
         }`
       );
     } finally {
@@ -502,6 +530,70 @@ export default function EditProdukPage() {
     }
   };
 
+  const handleCopyToClipboard = async () => {
+    try {
+      // Strip HTML tags from reviewResult for plain text copy
+      let plainText = reviewResult.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
+
+      // Extract only the content after "Saran perbaikan:"
+      const saranIndex = plainText.toLowerCase().indexOf('saran perbaikan:');
+      if (saranIndex !== -1) {
+        plainText = plainText.substring(saranIndex + 'saran perbaikan:'.length).trim();
+      }
+
+      // Remove the last paragraph if it contains generic closing statements
+      const paragraphs = plainText.split('\n\n').filter(p => p.trim() !== '');
+      if (paragraphs.length > 1) {
+        const lastParagraph = paragraphs[paragraphs.length - 1].toLowerCase();
+        if (lastParagraph.includes('dengan memperhatikan') ||
+          lastParagraph.includes('deskripsi produk ini akan') ||
+          lastParagraph.includes('lebih menarik dan informatif') ||
+          lastParagraph.includes('semoga bermanfaat')) {
+          paragraphs.pop();
+        }
+      }
+
+      const finalText = paragraphs.join('\n\n').trim();
+
+      await navigator.clipboard.writeText(finalText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      // Fallback for older browsers
+      let plainText = reviewResult.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
+
+      // Extract only the content after "Saran perbaikan:"
+      const saranIndex = plainText.toLowerCase().indexOf('saran perbaikan:');
+      if (saranIndex !== -1) {
+        plainText = plainText.substring(saranIndex + 'saran perbaikan:'.length).trim();
+      }
+
+      // Remove the last paragraph if it contains generic closing statements
+      const paragraphs = plainText.split('\n\n').filter(p => p.trim() !== '');
+      if (paragraphs.length > 1) {
+        const lastParagraph = paragraphs[paragraphs.length - 1].toLowerCase();
+        if (lastParagraph.includes('dengan memperhatikan') ||
+          lastParagraph.includes('deskripsi produk ini akan') ||
+          lastParagraph.includes('lebih menarik dan informatif') ||
+          lastParagraph.includes('semoga bermanfaat')) {
+          paragraphs.pop();
+        }
+      }
+
+      const finalText = paragraphs.join('\n\n').trim();
+
+      const textArea = document.createElement('textarea');
+      textArea.value = finalText;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -514,10 +606,17 @@ export default function EditProdukPage() {
         !form.categoryOptions ||
         !form.limbahOptions ||
         !form.fisikOptions ||
-        !form.price ||
         !form.stock
       ) {
         setError("Semua field wajib diisi.");
+        setLoading(false);
+        return;
+      }
+
+      // Validate that at least one weight with price is provided
+      const validWeights = form.weights.filter(w => w.value && Number(w.price) > 0);
+      if (validWeights.length === 0) {
+        setError("Harap isi minimal satu varian berat dan harga.");
         setLoading(false);
         return;
       }
@@ -542,11 +641,23 @@ export default function EditProdukPage() {
       const weights = form.weights.map((w, i) => ({
         ...w,
         id: w.id || `${Date.now()}-${i}`,
+        price: Number(w.price) || 0,
       }));
+
+      // Calculate minimum price from weights
+      const minPrice = Math.min(...weights.map(w => w.price || 0).filter(p => p > 0));
+      const finalPrice = isFinite(minPrice) ? minPrice : 0;
+
       const res = await fetch(`/api/products/${productId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, imageUrl, weights }),
+        body: JSON.stringify({
+          ...form,
+          price: finalPrice,
+          stock: Number(form.stock) || 0,
+          imageUrl,
+          weights
+        }),
       });
       if (res.ok) {
         setSuccess("Produk berhasil diupdate");
@@ -569,7 +680,7 @@ export default function EditProdukPage() {
     );
 
   return (
-    <section className="min-h-screen py-10 px-2 md:px-0 flex items-center justify-center">
+    <section className="min-h-screen py-10 px-4 md:px-6 lg:px-8 overflow-x-hidden">
       {/* Show loading while checking authentication */}
       {userLoading && (
         <div className="text-center">
@@ -601,7 +712,16 @@ export default function EditProdukPage() {
 
       {/* Show main content if user is authenticated */}
       {!userLoading && user && (
-        <div className="w-full max-w-2xl mx-auto bg-white p-8">
+        <div className="w-full max-w-4xl mx-auto bg-white rounded-2xl p-6 md:p-10 shadow-lg border border-gray-100 overflow-hidden">
+          {/* Tombol Back */}
+          <button
+            type="button"
+            onClick={() => router.push("/tokoSaya")}
+            className="flex items-center gap-2 text-sm text-gray-700 hover:text-yellow-600 mb-4 font-semibold"
+          >
+            <ArrowLeft size={18} />
+            Kembali ke Toko Saya
+          </button>
           <h1 className="text-3xl font-extrabold text-[#39381F] mb-8 text-center">
             Edit Produk
           </h1>
@@ -615,7 +735,7 @@ export default function EditProdukPage() {
                 value={form.name}
                 onChange={handleChange}
                 className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg"
-                placeholder="Masukkan nama produk"
+                placeholder=""
               />
             </div>
             <div>
@@ -627,10 +747,10 @@ export default function EditProdukPage() {
                   type="button"
                   onClick={handleReviewDescription}
                   disabled={!form.description.trim() || reviewLoading}
-                  className="flex items-center gap-2 px-3 py-1 bg-3 text-white rounded-lg text-sm hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Sparkles size={16} />
-                  {reviewLoading ? "Reviewing..." : "Review - AgroMarFeed AI"}
+                  {reviewLoading ? "Reviewing..." : "Review AI"}
                 </button>
               </div>
               <textarea
@@ -638,87 +758,81 @@ export default function EditProdukPage() {
                 value={form.description}
                 onChange={handleChange}
                 className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg"
-                placeholder="Deskripsi produk"
+                placeholder=""
                 rows={3}
               />
             </div>
-            <div>
-              <label className="font-medium block mb-1">
-                Kategori <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="categoryOptions"
-                value={form.categoryOptions}
-                onChange={handleChange}
-                className="input input-bordered w-full rounded"
-              >
-                <option value="">Pilih Kategori</option>
-                {kategoriOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <label className="font-semibold block mb-2 text-[#39381F]">
+                  Kategori <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="categoryOptions"
+                  value={form.categoryOptions}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg bg-white"
+                >
+                  <option value="">Pilih Kategori</option>
+                  {kategoriOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="font-semibold block mb-2 text-[#39381F]">
+                  Jenis Limbah <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="limbahOptions"
+                  value={form.limbahOptions}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg bg-white"
+                >
+                  <option value="">Pilih Jenis Limbah</option>
+                  {limbahOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="font-semibold block mb-2 text-[#39381F]">
+                  Fisik <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="fisikOptions"
+                  value={form.fisikOptions}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg bg-white"
+                >
+                  <option value="">Pilih Bentuk Fisik</option>
+                  {fisikOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="font-medium block mb-1">
-                Jenis Limbah <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="limbahOptions"
-                value={form.limbahOptions}
-                onChange={handleChange}
-                className="input input-bordered w-full rounded"
-              >
-                <option value="">Pilih Jenis Limbah</option>
-                {limbahOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="font-medium block mb-1">
-                Fisik <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="fisikOptions"
-                value={form.fisikOptions}
-                onChange={handleChange}
-                className="input input-bordered w-full rounded"
-              >
-                <option value="">Pilih Bentuk Fisik</option>
-                {fisikOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="font-medium block mb-1">
-                Harga <span className="text-red-500">*</span>
-              </label>
-              <input
-                name="price"
-                type="number"
-                value={form.price}
-                onChange={handleChange}
-                className="input input-bordered w-full rounded"
-              />
-            </div>
-            <div>
-              <label className="font-medium block mb-1">
-                Stok <span className="text-red-500">*</span>
-              </label>
-              <input
-                name="stock"
-                type="number"
-                value={form.stock}
-                onChange={handleChange}
-                className="input input-bordered w-full rounded"
-              />
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="font-semibold block mb-2 text-[#39381F]">
+                  Stok <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="stock"
+                  type="number"
+                  value={form.stock}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none text-lg"
+                  placeholder=""
+                  min="1"
+                />
+              </div>
             </div>
             <div>
               <label className="font-semibold block mb-2 text-[#39381F]">
@@ -772,51 +886,119 @@ export default function EditProdukPage() {
               </div>
             </div>
             <div>
-              <label className="font-medium block mb-1">
-                Varian Berat & Harga
+              <label className="font-semibold block mb-2 text-[#39381F]">
+                Varian Berat & Harga <span className="text-red-500">*</span>
               </label>
-              {form.weights.map((w, idx) => (
-                <div key={idx} className="flex gap-2 mb-2">
-                  <input
-                    placeholder="Berat (misal: 1kg)"
-                    value={w.value}
-                    onChange={(e) =>
-                      handleWeightChange(idx, "value", e.target.value)
-                    }
-                    className="input input-bordered w-1/2 rounded"
-                  />
-                  <input
-                    placeholder="Harga"
-                    type="number"
-                    value={w.price}
-                    onChange={(e) =>
-                      handleWeightChange(idx, "price", Number(e.target.value))
-                    }
-                    className="input input-bordered w-1/2 rounded"
-                  />
+              <div className="space-y-4 max-w-full">
+                {form.weights.map((w, idx) => (
+                  <div key={idx} className="p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div className="w-full">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Berat
+                        </label>
+                        <div className="space-y-2">
+                          <select
+                            value={w.isCustom ? "Custom" : (weightOptions.includes(w.value) ? w.value : "")}
+                            onChange={(e) => {
+                              if (e.target.value === "Custom") {
+                                handleWeightChange(idx, "value", "", true);
+                              } else {
+                                handleWeightChange(idx, "value", e.target.value, false);
+                              }
+                            }}
+                            className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none bg-white text-sm"
+                          >
+                            <option value="">Pilih Berat</option>
+                            {weightOptions.filter(option => option !== "Custom").map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                            <option value="Custom">Custom</option>
+                          </select>
+                          {w.isCustom && (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                placeholder="Masukkan berat"
+                                value={w.value.replace("kg", "")}
+                                onChange={(e) => {
+                                  const numValue = e.target.value;
+                                  handleWeightChange(idx, "value", numValue ? `${numValue}kg` : "", true);
+                                }}
+                                className="flex-1 px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none text-sm"
+                                min="0.1"
+                                step="0.1"
+                              />
+                              <span className="text-sm text-gray-500 font-medium whitespace-nowrap">kg</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="w-full">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Harga
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-500 font-medium whitespace-nowrap">Rp</span>
+                          <input
+                            type="number"
+                            placeholder=""
+                            value={w.price}
+                            onChange={(e) =>
+                              handleWeightChange(idx, "price", e.target.value)
+                            }
+                            className="flex-1 px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none text-sm"
+                            min="1"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    {form.weights.length > 1 && (
+                      <div className="mt-4 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => removeWeight(idx)}
+                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 shadow-sm"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <div className="flex justify-center pt-2">
                   <button
                     type="button"
-                    className="bg-red-500 text-white px-2 rounded-[25]"
-                    onClick={() => removeWeight(idx)}
-                    disabled={form.weights.length === 1}
+                    onClick={addWeight}
+                    className="bg-green-500 hover:bg-green-600 text-white px-6 py-2.5 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 text-sm shadow-sm"
                   >
-                    Hapus
+                    + Tambah Varian
                   </button>
                 </div>
-              ))}
-              <button
-                type="button"
-                className="bg-2 text-white px-3 py-1 rounded-[25] mt-2"
-                onClick={addWeight}
-              >
-                + Tambah Varian
-              </button>
+
+                {/* Display minimum price */}
+                {form.weights.some(w => Number(w.price) > 0) && (
+                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg shadow-sm mt-4">
+                    <p className="text-sm font-medium text-gray-700">
+                      Harga Produk (otomatis dari harga termurah):
+                      <span className="ml-1 font-bold text-yellow-600">
+                        Rp {Math.min(...form.weights.map(w => Number(w.price) || 0).filter(p => p > 0)).toLocaleString('id-ID')}
+                      </span>
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Harga ini akan otomatis diambil dari varian dengan harga paling murah
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
-            {error && <div className="text-red-500">{error}</div>}
-            {success && <div className="text-green-600">{success}</div>}
+            {error && <div className="text-red-500 text-sm">{error}</div>}
+            {success && <div className="text-green-600 text-sm">{success}</div>}
             <button
               type="submit"
-              className="bg-3 text-white px-6 py-2 rounded-[25] font-semibold hover:bg-blue-700 mt-4"
+              className="bg-yellow-500 hover:bg-yellow-600 text-white hover:scale-[1.02] transition-all duration-200 w-full py-3 rounded-xl font-bold text-lg shadow-lg mt-6"
               disabled={loading}
             >
               {loading ? "Menyimpan..." : "Simpan Perubahan"}
@@ -826,96 +1008,162 @@ export default function EditProdukPage() {
           {/* Review Popup Window */}
           {showReviewPopup && (
             <div
-              className={`fixed z-50 pointer-events-none ${
-                isMobile
-                  ? "inset-0 flex items-center justify-center px-2 py-8"
+              className={`fixed z-50 pointer-events-none ${isMobile
+                  ? "inset-0 flex items-center justify-center px-4 py-8"
                   : "inset-0"
-              }`}
+                }`}
               style={
                 isMobile
                   ? {
-                      left: undefined,
-                      top: undefined,
-                      width: "100vw",
-                      height: "100vh",
-                      padding: 0,
-                    }
+                    left: undefined,
+                    top: undefined,
+                    width: "100vw",
+                    height: "100vh",
+                    padding: 0,
+                  }
                   : {
-                      left: `${popupPosition.x}px`,
-                      top: `${popupPosition.y}px`,
-                      width: `${popupSize.width}px`,
-                      height: `${popupSize.height}px`,
-                    }
+                    left: `${popupPosition.x}px`,
+                    top: `${popupPosition.y}px`,
+                    width: `${popupSize.width}px`,
+                    height: `${popupSize.height}px`,
+                  }
               }
             >
               <div
-                className={`bg-white rounded-lg shadow-2xl border-2 border-gray-200 w-full h-full flex flex-col pointer-events-auto ${
-                  isMobile ? "max-w-full max-h-full w-full h-auto" : ""
-                }`}
+                className={`bg-white rounded-2xl shadow-2xl border border-gray-200 w-full h-full flex flex-col pointer-events-auto backdrop-blur-sm transform transition-all duration-300 scale-100 opacity-100 ${isMobile ? "max-w-full max-h-full w-full h-auto animate-in slide-in-from-bottom-4" : "animate-in zoom-in-95"
+                  }`}
                 style={
                   isMobile
                     ? {
-                        maxWidth: "100vw",
-                        maxHeight: "90vh",
-                        minHeight: "40vh",
-                        minWidth: "0",
-                        margin: 0,
-                        padding: 0,
-                      }
+                      maxWidth: "100vw",
+                      maxHeight: "85vh",
+                      minHeight: "50vh",
+                      minWidth: "0",
+                      margin: 0,
+                      padding: 0,
+                    }
                     : {}
                 }
               >
                 {/* Header */}
                 <div
-                  className={`bg-gray-100 px-4 py-2 rounded-t-lg flex items-center justify-between ${
-                    isMobile ? "cursor-default" : "cursor-move"
-                  }`}
+                  className={`bg-gradient-to-r from-yellow-500 to-yellow-600 px-6 py-4 rounded-t-2xl flex items-center justify-between ${isMobile ? "cursor-default" : "cursor-move"
+                    }`}
                   onMouseDown={
                     isMobile ? undefined : (e) => handleMouseDown(e, "drag")
                   }
                 >
-                  <div className="flex items-center gap-2">
-                    <Move size={16} className="text-gray-500" />
-                    <h3 className="text-sm font-semibold text-gray-700">
-                      Review - AgroMarFeed AI
-                    </h3>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                      <img
+                        src="/images/ai1.png"
+                        alt="AgroMarFeed AI"
+                        className="w-5 h-5 object-contain"
+                      />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">
+                        Review AI
+                      </h3>
+                      <p className="text-yellow-100 text-sm">
+                        AgroMarFeed Intelligence
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleCopyToClipboard}
+                      className="p-2 hover:bg-white/20 rounded-lg transition-all duration-200"
+                      title="Copy to clipboard"
+                    >
+                      {copied ? (
+                        <Check size={16} className="text-green-300" />
+                      ) : (
+                        <Copy size={16} className="text-white" />
+                      )}
+                    </button>
                     <button
                       onClick={() => setShowReviewPopup(false)}
-                      className="p-1 hover:bg-gray-200 rounded transition"
+                      className="p-2 hover:bg-white/20 rounded-lg transition-all duration-200"
+                      title="Close"
                     >
-                      <X size={16} className="text-gray-500" />
+                      <X size={18} className="text-white" />
                     </button>
                   </div>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 p-4 overflow-auto">
+                <div className="flex-1 p-6 overflow-auto bg-gradient-to-br from-gray-50 to-white">
                   {reviewLoading ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-                      <p className="mt-2 text-gray-600">
-                        AI sedang menganalisis deskripsi...
-                      </p>
+                    <div className="text-center py-12">
+                      <div className="relative">
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-yellow-200 border-t-yellow-500 mx-auto"></div>
+                        <div className="absolute inset-0 rounded-full h-12 w-12 border-4 border-transparent border-r-yellow-300 mx-auto animate-ping"></div>
+                      </div>
+                      <div className="mt-6 space-y-2">
+                        <p className="text-lg font-semibold text-gray-800">
+                          🤖 AI sedang menganalisis...
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Memberikan review dan saran untuk deskripsi produk Anda
+                        </p>
+                      </div>
+                      <div className="mt-8 flex justify-center">
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
+                      </div>
                     </div>
                   ) : (
-                    <div
-                      className="prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{
-                        __html: markdownToHtml(reviewResult),
-                      }}
-                    />
+                    <div className="space-y-4">
+                      {/* AI Badge */}
+                      <div className="flex items-center gap-2 mb-6">
+                        <div className="flex items-center gap-2 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
+                          <img
+                            src="/images/ai1.png"
+                            alt="AI"
+                            className="w-3 h-3 object-contain"
+                          />
+                          AI Review Complete
+                        </div>
+                      </div>
+
+                      {/* Content with styling */}
+                      <div
+                        className="prose prose-sm max-w-none text-gray-800 leading-relaxed"
+                        style={{
+                          fontSize: '14px',
+                          lineHeight: '1.6',
+                        }}
+                        dangerouslySetInnerHTML={{
+                          __html: markdownToHtml(reviewResult),
+                        }}
+                      />
+
+                      {/* Footer Actions */}
+                      <div className="mt-8 pt-4 border-t border-gray-200">
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span>Powered by AgroMarFeed AI</span>
+                          <span>{new Date().toLocaleString('id-ID')}</span>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
 
                 {/* Resize Handle (desktop only) */}
                 {!isMobile && (
                   <div
-                    className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
+                    className="absolute bottom-0 right-0 w-6 h-6 cursor-se-resize opacity-60 hover:opacity-100 transition-opacity"
                     onMouseDown={(e) => handleMouseDown(e, "resize")}
                   >
-                    <div className="w-0 h-0 border-l-8 border-l-transparent border-b-8 border-b-gray-400"></div>
+                    <div className="absolute bottom-1 right-1">
+                      <div className="w-0 h-0 border-l-[6px] border-l-transparent border-b-[6px] border-b-gray-400"></div>
+                      <div className="w-0 h-0 border-l-[4px] border-l-transparent border-b-[4px] border-b-gray-300 absolute bottom-0 right-1"></div>
+                      <div className="w-0 h-0 border-l-[2px] border-l-transparent border-b-[2px] border-b-gray-200 absolute bottom-0 right-2"></div>
+                    </div>
                   </div>
                 )}
               </div>
